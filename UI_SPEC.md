@@ -181,7 +181,8 @@
 - 900-1099px: sidebar collapses to icons with tooltips.
 - Below 900px: show resize guard; mobile is out of scope.
 - Overlay: responsive to OBS Browser Source dimensions and anchored by theme settings.
-- Overlay runtime: rendered subtitles must come from `SubtitleFrame.escapedText` in the OCR-to-overlay pipeline snapshot, not from raw OCR text or debug-only source text.
+- Overlay runtime: rendered subtitles must come from `SubtitleFrame.escapedText` in the OCR-to-overlay pipeline snapshot, not from raw OCR text, translated debug text, or debug-only source text.
+- Overlay shell: `/overlay` is a transparent, non-interactive, self-contained HTML document with no remote assets; it restores the latest subtitle from `/api/status` and then listens to `/ws/overlay` when that endpoint is available.
 
 ## UX Acceptance Criteria
 - [ ] First-run wizard is completable by keyboard only.

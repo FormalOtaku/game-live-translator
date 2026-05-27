@@ -96,3 +96,16 @@
 - Regression tests added first: `test/local-api-server.test.js` covers non-localhost bind rejection, selected port reporting, sequential fallback and exhaustion on port conflict, sanitized and empty status snapshots, canonical 404/405/500 errors, and CORS not using a wildcard.
 - Migration needed: None.
 - Rollback plan: Revert the server core, focused tests, and T-006 spec/decision entries; no persisted data is introduced.
+
+### CHG-20260528-008
+- Date: 2026-05-28
+- Summary: Added the OBS overlay HTML renderer and `/overlay` safety fixtures for T-006-002.
+- Reason: OBS users need a real Browser Source URL that renders stream subtitles safely before WebSocket broadcast wiring lands.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. Overlay HTML rendering is stateless and reads only sanitized in-memory subtitle state.
+  - API: `GET /overlay` returns a transparent, self-contained, no-store HTML document with no remote assets; it restores `/api/status` and prepares for `/ws/overlay` reconnect.
+  - UI: OBS Setup Guide and Home/Status can point users at a functional local overlay shell that renders `SubtitleFrame.escapedText` only.
+- Risk: T-006-002 locks the browser shell but the server WebSocket endpoint still lands in T-006-003, so live updates beyond the initial status restore are not complete until the next slice.
+- Regression tests added first: `test/overlay-renderer.test.js` and `/overlay` server tests cover transparent layout, no remote assets, no raw/debug text leakage, malicious subtitle rendering as text, line-count/theme fallbacks, no-store headers, and browser-side use of `escapedText`.
+- Migration needed: None.
+- Rollback plan: Revert the overlay renderer, server `/overlay` route, tests, and spec/decision entries; no persisted data is introduced.

@@ -8,6 +8,7 @@ const {
   redactSecrets,
 } = require('../contracts/security');
 const { sanitizeSubtitleForOverlay } = require('../core/subtitle-state');
+const { OVERLAY_CSP, renderOverlayHtml } = require('./overlay-renderer');
 
 const DEFAULT_PREFERRED_PORT = 39600;
 const DEFAULT_MAX_PORT_ATTEMPTS = 8;
@@ -234,8 +235,23 @@ function writeJson(res, statusCode, payload) {
   res.end(body);
 }
 
+function writeHtml(res, statusCode, html) {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Content-Length', Buffer.byteLength(html));
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Content-Security-Policy', OVERLAY_CSP);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.end(html);
+}
+
 function writeApiError(res, statusCode, code, message, options) {
   writeJson(res, statusCode, buildApiError(code, message, options));
+}
+
+function writeMethodNotAllowed(res) {
+  res.setHeader('Allow', 'GET');
+  writeApiError(res, 405, 'METHOD_NOT_ALLOWED', 'Method not allowed');
 }
 
 function listenOnPort(server, bindAddress, port) {
@@ -333,7 +349,7 @@ function createLocalApiServer(options = {}) {
 
     if (pathname === '/health') {
       if (req.method !== 'GET') {
-        writeApiError(res, 405, 'METHOD_NOT_ALLOWED', 'Method not allowed');
+        writeMethodNotAllowed(res);
         return;
       }
       writeJson(res, 200, Object.freeze({
@@ -345,9 +361,25 @@ function createLocalApiServer(options = {}) {
       return;
     }
 
+    if (pathname === '/overlay') {
+      if (req.method !== 'GET') {
+        writeMethodNotAllowed(res);
+        return;
+      }
+      const overlay = getOverlaySnapshot(options.overlayState);
+      writeHtml(res, 200, renderOverlayHtml({
+        initialFrame: overlay.lastSubtitle,
+        themeId: valueFromOption(options.overlayThemeId),
+        maxLines: valueFromOption(options.overlayMaxLines),
+        statusPath: valueFromOption(options.overlayStatusPath),
+        wsPath: valueFromOption(options.overlayWsPath),
+      }));
+      return;
+    }
+
     if (pathname === '/api/status') {
       if (req.method !== 'GET') {
-        writeApiError(res, 405, 'METHOD_NOT_ALLOWED', 'Method not allowed');
+        writeMethodNotAllowed(res);
         return;
       }
       writeJson(res, 200, buildAppStatus({
@@ -411,4 +443,6 @@ module.exports = {
   freezeRedactedDetails,
   normalizeRuntimeStatus,
   resolveCorsOrigin,
+  writeHtml,
+  writeMethodNotAllowed,
 };

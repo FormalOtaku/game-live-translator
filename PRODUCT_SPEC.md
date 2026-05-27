@@ -77,6 +77,7 @@
 ### FR-004 OBS Overlay
 - The backend serves `GET /overlay` from `http://127.0.0.1:<port>/overlay`.
 - The overlay has a transparent background and renders subtitles suitable for OBS Browser Source.
+- The overlay HTML is self-contained and must not load remote fonts, images, scripts, stylesheets, analytics, or telemetry.
 - Subtitle updates arrive through a local WebSocket or equivalent stream.
 - Incoming subtitle text is escaped and rendered as text, never interpreted as HTML.
 - The overlay reconnects automatically and restores the latest subtitle state after reconnect.
@@ -125,7 +126,7 @@
 - [ ] API keys do not appear in SQLite, exported profiles, logs, diagnostics bundles, or error messages.
 - [ ] Default settings create no OCR image files, OCR full-text logs, or translation full-text logs.
 - [x] The T-006 localhost server core refuses non-localhost bind configuration before listening.
-- [ ] Overlay escaping is verified with malicious OCR payload fixtures.
+- [x] Overlay escaping is verified with malicious OCR/subtitle payload fixtures in core and overlay renderer tests.
 - [ ] Capture, translation, overlay reconnect, backend restart, and port conflict have recoverable UI states.
 - [ ] 1280x720, 1920x1080, and 2560x1440 overlay layouts do not clip or overlap subtitle text.
 - [ ] `npm test`, `npm run build`, `npm run lint`, and Claude sidecar review evidence pass for each completed slice.

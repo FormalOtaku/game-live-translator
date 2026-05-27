@@ -42,6 +42,29 @@ function requestJson({ port, path, method = 'GET', headers = {} }) {
   });
 }
 
+function requestText({ port, path, method = 'GET', headers = {} }) {
+  return new Promise((resolve, reject) => {
+    const req = http.request({
+      host: '127.0.0.1',
+      port,
+      path,
+      method,
+      headers,
+    }, (res) => {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+      res.on('end', () => {
+        resolve({ statusCode: res.statusCode, headers: res.headers, body });
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 function listenBlocker() {
   return new Promise((resolve, reject) => {
     const server = http.createServer((_req, res) => {
@@ -223,6 +246,71 @@ test('GET /api/status without overlay state omits lastSubtitle and uses safe def
   }
 });
 
+test('GET /overlay serves self-contained OBS HTML with sanitized initial subtitle', async () => {
+  const overlayState = new OverlayState({ clock: fixedClock });
+  overlayState.publishFrame(createSubtitleFrame({
+    id: 'subtitle-overlay',
+    profileId: 'profile-1',
+    sourceText: '秘密の原文',
+    translatedText: '</script><img src=x onerror=alert(1)>',
+    provider: 'echo',
+    createdAt: FIXED_TIME,
+    displayMs: 7000,
+    themeId: 'classic_subtitle',
+    includeSourceText: true,
+  }));
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    overlayState,
+    overlayThemeId: 'stream_box',
+    overlayMaxLines: 2,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestText({ port: started.port, path: '/overlay' });
+
+    assert.equal(response.statusCode, 200);
+    assert.match(response.headers['content-type'], /text\/html; charset=utf-8/);
+    assert.equal(response.headers['cache-control'], 'no-store');
+    assert.equal(response.headers['x-content-type-options'], 'nosniff');
+    assert.match(response.headers['content-security-policy'], /default-src 'none'/);
+    assert.ok(response.body.startsWith('<!doctype html>'));
+    assert.match(response.body, /<body data-theme="stream_box">/);
+    assert.match(response.body, /--glt-lines: 2;/);
+    assert.ok(response.body.includes('&lt;&#x2F;script&gt;&lt;img src&#x3D;x onerror&#x3D;alert(1)&gt;'));
+    assert.equal(response.body.includes('</script><img'), false);
+    assert.equal(response.body.includes('<img src=x'), false);
+    assert.equal(response.body.includes('秘密の原文'), false);
+    assert.equal(response.body.includes('sourceText'), false);
+    assert.equal(response.body.includes('translatedText'), false);
+    assert.equal(/<script[^>]+\bsrc=/i.test(response.body), false);
+    assert.equal(/<link\b/i.test(response.body), false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('GET /overlay falls back to safe theme and line count defaults', async () => {
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    overlayThemeId: 'unknown',
+    overlayMaxLines: 99,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestText({ port: started.port, path: '/overlay' });
+
+    assert.equal(response.statusCode, 200);
+    assert.match(response.body, /<body data-theme="classic_subtitle">/);
+    assert.match(response.body, /--glt-lines: 3;/);
+    assert.match(response.body, /data-overlay-state="empty"/);
+  } finally {
+    await api.stop();
+  }
+});
+
 test('unsupported routes and methods return canonical ApiError envelopes', async () => {
   const api = createLocalApiServer({ preferredPort: 0 });
   const started = await api.start();
@@ -245,9 +333,19 @@ test('unsupported routes and methods return canonical ApiError envelopes', async
       method: 'POST',
     });
     assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'GET');
     assert.equal(wrongMethod.parsed.error.code, 'METHOD_NOT_ALLOWED');
     assert.equal(wrongMethod.parsed.error.retryable, false);
     assert.equal(Object.hasOwn(wrongMethod.parsed.error, 'stack'), false);
+
+    const wrongOverlayMethod = await requestJson({
+      port: started.port,
+      path: '/overlay',
+      method: 'POST',
+    });
+    assert.equal(wrongOverlayMethod.statusCode, 405);
+    assert.equal(wrongOverlayMethod.headers.allow, 'GET');
+    assert.equal(wrongOverlayMethod.parsed.error.code, 'METHOD_NOT_ALLOWED');
   } finally {
     await api.stop();
   }

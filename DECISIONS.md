@@ -69,3 +69,11 @@
 - Decision: Implement a dependency-free Node localhost server core for T-006 as the executable contract harness. It must enforce `127.0.0.1` before listen, report the selected local port, emit canonical `ApiError` envelopes, avoid wildcard CORS, and expose only privacy-safe status payloads.
 - Consequences: The project gains deterministic API/overlay server tests without adding framework dependencies or secrets, while preserving the documented FastAPI production target. Any later Python sidecar must keep the same `/health`, `/api/status`, bind, CORS, and error semantics.
 - Follow-up: T-006-002/T-006-003 should add the actual OBS overlay HTML and WebSocket replay/broadcast behavior on top of this local server boundary.
+
+### DEC-008
+- Date: 2026-05-28
+- Context: T-006-002 adds the OBS Browser Source HTML shell. The overlay must show subtitles clearly while treating all runtime text as untrusted and preserving the privacy rule that raw OCR/source text is not exposed by default.
+- Options: render raw translated text with `textContent`; render pre-escaped `escapedText` with `innerHTML`; render only sanitized `escapedText` and fall back to `textContent` if a future payload contains raw angle brackets.
+- Decision: The overlay shell renders only sanitized `SubtitleFrame.escapedText`. Server-side initial rendering sanitizes frames before insertion. Browser runtime ignores `sourceText` and `translatedText`, and uses a bracket guard so malformed future payloads with raw `<` or `>` are displayed with `textContent` instead of becoming DOM nodes.
+- Consequences: Malicious payloads render as broadcast text instead of executable HTML, while existing pre-escaped subtitle frames still display readable characters. The HTML is self-contained with transparent background and no remote assets, keeping OBS setup simple and privacy-safe.
+- Follow-up: T-006-003 must feed `/ws/overlay` with the same sanitized frame contract and keep reconnect/replay behavior aligned with this renderer.

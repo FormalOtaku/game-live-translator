@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-006
-- current_slice_id: T-006-002
-- current_slice_goal: OBS overlay HTML renderer and safety fixtures
+- current_slice_id: T-006-003
+- current_slice_goal: Overlay WebSocket replay and broadcast core
 - current_slice_status: todo
-- completed_slices: 1
+- completed_slices: 2
 - total_slices: 5
-- progress_pct: 20
-- next_slice_id: T-006-002
-- next_slice_goal: OBS overlay HTML renderer and safety fixtures
-- last_checkpoint: 2026-05-27T16:09:40.068Z
+- progress_pct: 40
+- next_slice_id: T-006-003
+- next_slice_goal: Overlay WebSocket replay and broadcast core
+- last_checkpoint: 2026-05-27T16:48:31.746Z
 ## Session Flow
 - current_session_role: supervisor
 - recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-006-001 review recheck satisfied: Claude sidecar T-006-001-r2 imported, must_fix=0, unresolved P1/P2=0; local and devcontainer npm test/build/lint pass.
-- last_completed_slice: T-006-001
-- handoff_summary: T-006-001 complete: localhost-only HTTP server core added with 127.0.0.1 bind enforcement, selected port fallback/reporting, /health, sanitized /api/status, redacted ApiError envelopes, no-wildcard CORS, and 12 focused tests. Local and devcontainer npm test/build/lint pass. Claude sidecar T-006-001-r2 review imported with must_fix=0 and unresolved P1/P2=0. Next slice is T-006-002 OBS overlay HTML renderer and safety fixtures.
+- checkpoint_reason: T-006-002 review recheck satisfied: Claude sidecar T-006-002-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0; local and devcontainer npm test/build/lint pass.
+- last_completed_slice: T-006-002
+- handoff_summary: T-006-002 complete: OBS overlay HTML renderer added with transparent self-contained Browser Source shell, /overlay route, no-store/CSP/nosniff headers, escapedText-only initial/live rendering, source/raw/debug text omission, no remote assets, bounded WebSocket reconnect bootstrap, theme/maxLines fallbacks, and safety fixtures. Local and devcontainer npm test/build/lint pass with 107 tests. Claude sidecar T-006-002-r2 review imported clean with findings=0, must_fix=0, unresolved P1/P2=0. Next slice is T-006-003 Overlay WebSocket replay and broadcast core.
 - next_action: start_execution_session
-- updated_at: 2026-05-27T16:09:40.065Z
+- updated_at: 2026-05-27T16:48:31.744Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

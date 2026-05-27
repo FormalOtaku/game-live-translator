@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T16:08:45.583Z",
+  "migrated_at": "2026-05-27T16:48:19.484Z",
   "source_path": "TASKS.md",
-  "source_sha256": "b70ae27330d06ce6b41f6beccb2b3b2e140e54669f18f04b5cd6516e5af691c2",
+  "source_sha256": "d8b0747f65e5fcb5a9af4dd688af25ddfcbcbd1d7c1ce3f0036760c0923436fa",
   "task_count": 16,
   "counts": {
-    "todo": 5,
+    "todo": 4,
     "doing": 0,
     "blocked": 0,
-    "done": 11
+    "done": 12
   },
   "tasks": [
     {
@@ -99,9 +99,9 @@
     {
       "id": "T-006-002",
       "title": "OBS overlay HTML renderer and safety fixtures",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification."
+      "notes": "Added OBS overlay renderer and /overlay route with transparent self-contained HTML, escapedText-only rendering, no raw/debug text, no remote assets, CSP/no-store/nosniff headers, and 21 overlay/server focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar T-006-002-r2 clean with findings=0 and unresolved P1/P2=0"
     },
     {
       "id": "T-006-003",

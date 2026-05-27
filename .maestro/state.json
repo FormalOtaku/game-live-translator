@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T16:09:40.069Z",
+  "migrated_at": "2026-05-27T16:48:31.747Z",
   "source_path": "STATE.md",
-  "source_sha256": "328c8a211a2d97aba849a201327d35f150919b6fe99c26ebaac327517f156216",
+  "source_sha256": "439cb5836c3f42cb357e658cd4cba8aa0223262874a668386236480ded14b23b",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
     "current_slice_prefix": "T-006",
-    "current_slice_id": "T-006-002",
-    "current_slice_goal": "OBS overlay HTML renderer and safety fixtures",
+    "current_slice_id": "T-006-003",
+    "current_slice_goal": "Overlay WebSocket replay and broadcast core",
     "current_slice_status": "todo",
-    "completed_slices": 1,
+    "completed_slices": 2,
     "total_slices": 5,
-    "progress_pct": 20,
-    "next_slice_id": "T-006-002",
-    "next_slice_goal": "OBS overlay HTML renderer and safety fixtures",
-    "last_checkpoint": "2026-05-27T16:09:40.068Z",
+    "progress_pct": 40,
+    "next_slice_id": "T-006-003",
+    "next_slice_goal": "Overlay WebSocket replay and broadcast core",
+    "last_checkpoint": "2026-05-27T16:48:31.746Z",
     "done": [],
     "doing": [],
     "todo": []
