@@ -29,24 +29,24 @@
 <body>
   <main>
     <header>
-      <p class="meta">Generated from structured Maestro state at 2026-05-27T22:22:26.250Z</p>
+      <p class="meta">Generated from structured Maestro state at 2026-05-27T22:45:41.476Z</p>
       <h1>Maestro<br>Project Report</h1>
       <p class="meta">/home/murasaki01/Projects/Game_Live_Translator</p>
     </header>
     <section class="grid">
       <div class="card"><span class="metric">29</span><span class="muted">tasks</span></div>
       <div class="card"><span class="metric">2</span><span class="muted">doing</span></div>
-      <div class="card"><span class="metric">1</span><span class="muted">todo</span></div>
-      <div class="card"><span class="metric">26</span><span class="muted">done</span></div>
+      <div class="card"><span class="metric">0</span><span class="muted">todo</span></div>
+      <div class="card"><span class="metric">27</span><span class="muted">done</span></div>
       <div class="card"><span class="metric">0</span><span class="muted">decisions</span></div>
     </section>
     <section>
       <h2>Current Focus</h2>
       <div class="card">
         <p><strong>Milestone:</strong> (none)</p>
-        <p><strong>Current slice:</strong> T-008-004</p>
-        <p><strong>Goal:</strong> Capture start stop runtime status</p>
-        <p><strong>Progress:</strong> 60%</p>
+        <p><strong>Current slice:</strong> T-008-005</p>
+        <p><strong>Goal:</strong> Capture OCR smoke runbook and parent closeout</p>
+        <p><strong>Progress:</strong> 80%</p>
       </div>
     </section>
     <section>
@@ -79,9 +79,9 @@
 <tr><td>T-008</td><td>Implement capture and OCR test API core</td><td><span class="pill doing">doing</span></td><td>codex</td><td>Parent goal: add production-grade v1 capture source enumeration, ROI/manual OCR test, capture start/stop runtime status, privacy-safe OCR errors, and repeatable smoke evidence for First-Run/Capture Setup/OCR Preview dependencies. DB/API/UI impact: no schema bump expected; API capture/OCR endpoints; UI Capture Setup/OCR Preview/Home status readiness.</td></tr>
 <tr><td>T-008-001</td><td>Capture and OCR API contract validation</td><td><span class="pill done">done</span></td><td>codex</td><td>Added capture/OCR API contract validators for CaptureSourcesResponse, CaptureStartRequest, OcrTestRequest, and OcrResult with per-CaptureSource unknown-field rejection, controlled OCR rejection reasons, value-free fieldErrors, and 65 focused contract tests. Local and Docker npm test/build/lint pass with 238 tests; git diff --check pass; Claude T-008-001-r3 module review clean with must_fix=0 and unresolved P1/P2=0.</td></tr>
 <tr><td>T-008-002</td><td>Capture source enumeration endpoint</td><td><span class="pill done">done</span></td><td>codex</td><td>Wired GET /api/capture/sources through injected captureSourceProvider.enumerateCaptureSources(), validated responses with assertCaptureSourcesResponse, sanitized only CaptureSource fields before JSON, mapped missing/thrown/non-Error/invalid provider output to privacy-safe CAPTURE_ENUM_FAILED, and added route/CORS/redaction tests. Local and Docker npm test/build/lint pass with 242 tests; git diff --check pass; Claude T-008-002-r2 module review clean with findings=0, must_fix=0, unresolved P1/P2=0.</td></tr>
-<tr><td>T-008-003</td><td>Manual OCR test endpoint</td><td><span class="pill done">done</span></td><td>codex</td><td>PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr>
-<tr><td>T-008-004</td><td>Capture start stop runtime status</td><td><span class="pill doing">doing</span></td><td>codex</td><td>PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr>
-<tr><td>T-008-005</td><td>Capture OCR smoke runbook and parent closeout</td><td><span class="pill todo">todo</span></td><td>codex</td><td>PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr></tbody>
+<tr><td>T-008-003</td><td>Manual OCR test endpoint</td><td><span class="pill done">done</span></td><td>codex</td><td>Added POST /api/ocr/test through injected ocrTestProvider.runOcrTest with request/profile ROI fallback, OcrResult validation/sanitization, privacy-safe OCR_ENGINE_ERROR mapping, DB_UNAVAILABLE/PROFILE_NOT_FOUND/ROI_MISSING preservation, CORS/method coverage, and spec/decision updates. Local and Docker npm test/build/lint pass with 250 tests; git diff --check pass; Claude T-008-003-r2 module review clean with findings=5 info, must_fix=0, unresolved P1/P2=0.</td></tr>
+<tr><td>T-008-004</td><td>Capture start stop runtime status</td><td><span class="pill done">done</span></td><td>codex</td><td>PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr>
+<tr><td>T-008-005</td><td>Capture OCR smoke runbook and parent closeout</td><td><span class="pill doing">doing</span></td><td>codex</td><td>PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr></tbody>
       </table>
     </section>
     <section>

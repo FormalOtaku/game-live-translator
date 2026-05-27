@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T22:22:18.759Z",
+  "migrated_at": "2026-05-27T22:45:35.581Z",
   "source_path": "TASKS.md",
-  "source_sha256": "cfa2c27ccd2fbeb8c6232c528643b28b03652c85d13122f229c49481f3f6f480",
+  "source_sha256": "99f1f86fca4cf303dd4f67c692c3886fee611a292c8160ccba23bbc0f5b9a0da",
   "task_count": 29,
   "counts": {
-    "todo": 1,
+    "todo": 0,
     "doing": 2,
     "blocked": 0,
-    "done": 26
+    "done": 27
   },
   "tasks": [
     {
@@ -204,14 +204,14 @@
     {
       "id": "T-008-004",
       "title": "Capture start stop runtime status",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+      "notes": "Added POST /api/capture/start and /api/capture/stop through injected captureController with profile/saved captureSource validation, serialized operations, privacy-safe AppStatus runtime updates, deterministic {ok:true}, CAPTURE_ALREADY_RUNNING, and stop retry/resync handling. Local and Docker npm test/build/lint pass with 260 tests; git diff --check pass; Claude T-008-004-r2 module review clean with findings=7, must_fix=0, unresolved P1/P2=0."
     },
     {
       "id": "T-008-005",
       "title": "Capture OCR smoke runbook and parent closeout",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
     }

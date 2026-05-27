@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-008
-- current_slice_id: T-008-004
-- current_slice_goal: Capture start stop runtime status
+- current_slice_id: T-008-005
+- current_slice_goal: Capture OCR smoke runbook and parent closeout
 - current_slice_status: doing
-- completed_slices: 3
+- completed_slices: 4
 - total_slices: 5
-- progress_pct: 60
-- next_slice_id: T-008-005
-- next_slice_goal: Capture OCR smoke runbook and parent closeout
-- last_checkpoint: 2026-05-27T22:22:26.249Z
+- progress_pct: 80
+- next_slice_id:
+- next_slice_goal:
+- last_checkpoint: 2026-05-27T22:45:41.475Z
 ## Session Flow
 - current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: none
-- checkpoint_reason: T-008 parent remains in progress; no human checkpoint required after manual OCR route slice.
-- last_completed_slice: T-008-003
-- handoff_summary: T-008-003 complete: added POST /api/ocr/test through injected ocrTestProvider.runOcrTest, request/profile ROI fallback, OcrResult validation/sanitization, privacy-safe OCR_ENGINE_ERROR mapping, DB_UNAVAILABLE/PROFILE_NOT_FOUND/ROI_MISSING behavior, CORS/method coverage, and spec/decision updates. Local and Docker npm test/build/lint pass with 250 tests; git diff --check pass; Claude T-008-003-r2 module review clean with findings=5 info, must_fix=0, unresolved P1/P2=0.
-- next_action: Continue T-008-004 capture start stop runtime status.
-- updated_at: 2026-05-27T22:22:26.246Z
+- checkpoint_reason: T-008 parent remains in progress; no human checkpoint required after deterministic capture start/stop route slice.
+- last_completed_slice: T-008-004
+- handoff_summary: T-008-004 complete: added capture start/stop API backed by injected captureController, serialized runtime operations, profile/captureSource validation, privacy-safe AppStatus updates, deterministic ok envelopes, CAPTURE_ALREADY_RUNNING and stop retry/resync semantics. Verification: local npm test 260 pass, npm run build pass, npm run lint pass, git diff --check pass; Docker game-live-translator-dev npm test 260 pass, build pass, lint pass; Claude agent-pass review T-008-004-r2 clean with unresolved P1/P2=0.
+- next_action: Continue T-008-005 capture OCR smoke runbook and T-008 parent closeout.
+- updated_at: 2026-05-27T22:45:41.472Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

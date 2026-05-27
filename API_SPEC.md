@@ -195,8 +195,8 @@ type DiagnosticBundle = {
 | GET | `/overlay` | OBS Browser Source HTML | - | HTML | `OVERLAY_UNAVAILABLE` |
 | GET | `/api/status` | Runtime status for UI | - | `AppStatus` | `BACKEND_NOT_READY` |
 | GET | `/api/capture/sources` | Enumerate monitors/windows | - | `{ sources: CaptureSource[] }` | `CAPTURE_ENUM_FAILED` |
-| POST | `/api/capture/start` | Start capture loop | `{ profileId: string }` | `{ ok: true }` | `PROFILE_NOT_FOUND`, `CAPTURE_SOURCE_MISSING`, `CAPTURE_FAILED` |
-| POST | `/api/capture/stop` | Stop capture loop | - | `{ ok: true }` | `CAPTURE_NOT_RUNNING` |
+| POST | `/api/capture/start` | Start capture loop | `{ profileId: string }` | `{ ok: true }` | `PROFILE_NOT_FOUND`, `DB_UNAVAILABLE`, `CAPTURE_ALREADY_RUNNING`, `CAPTURE_SOURCE_MISSING`, `CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE`, `CAPTURE_FAILED` |
+| POST | `/api/capture/stop` | Stop capture loop | - | `{ ok: true }` | `CAPTURE_NOT_RUNNING`, `CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE`, `CAPTURE_FAILED` |
 | POST | `/api/ocr/test` | Run one OCR pass with active profile or supplied ROI | `{ profileId: string, roi?: RoiRect }` | `OcrResult` | `PROFILE_NOT_FOUND`, `ROI_MISSING`, `OCR_ENGINE_ERROR` |
 | POST | `/api/translate/test` | Test provider with supplied text | `{ profileId: string, text: string }` | `TranslationResult` | `PROVIDER_KEY_MISSING`, `PROVIDER_AUTH_FAILED`, `PROVIDER_RATE_LIMITED`, `PROVIDER_QUOTA_EXCEEDED`, `PROVIDER_NETWORK_ERROR`, `PROVIDER_RESPONSE_INVALID`, `PROVIDER_UNKNOWN`, `TARGET_LANG_INVALID` |
 | GET | `/api/profiles` | List profiles | - | `{ profiles: Profile[] }` | `DB_UNAVAILABLE` |
@@ -221,7 +221,7 @@ type DiagnosticBundle = {
 
 ## Localhost HTTP Server Core
 - T-006 introduces a dependency-free localhost server core in `src/server/local-api-server.js` as the executable wire-contract harness for the v1 local API. The production sidecar may wrap or port this contract to Python FastAPI, but endpoint shapes, bind restrictions, error envelopes, and privacy rules must remain compatible.
-- `createLocalApiServer({ bindAddress, preferredPort, maxPortAttempts, version, overlayState, runtimeStatus, activeProfileId, allowedOrigins, allowSamePortLocalhostOrigin, overlayWsPath, appWsPath, profileRepository, providerKeyStore })` is the T-006/T-007 server factory.
+- `createLocalApiServer({ bindAddress, preferredPort, maxPortAttempts, version, overlayState, runtimeStatus, activeProfileId, allowedOrigins, allowSamePortLocalhostOrigin, overlayWsPath, appWsPath, profileRepository, providerKeyStore, captureSourceProvider, captureController, ocrTestProvider })` is the T-006 through T-008 server factory.
 - Bind behavior:
   - `bindAddress` defaults to `127.0.0.1` and any other value, including `0.0.0.0`, `::`, LAN IPs, or hostnames, raises `NON_LOCALHOST_BIND_REJECTED` before listening.
   - `preferredPort` defaults to `39600`; when unavailable, the server may try sequential local ports up to `maxPortAttempts` and must report the selected port through `/health` and `/api/status`.
@@ -298,6 +298,16 @@ type DiagnosticBundle = {
 - The route must call `assertCaptureSourcesResponse` before writing JSON so only `kind`, `id`, `label`, and optional `bounds` can leave the backend. Invalid provider output, missing provider methods, and thrown provider errors map to canonical `CAPTURE_ENUM_FAILED` `ApiError` responses.
 - `CAPTURE_ENUM_FAILED` responses must be privacy-safe: they may include validator field names/codes for invalid provider output, but must not include provider keys, raw OCR text, captured images, screenshots, stack traces, debug logs, or raw provider exception text.
 - Only `GET` is allowed on `/api/capture/sources`; other methods return `METHOD_NOT_ALLOWED` with `Allow: GET`. The endpoint preserves the existing localhost bind, CORS, no-store-free JSON, and no-persistence behavior.
+
+## Capture Start/Stop Endpoints
+- T-008-004 wires `POST /api/capture/start` and `POST /api/capture/stop` into the localhost API harness with a dependency-injected `captureController` boundary. The future Electron/Windows adapter owns the real desktop capture loop behind this interface.
+- `POST /api/capture/start` validates the body with `assertCaptureStartRequest`, loads the profile through `profileRepository.getProfile(profileId)`, requires a saved valid `captureSource`, and calls `captureController.startCapture({ profile, captureSource })`. The response is always the fixed `{ ok: true }`; controller output is never serialized.
+- `POST /api/capture/start` and `POST /api/capture/stop` are serialized inside the process so concurrent requests cannot double-dispatch into the controller. A start request while a capture session is already running returns `CAPTURE_ALREADY_RUNNING`.
+- `POST /api/capture/stop` stops the in-process active capture session by calling `captureController.stopCapture({ profileId })`. When no capture session is running, it returns `CAPTURE_NOT_RUNNING` before calling the controller. If the controller reports `CAPTURE_NOT_RUNNING`, the API re-syncs its in-memory session to idle; generic stop failures leave the active session present so a later stop can retry. The response is always the fixed `{ ok: true }`; controller output is never serialized.
+- Successful start sets the sanitized in-memory `capture` runtime status to `state: "running"` with `code: "CAPTURE_RUNNING"` and the active profile id. Successful stop sets `capture` to `state: "idle"` with `code: "CAPTURE_STOPPED"` while keeping the last active profile id visible. Both transitions are reflected by `GET /api/status` and broadcast to `/ws/app`.
+- Missing/invalid saved capture source returns `CAPTURE_SOURCE_MISSING` before controller calls. Missing controller methods and generic controller failures return privacy-safe `CAPTURE_FAILED`. A controller-raised `CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE` is preserved as retryable without echoing raw exception text.
+- Capture start/stop errors must not include provider keys, raw OCR text, translated text, captured images, screenshot paths, stack traces, debug logs, or raw controller exception text. The endpoints do not persist capture frames, OCR text, source-list cache, provider keys, logs, diagnostics, or runtime status.
+- Only `POST` is allowed on `/api/capture/start` and `/api/capture/stop`; other methods return `METHOD_NOT_ALLOWED` with `Allow: POST`. The endpoints preserve the existing localhost bind and CORS behavior.
 
 ## Manual OCR Test Endpoint
 - T-008-003 wires `POST /api/ocr/test` into the localhost API harness with a dependency-injected `ocrTestProvider.runOcrTest({ profile, roi })` boundary. The future OCR adapter owns screenshot capture, ROI crop, preprocessing, and PaddleOCR execution behind this interface.

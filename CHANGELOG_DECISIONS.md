@@ -265,3 +265,16 @@
 - Regression tests added first: `test/local-api-server.test.js` covers successful ROI override and profile ROI fallback, method/request validation, profile not found, ROI missing, missing provider, thrown/non-Error provider failures, invalid provider output redaction, result sanitization, and CORS inheritance.
 - Migration needed: None.
 - Rollback plan: Remove the OCR test route, injected provider handling, focused tests, and spec entries. Existing capture source and profile/config routes remain unchanged.
+
+### CHG-20260528-021
+- Date: 2026-05-28
+- Summary: Wired capture start/stop runtime status for T-008-004.
+- Reason: Home/Status, First-Run, and Capture Setup need a stable route surface for starting and stopping the capture loop before concrete Windows desktop capture is integrated. The core contract must prove profile/source validation, status updates, and no-leak behavior without native dependencies.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The routes read profile configuration through the existing repository boundary and keep capture session state in memory only.
+  - API: Adds `POST /api/capture/start` and `POST /api/capture/stop` to `createLocalApiServer` using `profileRepository.getProfile(profileId)` and `captureController.startCapture/stopCapture`. Start validates `CaptureStartRequest`, requires a valid saved `captureSource`, serializes concurrent start/stop requests, maps already-running start to `CAPTURE_ALREADY_RUNNING`, maps missing source to `CAPTURE_SOURCE_MISSING`, maps missing/generic controller failures to privacy-safe `CAPTURE_FAILED`, preserves retryable `CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE`, and updates/broadcasts sanitized capture `RuntimeStatus`.
+  - UI: Home/Status and Capture Setup can show running/idle/error capture state and retryable source-disappeared failures from `/api/status` or `/ws/app` without parsing raw controller exceptions.
+- Risk: This is the HTTP contract and runtime-status seam only. The future concrete capture controller must preserve the same request/result shape, in-memory defaults, redacted errors, and status publication when it performs real Windows monitor/window capture.
+- Regression tests added first: `test/local-api-server.test.js` covers start/stop success, `/api/status` and `/ws/app` updates, fixed success envelopes, request validation before calls, repository/source/controller failure mapping and redaction, stop-not-running, concurrent start/stop serialization, stop failure recovery/resync behavior, method guards, and CORS preflight behavior.
+- Migration needed: None.
+- Rollback plan: Remove the capture start/stop routes, injected controller handling, focused tests, and spec entries. Existing source enumeration, OCR test, profile/config, and status routes remain unchanged.

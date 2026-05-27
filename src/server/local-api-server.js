@@ -8,6 +8,7 @@ const {
   redactSecrets,
 } = require('../contracts/security');
 const {
+  assertCaptureStartRequest,
   assertCaptureSourcesResponse,
   assertOcrResult,
   assertOcrTestRequest,
@@ -54,6 +55,8 @@ const RETRYABLE_API_ERROR_CODES = Object.freeze([
   'PORT_UNAVAILABLE',
   'WS_REJECTED',
 ]);
+
+const OK_RESPONSE = Object.freeze({ ok: true });
 
 function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -304,6 +307,13 @@ function captureSourceProviderUnavailable() {
   );
 }
 
+function captureControllerUnavailable() {
+  return new ContractError(
+    'CAPTURE_FAILED',
+    'Capture controller is not available',
+  );
+}
+
 function ocrTestProviderUnavailable() {
   return new ContractError(
     'OCR_ENGINE_ERROR',
@@ -332,6 +342,13 @@ function getCaptureSourceProvider(provider) {
     throw captureSourceProviderUnavailable();
   }
   return provider;
+}
+
+function getCaptureController(controller, method) {
+  if (!isObject(controller) || typeof controller[method] !== 'function') {
+    throw captureControllerUnavailable();
+  }
+  return controller;
 }
 
 function getOcrTestProvider(provider) {
@@ -374,6 +391,73 @@ function sanitizeOcrResult(payload) {
     output.rejectionReason = payload.rejectionReason;
   }
   return Object.freeze(output);
+}
+
+function remapCaptureSourceFieldErrors(fieldErrors) {
+  if (!Array.isArray(fieldErrors)) return undefined;
+  return Object.freeze(fieldErrors.map((error) => {
+    const sourceField = typeof error.field === 'string'
+      ? error.field.replace(/^sources\[0\]/, 'captureSource')
+      : 'captureSource';
+    const sourceMessage = typeof error.message === 'string'
+      ? error.message.replace(/sources\[0\]/g, 'captureSource')
+      : 'captureSource is invalid';
+    return fieldError(sourceField, error.code, sourceMessage);
+  }));
+}
+
+function captureSourceMissingError(fieldErrors) {
+  const details = Array.isArray(fieldErrors)
+    ? { fieldErrors }
+    : {
+        fieldErrors: [
+          fieldError(
+            'captureSource',
+            'CAPTURE_SOURCE_MISSING',
+            'captureSource must be configured before starting capture',
+          ),
+        ],
+      };
+  return new ContractError(
+    'CAPTURE_SOURCE_MISSING',
+    'Capture source is not configured',
+    details,
+  );
+}
+
+function captureNotRunningError() {
+  return new ContractError(
+    'CAPTURE_NOT_RUNNING',
+    'Capture is not running',
+  );
+}
+
+function captureAlreadyRunningError() {
+  return new ContractError(
+    'CAPTURE_ALREADY_RUNNING',
+    'Capture is already running',
+  );
+}
+
+function mapCaptureControllerError(error, fallbackMessage) {
+  if (error instanceof ContractError && error.code === 'CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE') {
+    return new ContractError(
+      'CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE',
+      'Capture source temporarily unavailable',
+    );
+  }
+  if (error instanceof ContractError && error.code === 'CAPTURE_NOT_RUNNING') {
+    return captureNotRunningError();
+  }
+  return new ContractError('CAPTURE_FAILED', fallbackMessage);
+}
+
+function captureRuntimeMessageForCode(code) {
+  if (code === 'CAPTURE_SOURCE_MISSING') return 'Capture source is not configured';
+  if (code === 'CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE') return 'Capture source temporarily unavailable';
+  if (code === 'CAPTURE_NOT_RUNNING') return 'Capture is not running';
+  if (code === 'CAPTURE_ALREADY_RUNNING') return 'Capture is already running';
+  return 'Capture failed';
 }
 
 function decodePathSegment(segment) {
@@ -443,7 +527,9 @@ function statusCodeForContractError(error) {
   if (
     code === 'CANNOT_UPDATE_BUILT_IN_THEME' ||
     code === 'CANNOT_DELETE_BUILT_IN_THEME' ||
-    code === 'THEME_IN_USE'
+    code === 'THEME_IN_USE' ||
+    code === 'CAPTURE_NOT_RUNNING' ||
+    code === 'CAPTURE_ALREADY_RUNNING'
   ) {
     return 409;
   }
@@ -457,9 +543,12 @@ function statusCodeForContractError(error) {
     return 400;
   }
   if (code === 'ROI_MISSING') return 400;
+  if (code === 'CAPTURE_SOURCE_MISSING') return 400;
+  if (code === 'CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE') return 503;
   if (code === 'DB_UNAVAILABLE') return 503;
   if (code === 'KEYCHAIN_UNAVAILABLE') return 503;
   if (code === 'CAPTURE_ENUM_FAILED') return 500;
+  if (code === 'CAPTURE_FAILED') return 500;
   if (code === 'OCR_ENGINE_ERROR') return 500;
   if (code === 'DB_READ_FAILED') return 500;
   return 500;
@@ -542,9 +631,14 @@ function createLocalApiServer(options = {}) {
   const profileRepository = options.profileRepository;
   const providerKeyStore = options.providerKeyStore;
   const captureSourceProvider = options.captureSourceProvider;
+  const captureController = options.captureController;
   const ocrTestProvider = options.ocrTestProvider;
   let selectedPort = null;
   let upgradeAttached = false;
+  let captureRuntimeStatus = null;
+  let captureSession = null;
+  let captureActiveProfileId = null;
+  let captureOperation = Promise.resolve();
 
   const server = http.createServer((req, res) => {
     Promise.resolve(handleRequest(req, res)).catch((error) => {
@@ -591,11 +685,13 @@ function createLocalApiServer(options = {}) {
     let backendState = options.backendState;
     let activeProfileId = options.activeProfileId;
     try {
-      runtimeStatus = valueFromOption(options.runtimeStatus);
+      runtimeStatus = mergeCaptureRuntimeStatus(valueFromOption(options.runtimeStatus));
+      backendState = valueFromOption(options.backendState);
+      activeProfileId = resolveActiveProfileId(valueFromOption(options.activeProfileId));
     } catch (error) {
-      runtimeStatus = runtimeStatusSourceFailure(error);
+      runtimeStatus = mergeCaptureRuntimeStatus(runtimeStatusSourceFailure(error));
       backendState = 'error';
-      activeProfileId = null;
+      activeProfileId = resolveActiveProfileId(null);
     }
     try {
       return buildAppStatus({
@@ -613,9 +709,9 @@ function createLocalApiServer(options = {}) {
           port: selectedPort,
           bindAddress,
           overlayState,
-          runtimeStatus: runtimeStatusSourceFailure(error),
+          runtimeStatus: mergeCaptureRuntimeStatus(runtimeStatusSourceFailure(error)),
           backendState: 'error',
-          activeProfileId: null,
+          activeProfileId: resolveActiveProfileId(null),
           clock: options.clock,
         });
       } catch (_) {
@@ -624,12 +720,64 @@ function createLocalApiServer(options = {}) {
     }
   }
 
+  function mergeCaptureRuntimeStatus(runtimeStatus) {
+    if (captureRuntimeStatus === null) return runtimeStatus;
+    const base = isObject(runtimeStatus) ? runtimeStatus : {};
+    return Object.freeze({
+      ...base,
+      capture: captureRuntimeStatus,
+    });
+  }
+
+  function resolveActiveProfileId(activeProfileId) {
+    return captureActiveProfileId ?? activeProfileId;
+  }
+
   const appStatusWebSocket = createAppStatusWebSocketEndpoint({
     path: appWsPath,
     overlayState,
     isOriginAllowed: isOriginAllowedForWs,
     buildSnapshot: currentAppStatusSafe,
   });
+
+  function buildCaptureRuntimeStatus(state, statusOptions = {}) {
+    const status = {
+      state,
+      updatedAt: toIsoTimestamp(undefined, options.clock),
+    };
+    if (typeof statusOptions.code === 'string' && statusOptions.code.trim().length > 0) {
+      status.code = statusOptions.code.trim();
+    }
+    if (typeof statusOptions.message === 'string' && statusOptions.message.trim().length > 0) {
+      status.message = redactSecrets(statusOptions.message);
+    }
+    if (typeof statusOptions.retryable === 'boolean') {
+      status.retryable = statusOptions.retryable;
+    }
+    return Object.freeze(status);
+  }
+
+  function setCaptureRuntimeStatus(status) {
+    captureRuntimeStatus = status;
+    if (selectedPort !== null) {
+      appStatusWebSocket.publish();
+    }
+  }
+
+  function setCaptureErrorStatus(error) {
+    const code = error && typeof error.code === 'string' ? error.code : 'CAPTURE_FAILED';
+    setCaptureRuntimeStatus(buildCaptureRuntimeStatus('error', {
+      code,
+      message: captureRuntimeMessageForCode(code),
+      retryable: providerErrorRetryable(error) || RETRYABLE_API_ERROR_CODES.includes(code),
+    }));
+  }
+
+  function withCaptureOperation(operation) {
+    const run = captureOperation.then(operation, operation);
+    captureOperation = run.catch(() => {});
+    return run;
+  }
 
   function rejectUpgrade(socket, statusCode, statusName, code, message) {
     const body = JSON.stringify({
@@ -710,6 +858,96 @@ function createLocalApiServer(options = {}) {
     return sanitizeCaptureSourcesResponse(payload);
   }
 
+  function resolveProfileCaptureSource(profile) {
+    const captureSource = isObject(profile) ? profile.captureSource : undefined;
+    if (captureSource === undefined) {
+      throw captureSourceMissingError();
+    }
+    try {
+      assertCaptureSourcesResponse({ sources: [captureSource] });
+    } catch (error) {
+      const fieldErrors = error instanceof ContractError &&
+        isObject(error.details) &&
+        Array.isArray(error.details.fieldErrors)
+        ? remapCaptureSourceFieldErrors(error.details.fieldErrors)
+        : undefined;
+      throw captureSourceMissingError(fieldErrors);
+    }
+    return captureSource;
+  }
+
+  async function startCapture(payload) {
+    assertCaptureStartRequest(payload);
+    if (captureSession !== null) {
+      throw captureAlreadyRunningError();
+    }
+    const repository = getProfileRepository(profileRepository, ['getProfile']);
+    const profile = repository.getProfile(payload.profileId);
+
+    let captureSource;
+    try {
+      captureSource = resolveProfileCaptureSource(profile);
+    } catch (error) {
+      if (error instanceof ContractError && error.code === 'CAPTURE_SOURCE_MISSING') {
+        setCaptureErrorStatus(error);
+      }
+      throw error;
+    }
+
+    try {
+      const controller = getCaptureController(captureController, 'startCapture');
+      await controller.startCapture({ profile, captureSource });
+    } catch (error) {
+      const captureError = mapCaptureControllerError(error, 'Capture start failed');
+      setCaptureErrorStatus(captureError);
+      throw captureError;
+    }
+
+    captureSession = Object.freeze({ profileId: payload.profileId });
+    captureActiveProfileId = payload.profileId;
+    setCaptureRuntimeStatus(buildCaptureRuntimeStatus('running', {
+      code: 'CAPTURE_RUNNING',
+      message: 'Capture loop running',
+      retryable: false,
+    }));
+    return OK_RESPONSE;
+  }
+
+  async function stopCapture() {
+    if (captureSession === null) {
+      throw captureNotRunningError();
+    }
+    const stoppedProfileId = captureSession.profileId;
+
+    try {
+      const controller = getCaptureController(captureController, 'stopCapture');
+      await controller.stopCapture({ profileId: stoppedProfileId });
+    } catch (error) {
+      const captureError = mapCaptureControllerError(error, 'Capture stop failed');
+      if (captureError.code === 'CAPTURE_NOT_RUNNING') {
+        captureSession = null;
+        captureActiveProfileId = stoppedProfileId;
+        setCaptureRuntimeStatus(buildCaptureRuntimeStatus('idle', {
+          code: 'CAPTURE_STOPPED',
+          message: 'Capture stopped',
+          retryable: false,
+        }));
+        throw captureError;
+      }
+      setCaptureErrorStatus(captureError);
+      throw captureError;
+    }
+
+    captureSession = null;
+    captureActiveProfileId = stoppedProfileId;
+    setCaptureRuntimeStatus(buildCaptureRuntimeStatus('idle', {
+      code: 'CAPTURE_STOPPED',
+      message: 'Capture stopped',
+      retryable: false,
+    }));
+    return OK_RESPONSE;
+  }
+
   function resolveOcrTestRoi(payload, profile) {
     if (payload.roi !== undefined) return payload.roi;
     const roi = isObject(profile) ? profile.roi : undefined;
@@ -767,6 +1005,23 @@ function createLocalApiServer(options = {}) {
           return true;
         }
         writeJson(res, 200, await enumerateCaptureSources());
+        return true;
+      }
+      if (segments.length === 3 && segments[2] === 'start') {
+        if (req.method !== 'POST') {
+          writeMethodNotAllowed(res, ['POST']);
+          return true;
+        }
+        const payload = await readJsonBody(req);
+        writeJson(res, 200, await withCaptureOperation(() => startCapture(payload)));
+        return true;
+      }
+      if (segments.length === 3 && segments[2] === 'stop') {
+        if (req.method !== 'POST') {
+          writeMethodNotAllowed(res, ['POST']);
+          return true;
+        }
+        writeJson(res, 200, await withCaptureOperation(() => stopCapture()));
         return true;
       }
     } catch (error) {

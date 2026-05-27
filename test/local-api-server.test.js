@@ -653,6 +653,720 @@ test('capture source API inherits local CORS policy without preflight enumeratio
   }
 });
 
+test('capture control API starts capture and publishes running AppStatus', async () => {
+  const calls = [];
+  const captureSource = {
+    kind: 'window',
+    id: 'window:game',
+    label: 'Game Window',
+    bounds: { x: 0, y: 0, width: 1280, height: 720 },
+  };
+  const profile = makeApiProfile({
+    id: 'profile_capture',
+    captureSource,
+    roi: { x: 10, y: 20, width: 640, height: 180 },
+    captureHz: 2,
+  });
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    runtimeStatus: {
+      ocr: { state: 'idle', updatedAt: FIXED_TIME },
+      translation: { state: 'idle', updatedAt: FIXED_TIME },
+    },
+    profileRepository: {
+      getProfile(profileId) {
+        calls.push(['getProfile', profileId]);
+        return profile;
+      },
+    },
+    captureController: {
+      async startCapture(input) {
+        calls.push(['startCapture', input]);
+        return {
+          ok: true,
+          screenshotPath: '/tmp/should-not-leak.png',
+          rawOcrText: '秘密のOCR本文',
+        };
+      },
+      stopCapture(input) {
+        calls.push(['stopCapture', input]);
+        return { ok: true };
+      },
+    },
+  });
+  const started = await api.start();
+  let appClient;
+
+  try {
+    appClient = await connectWebSocketClient({ port: started.port });
+    await appClient.waitForJson((m) => m.type === 'status');
+
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.parsed, { ok: true });
+    assert.deepEqual(calls[0], ['getProfile', 'profile_capture']);
+    assert.equal(calls[1][0], 'startCapture');
+    assert.strictEqual(calls[1][1].profile, profile);
+    assert.deepEqual(calls[1][1].captureSource, captureSource);
+    assert.equal(JSON.stringify(response.parsed).includes('/tmp/should-not-leak.png'), false);
+    assert.equal(JSON.stringify(response.parsed).includes('秘密のOCR本文'), false);
+
+    const status = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(status.statusCode, 200);
+    assert.equal(status.parsed.activeProfileId, 'profile_capture');
+    assert.equal(status.parsed.capture.state, 'running');
+    assert.equal(status.parsed.capture.code, 'CAPTURE_RUNNING');
+    assert.equal(status.parsed.capture.updatedAt, FIXED_TIME);
+    assert.equal(status.parsed.ocr.state, 'idle');
+    assert.equal(status.parsed.translation.state, 'idle');
+
+    const broadcast = await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.capture.state === 'running',
+    );
+    assert.equal(broadcast.status.activeProfileId, 'profile_capture');
+    assert.equal(broadcast.status.capture.code, 'CAPTURE_RUNNING');
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/capture/start',
+      method: 'GET',
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'POST');
+    assert.equal(wrongMethod.parsed.error.code, 'METHOD_NOT_ALLOWED');
+  } finally {
+    if (appClient !== undefined && !appClient.socket.destroyed) await appClient.close();
+    await api.stop();
+  }
+});
+
+test('capture control API stops active capture and publishes idle AppStatus', async () => {
+  const calls = [];
+  const captureSource = { kind: 'monitor', id: 'monitor:primary', label: 'Display 1' };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile(profileId) {
+        calls.push(['getProfile', profileId]);
+        return makeApiProfile({
+          id: profileId,
+          captureSource,
+          captureHz: 3,
+        });
+      },
+    },
+    captureController: {
+      startCapture(input) {
+        calls.push(['startCapture', input]);
+        return { ok: true };
+      },
+      async stopCapture(input) {
+        calls.push(['stopCapture', input]);
+        return {
+          ok: true,
+          lastFramePath: 'C:\\secret\\frame.png',
+        };
+      },
+    },
+  });
+  const started = await api.start();
+  let appClient;
+
+  try {
+    appClient = await connectWebSocketClient({ port: started.port });
+    await appClient.waitForJson((m) => m.type === 'status');
+
+    const start = await requestJson({
+      port: started.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(start.statusCode, 200);
+    await appClient.waitForJson((m) => m.type === 'status' && m.status.capture.state === 'running');
+
+    const stop = await requestJson({
+      port: started.port,
+      path: '/api/capture/stop',
+      method: 'POST',
+    });
+    assert.equal(stop.statusCode, 200);
+    assert.deepEqual(stop.parsed, { ok: true });
+    assert.deepEqual(calls.map((call) => call[0]), ['getProfile', 'startCapture', 'stopCapture']);
+    assert.deepEqual(calls[2][1], { profileId: 'profile_capture' });
+    assert.equal(JSON.stringify(stop.parsed).includes('frame.png'), false);
+
+    const status = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(status.parsed.activeProfileId, 'profile_capture');
+    assert.equal(status.parsed.capture.state, 'idle');
+    assert.equal(status.parsed.capture.code, 'CAPTURE_STOPPED');
+    assert.equal(status.parsed.capture.updatedAt, FIXED_TIME);
+
+    const broadcast = await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.capture.code === 'CAPTURE_STOPPED',
+    );
+    assert.equal(broadcast.status.capture.state, 'idle');
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/capture/stop',
+      method: 'GET',
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'POST');
+    assert.equal(wrongMethod.parsed.error.code, 'METHOD_NOT_ALLOWED');
+  } finally {
+    if (appClient !== undefined && !appClient.socket.destroyed) await appClient.close();
+    await api.stop();
+  }
+});
+
+test('capture control API rejects malformed start requests before repository and controller calls', async () => {
+  const calls = [];
+  const rawOcrText = '秘密のOCR本文';
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        calls.push(['getProfile', profileId]);
+        return makeApiProfile({
+          id: profileId,
+          captureSource: { kind: 'monitor', id: 'monitor:primary', label: 'Display 1' },
+        });
+      },
+    },
+    captureController: {
+      startCapture(input) {
+        calls.push(['startCapture', input]);
+        return { ok: true };
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: '', rawOcrText },
+    });
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.parsed.error.code, 'VALIDATION_ERROR');
+    assert.deepEqual(calls, []);
+    assert.equal(JSON.stringify(response.parsed).includes(rawOcrText), false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('capture control API maps profile repository and saved source errors before controller calls', async () => {
+  const missingProfileCalls = [];
+  const missingProfileApi = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        missingProfileCalls.push(['getProfile', profileId]);
+        throw new ContractError('PROFILE_NOT_FOUND', 'Missing profile');
+      },
+    },
+    captureController: {
+      startCapture(input) {
+        missingProfileCalls.push(['startCapture', input]);
+        return { ok: true };
+      },
+    },
+  });
+  const missingStarted = await missingProfileApi.start();
+
+  try {
+    const response = await requestJson({
+      port: missingStarted.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'missing' },
+    });
+    assert.equal(response.statusCode, 404);
+    assert.equal(response.parsed.error.code, 'PROFILE_NOT_FOUND');
+    assert.deepEqual(missingProfileCalls, [['getProfile', 'missing']]);
+  } finally {
+    await missingProfileApi.stop();
+  }
+
+  const unavailableCalls = [];
+  const unavailableApi = createLocalApiServer({
+    preferredPort: 0,
+    captureController: {
+      startCapture(input) {
+        unavailableCalls.push(['startCapture', input]);
+        return { ok: true };
+      },
+    },
+  });
+  const unavailableStarted = await unavailableApi.start();
+
+  try {
+    const response = await requestJson({
+      port: unavailableStarted.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(response.statusCode, 503);
+    assert.equal(response.parsed.error.code, 'DB_UNAVAILABLE');
+    assert.deepEqual(unavailableCalls, []);
+  } finally {
+    await unavailableApi.stop();
+  }
+
+  const invalidSourceSecret = 'sk-CAPTURESOURCESECRET12';
+  const sourceCalls = [];
+  const sourceApi = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile(profileId) {
+        sourceCalls.push(['getProfile', profileId]);
+        return makeApiProfile({
+          id: profileId,
+          captureSource: {
+            kind: 'window',
+            id: '',
+            label: 'Game Window',
+            apiKey: invalidSourceSecret,
+          },
+        });
+      },
+    },
+    captureController: {
+      startCapture(input) {
+        sourceCalls.push(['startCapture', input]);
+        return { ok: true };
+      },
+    },
+  });
+  const sourceStarted = await sourceApi.start();
+
+  try {
+    const response = await requestJson({
+      port: sourceStarted.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.parsed.error.code, 'CAPTURE_SOURCE_MISSING');
+    assert.equal(Array.isArray(response.parsed.error.details.fieldErrors), true);
+    assert.equal(JSON.stringify(response.parsed).includes(invalidSourceSecret), false);
+    assert.deepEqual(sourceCalls, [['getProfile', 'profile_capture']]);
+
+    const status = await requestJson({ port: sourceStarted.port, path: '/api/status' });
+    assert.equal(status.parsed.capture.state, 'error');
+    assert.equal(status.parsed.capture.code, 'CAPTURE_SOURCE_MISSING');
+    assert.equal(status.parsed.capture.message, 'Capture source is not configured');
+    assert.equal(status.parsed.capture.retryable, false);
+  } finally {
+    await sourceApi.stop();
+  }
+});
+
+test('capture control API maps controller failures to redacted capture errors and status', async () => {
+  const profile = makeApiProfile({
+    id: 'profile_capture',
+    captureSource: { kind: 'monitor', id: 'monitor:primary', label: 'Display 1' },
+    captureHz: 1,
+  });
+  const missingControllerApi = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile() {
+        return profile;
+      },
+    },
+  });
+  const missingStarted = await missingControllerApi.start();
+
+  try {
+    const response = await requestJson({
+      port: missingStarted.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(response.statusCode, 500);
+    assert.equal(response.parsed.error.code, 'CAPTURE_FAILED');
+    assert.equal(Object.hasOwn(response.parsed.error, 'stack'), false);
+
+    const status = await requestJson({ port: missingStarted.port, path: '/api/status' });
+    assert.equal(status.parsed.capture.state, 'error');
+    assert.equal(status.parsed.capture.code, 'CAPTURE_FAILED');
+    assert.equal(status.parsed.capture.updatedAt, FIXED_TIME);
+  } finally {
+    await missingControllerApi.stop();
+  }
+
+  const leakedKey = 'sk-CAPTUREFAILSECRET123';
+  const failingApi = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile() {
+        return profile;
+      },
+    },
+    captureController: {
+      startCapture() {
+        throw new Error(`capture failed with ${leakedKey}`);
+      },
+    },
+  });
+  const failingStarted = await failingApi.start();
+
+  try {
+    const response = await requestJson({
+      port: failingStarted.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(response.statusCode, 500);
+    assert.equal(response.parsed.error.code, 'CAPTURE_FAILED');
+    assert.equal(response.parsed.error.message, 'Capture start failed');
+    assert.equal(JSON.stringify(response.parsed).includes(leakedKey), false);
+    const status = await requestJson({ port: failingStarted.port, path: '/api/status' });
+    assert.equal(status.parsed.capture.state, 'error');
+    assert.equal(status.parsed.capture.code, 'CAPTURE_FAILED');
+    assert.equal(JSON.stringify(status.parsed).includes(leakedKey), false);
+  } finally {
+    await failingApi.stop();
+  }
+
+  const retryableApi = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile() {
+        return profile;
+      },
+    },
+    captureController: {
+      startCapture() {
+        throw new ContractError('CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE', `source moved ${leakedKey}`);
+      },
+    },
+  });
+  const retryableStarted = await retryableApi.start();
+
+  try {
+    const response = await requestJson({
+      port: retryableStarted.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(response.statusCode, 503);
+    assert.equal(response.parsed.error.code, 'CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE');
+    assert.equal(response.parsed.error.retryable, true);
+    assert.equal(JSON.stringify(response.parsed).includes(leakedKey), false);
+    const status = await requestJson({ port: retryableStarted.port, path: '/api/status' });
+    assert.equal(status.parsed.capture.code, 'CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE');
+    assert.equal(status.parsed.capture.retryable, true);
+    assert.equal(JSON.stringify(status.parsed).includes(leakedKey), false);
+  } finally {
+    await retryableApi.stop();
+  }
+});
+
+test('capture control API maps stop when idle before controller calls', async () => {
+  const calls = [];
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    captureController: {
+      stopCapture(input) {
+        calls.push(['stopCapture', input]);
+        return { ok: true };
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/capture/stop',
+      method: 'POST',
+    });
+    assert.equal(response.statusCode, 409);
+    assert.equal(response.parsed.error.code, 'CAPTURE_NOT_RUNNING');
+    assert.deepEqual(calls, []);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('capture control API serializes concurrent start and stop requests', async () => {
+  let startCalls = 0;
+  let stopCalls = 0;
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile(profileId) {
+        return makeApiProfile({
+          id: profileId,
+          captureSource: { kind: 'monitor', id: 'monitor:primary', label: 'Display 1' },
+          captureHz: 2,
+        });
+      },
+    },
+    captureController: {
+      async startCapture() {
+        startCalls += 1;
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        return { ok: true };
+      },
+      async stopCapture() {
+        stopCalls += 1;
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        return { ok: true };
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const startResponses = await Promise.all([
+      requestJson({
+        port: started.port,
+        path: '/api/capture/start',
+        method: 'POST',
+        body: { profileId: 'profile_capture' },
+      }),
+      requestJson({
+        port: started.port,
+        path: '/api/capture/start',
+        method: 'POST',
+        body: { profileId: 'profile_capture' },
+      }),
+    ]);
+    assert.deepEqual(startResponses.map((response) => response.statusCode).sort(), [200, 409]);
+    assert.equal(startResponses.some((response) => response.parsed.error?.code === 'CAPTURE_ALREADY_RUNNING'), true);
+    assert.equal(startCalls, 1);
+
+    const stopResponses = await Promise.all([
+      requestJson({ port: started.port, path: '/api/capture/stop', method: 'POST' }),
+      requestJson({ port: started.port, path: '/api/capture/stop', method: 'POST' }),
+    ]);
+    assert.deepEqual(stopResponses.map((response) => response.statusCode).sort(), [200, 409]);
+    assert.equal(stopResponses.some((response) => response.parsed.error?.code === 'CAPTURE_NOT_RUNNING'), true);
+    assert.equal(stopCalls, 1);
+
+    const status = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(status.parsed.capture.state, 'idle');
+    assert.equal(status.parsed.capture.code, 'CAPTURE_STOPPED');
+  } finally {
+    await api.stop();
+  }
+});
+
+test('capture control API handles stop controller failures without leaking or trapping sessions', async () => {
+  const leakedKey = 'sk-STOPCAPTURESECRET123';
+  let stopCalls = 0;
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile(profileId) {
+        return makeApiProfile({
+          id: profileId,
+          captureSource: { kind: 'window', id: 'window:game', label: 'Game Window' },
+          captureHz: 2,
+        });
+      },
+    },
+    captureController: {
+      startCapture() {
+        return { ok: true };
+      },
+      stopCapture() {
+        stopCalls += 1;
+        if (stopCalls === 1) {
+          throw new Error(`stop failed with ${leakedKey}`);
+        }
+        return { ok: true };
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const start = await requestJson({
+      port: started.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(start.statusCode, 200);
+
+    const failedStop = await requestJson({
+      port: started.port,
+      path: '/api/capture/stop',
+      method: 'POST',
+    });
+    assert.equal(failedStop.statusCode, 500);
+    assert.equal(failedStop.parsed.error.code, 'CAPTURE_FAILED');
+    assert.equal(failedStop.parsed.error.message, 'Capture stop failed');
+    assert.equal(JSON.stringify(failedStop.parsed).includes(leakedKey), false);
+    const failedStatus = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(failedStatus.parsed.capture.state, 'error');
+    assert.equal(failedStatus.parsed.capture.code, 'CAPTURE_FAILED');
+    assert.equal(JSON.stringify(failedStatus.parsed).includes(leakedKey), false);
+
+    const recoveredStop = await requestJson({
+      port: started.port,
+      path: '/api/capture/stop',
+      method: 'POST',
+    });
+    assert.equal(recoveredStop.statusCode, 200);
+    assert.deepEqual(recoveredStop.parsed, { ok: true });
+    assert.equal(stopCalls, 2);
+    const recoveredStatus = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(recoveredStatus.parsed.capture.state, 'idle');
+    assert.equal(recoveredStatus.parsed.capture.code, 'CAPTURE_STOPPED');
+  } finally {
+    await api.stop();
+  }
+});
+
+test('capture control API resyncs idle state when stop controller reports not running', async () => {
+  let stopCalls = 0;
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile(profileId) {
+        return makeApiProfile({
+          id: profileId,
+          captureSource: { kind: 'monitor', id: 'monitor:primary', label: 'Display 1' },
+          captureHz: 2,
+        });
+      },
+    },
+    captureController: {
+      startCapture() {
+        return { ok: true };
+      },
+      stopCapture() {
+        stopCalls += 1;
+        throw new ContractError('CAPTURE_NOT_RUNNING', 'Native loop already stopped');
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const start = await requestJson({
+      port: started.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(start.statusCode, 200);
+
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/capture/stop',
+      method: 'POST',
+    });
+    assert.equal(response.statusCode, 409);
+    assert.equal(response.parsed.error.code, 'CAPTURE_NOT_RUNNING');
+    assert.equal(stopCalls, 1);
+
+    const status = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(status.parsed.capture.state, 'idle');
+    assert.equal(status.parsed.capture.code, 'CAPTURE_STOPPED');
+
+    const repeated = await requestJson({
+      port: started.port,
+      path: '/api/capture/stop',
+      method: 'POST',
+    });
+    assert.equal(repeated.statusCode, 409);
+    assert.equal(repeated.parsed.error.code, 'CAPTURE_NOT_RUNNING');
+    assert.equal(stopCalls, 1);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('capture control API inherits local CORS policy without preflight controller calls', async () => {
+  const calls = [];
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        calls.push(['getProfile', profileId]);
+        return makeApiProfile({
+          id: profileId,
+          captureSource: { kind: 'monitor', id: 'monitor:primary', label: 'Display 1' },
+          captureHz: 2,
+        });
+      },
+    },
+    captureController: {
+      startCapture(input) {
+        calls.push(['startCapture', input]);
+        return { ok: true };
+      },
+      stopCapture(input) {
+        calls.push(['stopCapture', input]);
+        return { ok: true };
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const allowedOrigin = `http://127.0.0.1:${started.port}`;
+    for (const path of ['/api/capture/start', '/api/capture/stop']) {
+      const preflight = await requestJson({
+        port: started.port,
+        path,
+        method: 'OPTIONS',
+        headers: { Origin: allowedOrigin },
+      });
+      assert.equal(preflight.statusCode, 204);
+      assert.equal(preflight.headers['access-control-allow-origin'], allowedOrigin);
+      assert.equal(preflight.headers['access-control-allow-methods'], 'GET, POST, PUT, DELETE, OPTIONS');
+      assert.equal(preflight.headers['access-control-allow-headers'], 'Content-Type');
+    }
+    assert.deepEqual(calls, []);
+
+    const disallowed = await requestJson({
+      port: started.port,
+      path: '/api/capture/start',
+      method: 'POST',
+      headers: { Origin: 'https://evil.example.com' },
+      body: { profileId: 'profile_capture' },
+    });
+    assert.equal(disallowed.statusCode, 200);
+    assert.equal(disallowed.headers['access-control-allow-origin'], undefined);
+    assert.equal(disallowed.headers.vary, 'Origin');
+    assert.deepEqual(disallowed.parsed, { ok: true });
+    assert.equal(calls.length, 2);
+  } finally {
+    await api.stop();
+  }
+});
+
 test('manual OCR API runs provider with request ROI override and validates result', async () => {
   const calls = [];
   const profile = makeApiProfile({
