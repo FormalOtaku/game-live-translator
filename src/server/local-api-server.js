@@ -9,6 +9,11 @@ const {
 } = require('../contracts/security');
 const { sanitizeSubtitleForOverlay } = require('../core/subtitle-state');
 const { OVERLAY_CSP, renderOverlayHtml } = require('./overlay-renderer');
+const {
+  createOverlayWebSocketEndpoint,
+  normalizeOverlayState,
+  normalizeWebSocketPath,
+} = require('./overlay-websocket');
 
 const DEFAULT_PREFERRED_PORT = 39600;
 const DEFAULT_MAX_PORT_ATTEMPTS = 8;
@@ -294,6 +299,8 @@ function createLocalApiServer(options = {}) {
   const bindAddress = assertLocalhostBind(options.bindAddress ?? ALLOWED_BIND_ADDRESS);
   const preferredPort = normalizePreferredPort(options.preferredPort);
   const maxPortAttempts = normalizeMaxPortAttempts(options.maxPortAttempts);
+  const overlayState = normalizeOverlayState(options.overlayState, { clock: options.clock });
+  const overlayWsPath = normalizeWebSocketPath(valueFromOption(options.overlayWsPath));
   const version = typeof options.version === 'string' && options.version.trim().length > 0
     ? options.version.trim()
     : DEFAULT_VERSION;
@@ -314,6 +321,17 @@ function createLocalApiServer(options = {}) {
       writeApiError(res, 500, 'INTERNAL_ERROR', error && error.message ? error.message : 'Internal error');
     }
   });
+  const overlayWebSocket = createOverlayWebSocketEndpoint({
+    path: overlayWsPath,
+    overlayState,
+    clock: options.clock,
+    isOriginAllowed: (origin) => resolveCorsOrigin(origin, {
+      allowedOrigins,
+      allowSamePortLocalhostOrigin,
+      port: selectedPort,
+    }) !== null,
+  });
+  overlayWebSocket.attach(server);
 
   function handleRequest(req, res) {
     const hasOrigin = typeof req.headers.origin === 'string' && req.headers.origin.trim() !== '';
@@ -366,14 +384,19 @@ function createLocalApiServer(options = {}) {
         writeMethodNotAllowed(res);
         return;
       }
-      const overlay = getOverlaySnapshot(options.overlayState);
+      const overlay = getOverlaySnapshot(overlayState);
       writeHtml(res, 200, renderOverlayHtml({
         initialFrame: overlay.lastSubtitle,
         themeId: valueFromOption(options.overlayThemeId),
         maxLines: valueFromOption(options.overlayMaxLines),
         statusPath: valueFromOption(options.overlayStatusPath),
-        wsPath: valueFromOption(options.overlayWsPath),
+        wsPath: overlayWsPath,
       }));
+      return;
+    }
+
+    if (pathname === overlayWsPath) {
+      writeApiError(res, 426, 'WS_REJECTED', 'WebSocket upgrade required', { retryable: true });
       return;
     }
 
@@ -385,7 +408,7 @@ function createLocalApiServer(options = {}) {
       writeJson(res, 200, buildAppStatus({
         port: selectedPort,
         bindAddress,
-        overlayState: options.overlayState,
+        overlayState,
         runtimeStatus: options.runtimeStatus,
         backendState: options.backendState,
         activeProfileId: options.activeProfileId,
@@ -412,6 +435,7 @@ function createLocalApiServer(options = {}) {
   }
 
   async function stop() {
+    overlayWebSocket.close();
     if (!server.listening) return;
     await new Promise((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));
@@ -422,6 +446,7 @@ function createLocalApiServer(options = {}) {
     start,
     stop,
     server,
+    overlayState,
     get port() {
       return selectedPort;
     },

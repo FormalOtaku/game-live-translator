@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T16:48:31.747Z",
+  "migrated_at": "2026-05-27T17:14:38.160Z",
   "source_path": "STATE.md",
-  "source_sha256": "439cb5836c3f42cb357e658cd4cba8aa0223262874a668386236480ded14b23b",
+  "source_sha256": "76117972ce87a3d1ba84fa1807efcd9509c90c811c4c55161dd1e54458468ce8",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
     "current_slice_prefix": "T-006",
-    "current_slice_id": "T-006-003",
-    "current_slice_goal": "Overlay WebSocket replay and broadcast core",
+    "current_slice_id": "T-006-004",
+    "current_slice_goal": "App status stream and runtime error mapping",
     "current_slice_status": "todo",
-    "completed_slices": 2,
+    "completed_slices": 3,
     "total_slices": 5,
-    "progress_pct": 40,
-    "next_slice_id": "T-006-003",
-    "next_slice_goal": "Overlay WebSocket replay and broadcast core",
-    "last_checkpoint": "2026-05-27T16:48:31.746Z",
+    "progress_pct": 60,
+    "next_slice_id": "T-006-004",
+    "next_slice_goal": "App status stream and runtime error mapping",
+    "last_checkpoint": "2026-05-27T17:14:38.159Z",
     "done": [],
     "doing": [],
     "todo": []

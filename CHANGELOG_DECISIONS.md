@@ -109,3 +109,16 @@
 - Regression tests added first: `test/overlay-renderer.test.js` and `/overlay` server tests cover transparent layout, no remote assets, no raw/debug text leakage, malicious subtitle rendering as text, line-count/theme fallbacks, no-store headers, and browser-side use of `escapedText`.
 - Migration needed: None.
 - Rollback plan: Revert the overlay renderer, server `/overlay` route, tests, and spec/decision entries; no persisted data is introduced.
+
+### CHG-20260528-009
+- Date: 2026-05-28
+- Summary: Added the dependency-free `/ws/overlay` WebSocket replay and broadcast contract for T-006-003.
+- Reason: The overlay shell needs a real local stream for reconnect-safe subtitles and Home/Status needs accurate overlay client counters before broader app status streaming is added.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. WebSocket clients, latest subtitle replay, and broadcast fan-out remain in-memory runtime state only.
+  - API: `WS UPGRADE /ws/overlay` accepts valid local WebSocket clients, replays the latest non-expired sanitized subtitle frame, broadcasts `OverlayState.publishFrame()` and `clearFrame()` events, handles ping/close, and rejects non-upgrade HTTP access with `WS_REJECTED`.
+  - UI: OBS Browser Source can now receive live subtitle updates after the initial `/api/status` restore; Home/Status can rely on backend overlay client counts.
+- Risk: The WebSocket implementation is intentionally minimal and dependency-free, so protocol coverage is limited to the v1 Browser Source needs: text frames, ping/pong, close, origin gating, masking validation, and bounded payload size. Future binary or fragmented-client use must be added deliberately with tests.
+- Regression tests added first: focused local server and raw-socket WebSocket tests cover handshake rejection, origin rejection, replay on connect, live broadcast, clear events, client counters, ping responses, control-frame size rejection, and source-text omission.
+- Migration needed: None.
+- Rollback plan: Revert the overlay WebSocket helper, server upgrade wiring, tests, and spec/decision entries; no persisted data is introduced.

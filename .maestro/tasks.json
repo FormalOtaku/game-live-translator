@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T16:48:19.484Z",
+  "migrated_at": "2026-05-27T17:15:49.967Z",
   "source_path": "TASKS.md",
-  "source_sha256": "d8b0747f65e5fcb5a9af4dd688af25ddfcbcbd1d7c1ce3f0036760c0923436fa",
+  "source_sha256": "8d121638a47b41fa22d65054487b9aa3cd24b3f1a433334ad92d7954ff65b454",
   "task_count": 16,
   "counts": {
-    "todo": 4,
+    "todo": 3,
     "doing": 0,
     "blocked": 0,
-    "done": 12
+    "done": 13
   },
   "tasks": [
     {
@@ -106,9 +106,9 @@
     {
       "id": "T-006-003",
       "title": "Overlay WebSocket replay and broadcast core",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification."
+      "notes": "Added dependency-free /ws/overlay WebSocket core with local/configured Origin gating, latest sanitized subtitle replay, live publishFrame broadcast, clearFrame events, ping/close/protocol rejection, overlay client counters, and 8 WebSocket/subscriber tests; local and devcontainer npm test/build/lint pass with 115 tests; Claude sidecar T-006-003-r3 clean with must_fix=0 and unresolved P1/P2=0"
     },
     {
       "id": "T-006-004",

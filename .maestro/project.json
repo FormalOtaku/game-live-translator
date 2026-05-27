@@ -31,11 +31,11 @@
     "current_session_role": "supervisor",
     "recommended_next_session_role": "execution",
     "checkpoint_status": "satisfied",
-    "checkpoint_reason": "T-006-002 review recheck satisfied: Claude sidecar T-006-002-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0; local and devcontainer npm test/build/lint pass.",
-    "last_completed_slice": "T-006-002",
-    "handoff_summary": "T-006-002 complete: OBS overlay HTML renderer added with transparent self-contained Browser Source shell, /overlay route, no-store/CSP/nosniff headers, escapedText-only initial/live rendering, source/raw/debug text omission, no remote assets, bounded WebSocket reconnect bootstrap, theme/maxLines fallbacks, and safety fixtures. Local and devcontainer npm test/build/lint pass with 107 tests. Claude sidecar T-006-002-r2 review imported clean with findings=0, must_fix=0, unresolved P1/P2=0. Next slice is T-006-003 Overlay WebSocket replay and broadcast core.",
+    "checkpoint_reason": "T-006-003 review recheck satisfied: Claude sidecar T-006-003-r3 imported clean with findings informational only, must_fix=0, unresolved P1/P2=0; local and devcontainer npm test/build/lint pass with 115 tests.",
+    "last_completed_slice": "T-006-003",
+    "handoff_summary": "T-006-003 complete: dependency-free localhost /ws/overlay WebSocket core added with version-13 upgrade handling, local/configured Origin gating, sanitized latest-frame replay, live publishFrame broadcast, clearFrame broadcast, text/control ping handling, protocol rejection for binary/fragmented/unmasked/oversized frames, and overlay client counter lifecycle. Local and devcontainer npm test/build/lint pass with 115 tests. Claude sidecar T-006-003-r3 review imported clean with must_fix=0 and unresolved P1/P2=0. Next slice is T-006-004 App status stream and runtime error mapping.",
     "next_action": "start_execution_session",
-    "updated_at": "2026-05-27T16:48:31.744Z"
+    "updated_at": "2026-05-27T17:14:38.157Z"
   },
   "ui_design_policy": {
     "surface_priority": [

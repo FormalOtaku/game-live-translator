@@ -77,3 +77,11 @@
 - Decision: The overlay shell renders only sanitized `SubtitleFrame.escapedText`. Server-side initial rendering sanitizes frames before insertion. Browser runtime ignores `sourceText` and `translatedText`, and uses a bracket guard so malformed future payloads with raw `<` or `>` are displayed with `textContent` instead of becoming DOM nodes.
 - Consequences: Malicious payloads render as broadcast text instead of executable HTML, while existing pre-escaped subtitle frames still display readable characters. The HTML is self-contained with transparent background and no remote assets, keeping OBS setup simple and privacy-safe.
 - Follow-up: T-006-003 must feed `/ws/overlay` with the same sanitized frame contract and keep reconnect/replay behavior aligned with this renderer.
+
+### DEC-009
+- Date: 2026-05-28
+- Context: T-006-003 needs live OBS subtitle delivery, reconnect replay, and overlay client counters while the repository is still a dependency-free Node contract harness.
+- Options: add a third-party WebSocket dependency; wait for the future Python FastAPI sidecar; implement the small RFC 6455 subset needed for OBS Browser Source clients inside the local server core.
+- Decision: Implement a narrow dependency-free `/ws/overlay` helper that handles valid version 13 upgrades, configured/local origin gating, masked client text frames, ping/pong, close, latest-frame replay, `OverlayState.publishFrame()` broadcast, and `clearFrame()` broadcast.
+- Consequences: The v1 contract becomes executable and testable without adding package surface area. Protocol support is intentionally limited to the OBS/browser behavior needed by this product; binary, fragmented, compressed, oversized-control-frame, or remote WebSocket modes are out of scope until a later documented slice.
+- Follow-up: T-006-004 should add the app-facing status stream semantics without mixing UI status events into the overlay subtitle stream.

@@ -26,6 +26,7 @@
 - 2026-05-28 T-005-005: OCR-to-overlay runtime pipeline is in-memory only. It introduces no SQLite tables, no profile export schema changes, no cache persistence, and no key storage movement. Future persistence slices must decide explicitly which sanitized pipeline fields, if any, are durable.
 - 2026-05-28 T-006-001: Localhost HTTP server core is in-memory only. It introduces no SQLite tables, no profile export schema changes, no persistent status store, and no key storage movement. Port selection and runtime status are process state only.
 - 2026-05-28 T-006-002: OBS overlay HTML renderer is stateless and self-contained. It introduces no SQLite tables, no theme persistence, no profile export schema changes, and no key storage movement. Built-in theme CSS in this slice is runtime code only.
+- 2026-05-28 T-006-003: Overlay WebSocket replay and broadcast state is in-memory only. It introduces no SQLite tables, no durable client sessions, no profile export schema changes, no cache persistence, and no key storage movement.
 
 ## Migration Steps
 1. Pre-checks: confirm current `app_meta.schema_version`, backup DB, verify disk write access, verify app is not actively capturing.

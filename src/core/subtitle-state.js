@@ -190,6 +190,7 @@ class OverlayState {
     this._overlayClients = 0;
     this._connectionsOpened = 0;
     this._connectionsClosed = 0;
+    this._subscribers = new Set();
     this._updatedAt = nowIso(this._clock);
   }
 
@@ -202,10 +203,24 @@ class OverlayState {
     this._updatedAt = nowIso(this._clock);
   }
 
+  _emit(type, snapshot) {
+    if (this._subscribers.size === 0) return;
+    const event = Object.freeze({ type, snapshot });
+    for (const subscriber of [...this._subscribers]) {
+      try {
+        subscriber(event);
+      } catch (_) {
+        // Subscriber failures must not break subtitle publication.
+      }
+    }
+  }
+
   publishFrame(frame) {
     this._latestFrame = sanitizeSubtitleForOverlay(frame);
     this._touch();
-    return this.snapshot();
+    const snapshot = this.snapshot();
+    this._emit('frame', snapshot);
+    return snapshot;
   }
 
   latestFrame() {
@@ -221,7 +236,19 @@ class OverlayState {
   clearFrame() {
     this._latestFrame = null;
     this._touch();
-    return this.snapshot();
+    const snapshot = this.snapshot();
+    this._emit('clear', snapshot);
+    return snapshot;
+  }
+
+  subscribe(subscriber) {
+    if (typeof subscriber !== 'function') {
+      throwValidation([fieldError('subscriber', 'SUBSCRIBER_INVALID', 'subscriber must be a function')]);
+    }
+    this._subscribers.add(subscriber);
+    return () => {
+      this._subscribers.delete(subscriber);
+    };
   }
 
   connectClient() {

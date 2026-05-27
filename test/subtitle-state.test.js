@@ -249,3 +249,43 @@ test('OverlayState publishFrame omits debug sourceText from replay snapshots', (
   assert.equal(Object.hasOwn(debugFrame, 'sourceText'), true);
   assert.equal(Object.hasOwn(snapshot.lastSubtitle, 'sourceText'), false);
 });
+
+test('OverlayState subscribers receive frame and clear events without breaking publication', () => {
+  const state = new OverlayState({ clock: fixedClock() });
+  const events = [];
+  state.subscribe(() => {
+    throw new Error('subscriber failure');
+  });
+  const unsubscribe = state.subscribe((event) => {
+    events.push(event);
+  });
+
+  const published = state.publishFrame(createSubtitleFrame({
+    id: 'subtitle-10',
+    profileId: 'profile-1',
+    translatedText: 'Subscriber line',
+    provider: 'echo',
+    createdAt: FIXED_TIME,
+    displayMs: 3000,
+    themeId: 'minimal',
+  }));
+  const cleared = state.clearFrame();
+  unsubscribe();
+  state.publishFrame(createSubtitleFrame({
+    id: 'subtitle-11',
+    profileId: 'profile-1',
+    translatedText: 'Ignored line',
+    provider: 'echo',
+    createdAt: FIXED_TIME,
+    displayMs: 3000,
+    themeId: 'minimal',
+  }));
+
+  assert.equal(events.length, 2);
+  assert.equal(events[0].type, 'frame');
+  assert.equal(events[0].snapshot.lastSubtitle.id, 'subtitle-10');
+  assert.equal(events[0].snapshot, published);
+  assert.equal(events[1].type, 'clear');
+  assert.equal(events[1].snapshot, cleared);
+  assert.equal(Object.isFrozen(events[0]), true);
+});
