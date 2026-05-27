@@ -28,6 +28,7 @@ const {
   ALLOWED_PROVIDERS,
   ALLOWED_OCR_PRESETS,
   ALLOWED_GLOSSARY_IMPORT_FORMATS,
+  ALLOWED_OCR_REJECTION_REASONS,
   PROFILE_EXPORT_SCHEMA_VERSION,
   PROFILE_EXPORT_FORBIDDEN_FIELDS_POLICY,
   validateCaptureHz,
@@ -40,6 +41,14 @@ const {
   assertProfileCreateRequest,
   validateProfileUpdateRequest,
   assertProfileUpdateRequest,
+  validateCaptureSourcesResponse,
+  assertCaptureSourcesResponse,
+  validateCaptureStartRequest,
+  assertCaptureStartRequest,
+  validateOcrTestRequest,
+  assertOcrTestRequest,
+  validateOcrResult,
+  assertOcrResult,
   validateThemeCssJson,
   validateOverlayThemeCreateRequest,
   assertOverlayThemeCreateRequest,
@@ -432,7 +441,13 @@ test('ProfileCreateRequest: roi must be finite and strictly positive when presen
 test('ProfileCreateRequest: captureSource requires kind/id/label and validates bounds', () => {
   const errors = validateProfileCreateRequest(
     makeValidProfileCreateRequest({
-      captureSource: { kind: 'webcam', id: '', label: '', bounds: { x: 0, y: 0, width: 0, height: 10 } },
+      captureSource: {
+        kind: 'webcam',
+        id: '',
+        label: '',
+        bounds: { x: 0, y: 0, width: 0, height: 10 },
+        apiKey: 'sk-ABCDEFGHIJKLMNOP1234',
+      },
     }),
   );
   const fields = errors.map((error) => error.field);
@@ -440,6 +455,112 @@ test('ProfileCreateRequest: captureSource requires kind/id/label and validates b
   assert.ok(fields.includes('captureSource.id'));
   assert.ok(fields.includes('captureSource.label'));
   assert.ok(fields.includes('captureSource.bounds.width'));
+  assert.ok(fields.includes('captureSource.apiKey'));
+  assert.equal(JSON.stringify(errors).includes('sk-ABCDEFGHIJKLMNOP1234'), false);
+});
+
+test('CaptureSourcesResponse: validates monitor and window entries', () => {
+  const payload = {
+    sources: [
+      {
+        kind: 'monitor',
+        id: 'monitor:1',
+        label: 'Display 1',
+        bounds: { x: 0, y: 0, width: 1920, height: 1080 },
+      },
+      {
+        kind: 'window',
+        id: 'window:game',
+        label: 'Game Window',
+      },
+    ],
+  };
+
+  assert.deepEqual(validateCaptureSourcesResponse(payload), []);
+  assert.strictEqual(assertCaptureSourcesResponse(payload), payload);
+});
+
+test('CaptureSourcesResponse: rejects bad entries and does not leak values', () => {
+  const secret = 'sk-ABCDEFGHIJKLMNOP1234';
+  const errors = validateCaptureSourcesResponse({
+    sources: [
+      {
+        kind: 'browser',
+        id: '',
+        label: secret,
+        bounds: { x: 0, y: 0, width: 0, height: Infinity },
+        apiKey: secret,
+      },
+    ],
+    apiKey: secret,
+  });
+  const byField = Object.fromEntries(errors.map((error) => [error.field, error.code]));
+  assert.equal(byField.apiKey, 'UNKNOWN_CAPTURE_SOURCES_FIELD');
+  assert.equal(byField['sources[0].apiKey'], 'UNKNOWN_CAPTURE_SOURCE_FIELD');
+  assert.equal(byField['sources[0].kind'], 'CAPTURE_SOURCE_KIND_INVALID');
+  assert.equal(byField['sources[0].id'], 'VALIDATION_ERROR');
+  assert.equal(byField['sources[0].bounds.width'], 'ROI_INVALID');
+  assert.equal(byField['sources[0].bounds.height'], 'ROI_INVALID');
+  assert.equal(JSON.stringify(errors).includes(secret), false);
+});
+
+test('CaptureSourcesResponse: rejects non-object and non-array source envelopes', () => {
+  assert.throws(
+    () => assertCaptureSourcesResponse(null),
+    (error) => error instanceof ContractError && error.code === 'VALIDATION_ERROR',
+  );
+
+  const errors = validateCaptureSourcesResponse({
+    sources: { kind: 'monitor', id: 'monitor:1', label: 'Display 1' },
+    extra: true,
+  });
+  const byField = Object.fromEntries(errors.map((error) => [error.field, error.code]));
+  assert.equal(byField.extra, 'UNKNOWN_CAPTURE_SOURCES_FIELD');
+  assert.equal(byField.sources, 'VALIDATION_ERROR');
+});
+
+test('CaptureStartRequest: requires only profileId', () => {
+  const payload = { profileId: 'profile_main' };
+  assert.deepEqual(validateCaptureStartRequest(payload), []);
+  assert.strictEqual(assertCaptureStartRequest(payload), payload);
+
+  const errors = validateCaptureStartRequest({
+    profileId: '',
+    roi: { x: 0, y: 0, width: 100, height: 100 },
+  });
+  const byField = Object.fromEntries(errors.map((error) => [error.field, error.code]));
+  assert.equal(byField.profileId, 'VALIDATION_ERROR');
+  assert.equal(byField.roi, 'UNKNOWN_CAPTURE_START_FIELD');
+  assert.throws(
+    () => assertCaptureStartRequest(null),
+    (error) => error instanceof ContractError && error.code === 'VALIDATION_ERROR',
+  );
+});
+
+test('OcrTestRequest: accepts profileId with optional ROI override', () => {
+  const payload = {
+    profileId: 'profile_main',
+    roi: { x: 10, y: 20, width: 300, height: 80 },
+  };
+  assert.deepEqual(validateOcrTestRequest(payload), []);
+  assert.strictEqual(assertOcrTestRequest(payload), payload);
+  assert.deepEqual(validateOcrTestRequest({ profileId: 'profile_main' }), []);
+});
+
+test('OcrTestRequest: rejects unknown fields and invalid ROI without leaking raw OCR text', () => {
+  const rawOcrText = '秘密の原文';
+  const errors = validateOcrTestRequest({
+    profileId: '',
+    roi: { x: NaN, y: 0, width: -1, height: 0 },
+    text: rawOcrText,
+  });
+  const byField = Object.fromEntries(errors.map((error) => [error.field, error.code]));
+  assert.equal(byField.profileId, 'VALIDATION_ERROR');
+  assert.equal(byField.text, 'UNKNOWN_OCR_TEST_FIELD');
+  assert.equal(byField['roi.x'], 'ROI_INVALID');
+  assert.equal(byField['roi.width'], 'ROI_INVALID');
+  assert.equal(byField['roi.height'], 'ROI_INVALID');
+  assert.equal(JSON.stringify(errors).includes(rawOcrText), false);
 });
 
 test('ProfileCreateRequest: glossary entries require id/sourceTerm/targetTerm', () => {
@@ -772,6 +893,97 @@ test('ProviderKey write: non-object body fails validation', () => {
     () => assertProviderKeyWriteRequest(null, { provider: 'deepl' }),
     (error) => error instanceof ContractError && error.code === 'VALIDATION_ERROR',
   );
+});
+
+test('OcrResult: accepts successful and rejected OCR results with controlled reasons', () => {
+  assert.deepEqual([...ALLOWED_OCR_REJECTION_REASONS], [
+    'EMPTY_TEXT',
+    'CONFIDENCE_TOO_LOW',
+    'NOISE_TEXT',
+    'DUPLICATE_TEXT',
+  ]);
+
+  const accepted = {
+    text: 'こんにちは',
+    normalizedText: 'こんにちは',
+    confidence: 0.91,
+    durationMs: 12.5,
+    accepted: true,
+  };
+  assert.deepEqual(validateOcrResult(accepted), []);
+  assert.strictEqual(assertOcrResult(accepted), accepted);
+
+  for (const rejectionReason of ALLOWED_OCR_REJECTION_REASONS) {
+    assert.deepEqual(
+      validateOcrResult({
+        text: '',
+        normalizedText: '',
+        confidence: 0,
+        durationMs: 0,
+        accepted: false,
+        rejectionReason,
+      }),
+      [],
+      `expected rejection reason ${rejectionReason} to be accepted`,
+    );
+  }
+});
+
+test('OcrResult: rejects malformed results and keeps diagnostics value-free', () => {
+  const secret = 'sk-ABCDEFGHIJKLMNOP1234';
+  const rawOcrText = '秘密の原文';
+  const errors = validateOcrResult({
+    text: 123,
+    normalizedText: null,
+    confidence: 2,
+    durationMs: -1,
+    accepted: false,
+    rejectionReason: 'UNCONTROLLED_REASON',
+    apiKey: secret,
+    debugText: rawOcrText,
+  });
+  const byField = Object.fromEntries(errors.map((error) => [error.field, error.code]));
+  assert.equal(byField.text, 'OCR_RESULT_TEXT_INVALID');
+  assert.equal(byField.normalizedText, 'OCR_RESULT_TEXT_INVALID');
+  assert.equal(byField.confidence, 'OCR_RESULT_CONFIDENCE_INVALID');
+  assert.equal(byField.durationMs, 'OCR_RESULT_DURATION_INVALID');
+  assert.equal(byField.rejectionReason, 'OCR_REJECTION_REASON_INVALID');
+  assert.equal(byField.apiKey, 'UNKNOWN_OCR_RESULT_FIELD');
+  assert.equal(byField.debugText, 'UNKNOWN_OCR_RESULT_FIELD');
+  assert.equal(JSON.stringify(errors).includes(secret), false);
+  assert.equal(JSON.stringify(errors).includes(rawOcrText), false);
+
+  const acceptedWithReason = validateOcrResult({
+    text: rawOcrText,
+    normalizedText: rawOcrText,
+    confidence: 1,
+    durationMs: 1,
+    accepted: true,
+    rejectionReason: 'EMPTY_TEXT',
+  });
+  assert.ok(
+    acceptedWithReason.some(
+      (error) =>
+        error.field === 'rejectionReason' &&
+        error.code === 'OCR_REJECTION_REASON_INVALID',
+    ),
+  );
+  assert.equal(JSON.stringify(acceptedWithReason).includes(rawOcrText), false);
+
+  const missingAccepted = validateOcrResult({
+    text: rawOcrText,
+    normalizedText: rawOcrText,
+    confidence: 1,
+    durationMs: 1,
+  });
+  assert.ok(
+    missingAccepted.some(
+      (error) =>
+        error.field === 'accepted' &&
+        error.code === 'OCR_RESULT_ACCEPTED_INVALID',
+    ),
+  );
+  assert.equal(JSON.stringify(missingAccepted).includes(rawOcrText), false);
 });
 
 test('ALLOWED_OCR_PRESETS exposes the v1 controlled vocabulary', () => {

@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T21:24:13.273Z",
+  "migrated_at": "2026-05-27T21:45:19.134Z",
   "source_path": "TASKS.md",
-  "source_sha256": "a37663cc5314782ae13508589396e38929959fa3634e1a26779ac7449c4d7537",
-  "task_count": 23,
+  "source_sha256": "6cfdd43661dfee71a2928394ee66c9aaf5e74ca53aa362a4346cafbecc2aff1e",
+  "task_count": 29,
   "counts": {
-    "todo": 0,
-    "doing": 0,
+    "todo": 3,
+    "doing": 2,
     "blocked": 0,
-    "done": 23
+    "done": 24
   },
   "tasks": [
     {
@@ -172,6 +172,48 @@
       "status": "done",
       "owner": "codex",
       "notes": "Added npm run smoke:config, scripts/smoke-config-api.js, child-process regression test, and CONFIG_API_SMOKE_RUNBOOK_JA.md covering profiles/themes/glossary/privacy/provider-key write-delete no-readback. Local and Docker npm test/build/lint/smoke:server/smoke:config pass with 230 tests; git diff --check pass; Claude T-007-006-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
+    },
+    {
+      "id": "T-008",
+      "title": "Implement capture and OCR test API core",
+      "status": "doing",
+      "owner": "codex",
+      "notes": "Parent goal: add production-grade v1 capture source enumeration, ROI/manual OCR test, capture start/stop runtime status, privacy-safe OCR errors, and repeatable smoke evidence for First-Run/Capture Setup/OCR Preview dependencies. DB/API/UI impact: no schema bump expected; API capture/OCR endpoints; UI Capture Setup/OCR Preview/Home status readiness."
+    },
+    {
+      "id": "T-008-001",
+      "title": "Capture and OCR API contract validation",
+      "status": "done",
+      "owner": "codex",
+      "notes": "Added capture/OCR API contract validators for CaptureSourcesResponse, CaptureStartRequest, OcrTestRequest, and OcrResult with per-CaptureSource unknown-field rejection, controlled OCR rejection reasons, value-free fieldErrors, and 65 focused contract tests. Local and Docker npm test/build/lint pass with 238 tests; git diff --check pass; Claude T-008-001-r3 module review clean with must_fix=0 and unresolved P1/P2=0."
+    },
+    {
+      "id": "T-008-002",
+      "title": "Capture source enumeration endpoint",
+      "status": "doing",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-008-003",
+      "title": "Manual OCR test endpoint",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-008-004",
+      "title": "Capture start stop runtime status",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-008-005",
+      "title": "Capture OCR smoke runbook and parent closeout",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
     }
   ]
 }

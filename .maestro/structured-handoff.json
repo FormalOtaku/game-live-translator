@@ -1,9 +1,9 @@
 {
   "completed_items": [
-    "T-007,T-007-006"
+    "T-008-001"
   ],
   "blockers": [],
   "decisions_made": [],
   "open_questions": [],
-  "summary": "T-007 complete: configuration API core parent closeout landed with npm run smoke:config, CONFIG_API_SMOKE_RUNBOOK_JA.md, child-process regression test, and spec/runbook/checklist updates. Local and Docker npm test/build/lint/smoke:server/smoke:config pass with 230 tests; git diff --check pass; Claude T-007-006-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
+  "summary": "T-008-001 complete: added capture/OCR API contract validators for CaptureSourcesResponse, CaptureStartRequest, OcrTestRequest, and OcrResult with per-CaptureSource unknown-field rejection, controlled OCR rejection reasons from src/core/ocr-text.js, value-free fieldErrors, and 65 focused contract tests. Local and Docker npm test/build/lint pass with 238 tests; git diff --check pass; Claude T-008-001-r3 module review clean with must_fix=0 and unresolved P1/P2=0."
 }

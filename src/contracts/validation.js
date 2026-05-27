@@ -6,6 +6,7 @@ const {
   apiKeyWriteResponse,
   findForbiddenExportFields,
 } = require('./security');
+const { OCR_REJECTION_REASONS } = require('../core/ocr-text');
 
 const ALLOWED_CAPTURE_HZ = Object.freeze([0, 1, 2, 3, 4]);
 const ALLOWED_TARGET_LANGS = Object.freeze(['en']);
@@ -25,6 +26,8 @@ const ALLOWED_OCR_PRESETS = Object.freeze([
 
 const ALLOWED_CAPTURE_SOURCE_KINDS = Object.freeze(['monitor', 'window']);
 const ALLOWED_GLOSSARY_IMPORT_FORMATS = Object.freeze(['json', 'csv']);
+const ALLOWED_OCR_REJECTION_REASONS = Object.freeze(Object.values(OCR_REJECTION_REASONS));
+const CAPTURE_SOURCE_FIELDS = Object.freeze(['kind', 'id', 'label', 'bounds']);
 
 // ProfileExport schema constants. Bump PROFILE_EXPORT_SCHEMA_VERSION through
 // MIGRATION_PLAN.md before changing the export shape.
@@ -240,6 +243,17 @@ function validateCaptureSource(captureSource, basePath = 'captureSource') {
     return [fieldError(basePath, 'VALIDATION_ERROR', `${basePath} must be an object`)];
   }
   const errors = [];
+  for (const field of Object.keys(captureSource)) {
+    if (!CAPTURE_SOURCE_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          `${basePath}.${field}`,
+          'UNKNOWN_CAPTURE_SOURCE_FIELD',
+          `${basePath}.${field} is not a capture source field`,
+        ),
+      );
+    }
+  }
   if (!ALLOWED_CAPTURE_SOURCE_KINDS.includes(captureSource.kind)) {
     errors.push(
       fieldError(
@@ -255,6 +269,194 @@ function validateCaptureSource(captureSource, basePath = 'captureSource') {
     errors.push(...validateRoiRect(captureSource.bounds, `${basePath}.bounds`));
   }
   return errors;
+}
+
+const CAPTURE_SOURCES_RESPONSE_FIELDS = Object.freeze(['sources']);
+const CAPTURE_START_REQUEST_FIELDS = Object.freeze(['profileId']);
+const OCR_TEST_REQUEST_FIELDS = Object.freeze(['profileId', 'roi']);
+const OCR_RESULT_FIELDS = Object.freeze([
+  'text',
+  'normalizedText',
+  'confidence',
+  'durationMs',
+  'accepted',
+  'rejectionReason',
+]);
+
+function validateCaptureSourcesResponse(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'CaptureSourcesResponse must be an object'),
+    ];
+  }
+
+  const errors = [];
+  for (const field of Object.keys(payload)) {
+    if (!CAPTURE_SOURCES_RESPONSE_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_CAPTURE_SOURCES_FIELD',
+          `${field} is not a capture sources response field`,
+        ),
+      );
+    }
+  }
+  if (!Array.isArray(payload.sources)) {
+    errors.push(fieldError('sources', 'VALIDATION_ERROR', 'sources must be an array'));
+    return errors;
+  }
+  for (let i = 0; i < payload.sources.length; i += 1) {
+    errors.push(...validateCaptureSource(payload.sources[i], `sources[${i}]`));
+  }
+  return errors;
+}
+
+function assertCaptureSourcesResponse(payload) {
+  throwIfErrors(validateCaptureSourcesResponse(payload));
+  return payload;
+}
+
+function validateCaptureStartRequest(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'CaptureStartRequest must be an object'),
+    ];
+  }
+
+  const errors = [];
+  for (const field of Object.keys(payload)) {
+    if (!CAPTURE_START_REQUEST_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_CAPTURE_START_FIELD',
+          `${field} is not a capture start request field`,
+        ),
+      );
+    }
+  }
+  errors.push(...validateNonEmptyString(payload.profileId, 'profileId'));
+  return errors;
+}
+
+function assertCaptureStartRequest(payload) {
+  throwIfErrors(validateCaptureStartRequest(payload));
+  return payload;
+}
+
+function validateOcrTestRequest(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'OcrTestRequest must be an object'),
+    ];
+  }
+
+  const errors = [];
+  for (const field of Object.keys(payload)) {
+    if (!OCR_TEST_REQUEST_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_OCR_TEST_FIELD',
+          `${field} is not an OCR test request field`,
+        ),
+      );
+    }
+  }
+  errors.push(...validateNonEmptyString(payload.profileId, 'profileId'));
+  if (payload.roi !== undefined) {
+    errors.push(...validateRoiRect(payload.roi, 'roi'));
+  }
+  return errors;
+}
+
+function assertOcrTestRequest(payload) {
+  throwIfErrors(validateOcrTestRequest(payload));
+  return payload;
+}
+
+function validateOcrResult(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'OcrResult must be an object'),
+    ];
+  }
+
+  const errors = [];
+  for (const field of Object.keys(payload)) {
+    if (!OCR_RESULT_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_OCR_RESULT_FIELD',
+          `${field} is not an OCR result field`,
+        ),
+      );
+    }
+  }
+
+  if (typeof payload.text !== 'string') {
+    errors.push(fieldError('text', 'OCR_RESULT_TEXT_INVALID', 'text must be a string'));
+  }
+  if (typeof payload.normalizedText !== 'string') {
+    errors.push(
+      fieldError(
+        'normalizedText',
+        'OCR_RESULT_TEXT_INVALID',
+        'normalizedText must be a string',
+      ),
+    );
+  }
+  if (!isFiniteNumber(payload.confidence) || payload.confidence < 0 || payload.confidence > 1) {
+    errors.push(
+      fieldError(
+        'confidence',
+        'OCR_RESULT_CONFIDENCE_INVALID',
+        'confidence must be a finite number between 0 and 1 inclusive',
+      ),
+    );
+  }
+  if (!isFiniteNumber(payload.durationMs) || payload.durationMs < 0) {
+    errors.push(
+      fieldError(
+        'durationMs',
+        'OCR_RESULT_DURATION_INVALID',
+        'durationMs must be a finite non-negative number',
+      ),
+    );
+  }
+  if (typeof payload.accepted !== 'boolean') {
+    errors.push(
+      fieldError('accepted', 'OCR_RESULT_ACCEPTED_INVALID', 'accepted must be a boolean'),
+    );
+  } else if (payload.accepted === true && payload.rejectionReason !== undefined) {
+    errors.push(
+      fieldError(
+        'rejectionReason',
+        'OCR_REJECTION_REASON_INVALID',
+        'rejectionReason must be omitted when accepted is true',
+      ),
+    );
+  } else if (
+    payload.accepted === false &&
+    !ALLOWED_OCR_REJECTION_REASONS.includes(payload.rejectionReason)
+  ) {
+    errors.push(
+      fieldError(
+        'rejectionReason',
+        'OCR_REJECTION_REASON_INVALID',
+        `rejectionReason must be one of ${ALLOWED_OCR_REJECTION_REASONS.join(', ')}`,
+      ),
+    );
+  }
+
+  return errors;
+}
+
+function assertOcrResult(payload) {
+  throwIfErrors(validateOcrResult(payload));
+  return payload;
 }
 
 function validateGlossaryTerm(term, basePath) {
@@ -840,6 +1042,7 @@ module.exports = {
   ALLOWED_OCR_PRESETS,
   ALLOWED_CAPTURE_SOURCE_KINDS,
   ALLOWED_GLOSSARY_IMPORT_FORMATS,
+  ALLOWED_OCR_REJECTION_REASONS,
   PROFILE_EXPORT_SCHEMA_VERSION,
   PROFILE_EXPORT_FORBIDDEN_FIELDS_POLICY,
   FORBIDDEN_PROFILE_EXPORT_FIELDS,
@@ -855,6 +1058,14 @@ module.exports = {
   validateOcrPreset,
   validateOverlayThemeId,
   validateCaptureSource,
+  validateCaptureSourcesResponse,
+  assertCaptureSourcesResponse,
+  validateCaptureStartRequest,
+  assertCaptureStartRequest,
+  validateOcrTestRequest,
+  assertOcrTestRequest,
+  validateOcrResult,
+  assertOcrResult,
   validateGlossaryTerm,
   validateGlossary,
   validateThemeCssJson,

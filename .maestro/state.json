@@ -1,24 +1,26 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T21:25:50.219Z",
+  "migrated_at": "2026-05-27T21:47:11.154Z",
   "source_path": "STATE.md",
-  "source_sha256": "411a6b0d8b516d0ad3b6b2964dedd14571dc602d1758bc0b3d0a88d1cbb71ab3",
+  "source_sha256": "9396f4e20a3f9902e2fc1938cef788bd415d3e4afb853b71408351a20b3dad67",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": []
+    "active_task_ids": [
+      "T-008"
+    ]
   },
   "slice_progress": {
-    "current_slice_prefix": null,
-    "current_slice_id": null,
-    "current_slice_goal": null,
-    "current_slice_status": null,
-    "completed_slices": 0,
-    "total_slices": 0,
-    "progress_pct": 0,
-    "next_slice_id": null,
-    "next_slice_goal": null,
-    "last_checkpoint": "2026-05-27T21:25:50.219Z",
+    "current_slice_prefix": "T-008",
+    "current_slice_id": "T-008-002",
+    "current_slice_goal": "Capture source enumeration endpoint",
+    "current_slice_status": "doing",
+    "completed_slices": 1,
+    "total_slices": 5,
+    "progress_pct": 20,
+    "next_slice_id": "T-008-003",
+    "next_slice_goal": "Manual OCR test endpoint",
+    "last_checkpoint": "2026-05-27T21:47:11.153Z",
     "done": [],
     "doing": [],
     "todo": []

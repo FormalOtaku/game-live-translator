@@ -226,3 +226,16 @@
 - Regression tests added first: `test/config-api-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no provider key/source sentinel in stdout.
 - Migration needed: None.
 - Rollback plan: Remove `npm run smoke:config`, the smoke script, runbook, focused smoke test, and spec/decision entries. Existing profile/theme/glossary/privacy/key API behavior remains covered by unit tests.
+
+### CHG-20260528-018
+- Date: 2026-05-28
+- Summary: Started T-008 with capture/OCR API contract validation for source enumeration, capture start, manual OCR test, and OCR result response shapes.
+- Reason: First-run, Capture Setup, OCR Preview, and Home/Status need stable request/response contracts before the capture source enumerator and OCR engine adapter are wired into the localhost API.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The slice is a pure validator/docs/test boundary and introduces no SQLite rows, no key storage movement, no cache persistence, and no profile export schema bump.
+  - API: Adds validators and assert wrappers for `CaptureSourcesResponse`, `CaptureStartRequest`, `OcrTestRequest`, and `OcrResult`, including controlled OCR rejection reasons from `src/core/ocr-text.js` and entry-level unknown-field rejection for `CaptureSource`.
+  - UI: Capture Setup and OCR Preview can map one canonical field-error shape for missing profile id, invalid ROI, invalid source entries, OCR engine result failures, and controlled rejection reasons without parsing raw OCR text.
+- Risk: Concrete Windows monitor/window enumeration and PaddleOCR integration still land in later T-008 slices. These validators intentionally reject unknown fields now so later adapters cannot leak screenshots, provider keys, raw OCR text, or debug payloads by accident.
+- Regression tests added first: `test/contracts.test.js` covers valid monitor/window source responses, capture-source unknown-field rejection, capture start request shape, OCR test request ROI overrides, accepted/rejected OCR results, malformed OCR results, controlled rejection reason vocabulary, and no secret/raw OCR sentinel leakage from validation errors.
+- Migration needed: None.
+- Rollback plan: Revert the capture/OCR validators, focused tests, and spec/decision entries. Existing profile/config/server contracts remain unchanged.

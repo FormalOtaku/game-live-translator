@@ -41,28 +41,28 @@
 
 ## Current Focus
 - milestone:
-- active_task_ids: (none)
+- active_task_ids: T-008
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: (none)
-- current_slice_id: (none)
-- current_slice_goal: (none)
-- current_slice_status: (none)
-- completed_slices: 0
-- total_slices: 0
-- progress_pct: 0
-- next_slice_id: (none)
-- next_slice_goal: (none)
-- last_checkpoint: 2026-05-27T21:25:50.219Z
+- current_slice_prefix: T-008
+- current_slice_id: T-008-002
+- current_slice_goal: Capture source enumeration endpoint
+- current_slice_status: doing
+- completed_slices: 1
+- total_slices: 5
+- progress_pct: 20
+- next_slice_id: T-008-003
+- next_slice_goal: Manual OCR test endpoint
+- last_checkpoint: 2026-05-27T21:47:11.153Z
 ## Session Flow
-- current_session_role: supervisor
-- recommended_next_session_role: spec
-- checkpoint_status: satisfied
-- checkpoint_reason: T-007 deterministic API smoke/runbook closeout evidence complete; no human validation required.
-- last_completed_slice: T-007-006
-- handoff_summary: T-007 complete: configuration API core parent closeout landed with npm run smoke:config, CONFIG_API_SMOKE_RUNBOOK_JA.md, child-process regression test, and spec/runbook/checklist updates. Local and Docker npm test/build/lint/smoke:server/smoke:config pass with 230 tests; git diff --check pass; Claude T-007-006-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0.
-- next_action: Start spec session to select/decompose the next parent task for production-grade v1.
-- updated_at: 2026-05-27T21:25:50.217Z
+- current_session_role: execution
+- recommended_next_session_role: execution
+- checkpoint_status: none
+- checkpoint_reason: T-008 parent remains in progress; no human checkpoint required after validator slice.
+- last_completed_slice: T-008-001
+- handoff_summary: T-008-001 complete: added capture/OCR API contract validators for CaptureSourcesResponse, CaptureStartRequest, OcrTestRequest, and OcrResult with per-CaptureSource unknown-field rejection, controlled OCR rejection reasons from src/core/ocr-text.js, value-free fieldErrors, and 65 focused contract tests. Local and Docker npm test/build/lint pass with 238 tests; git diff --check pass; Claude T-008-001-r3 module review clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: Continue T-008-002 capture source enumeration endpoint.
+- updated_at: 2026-05-27T21:47:11.150Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

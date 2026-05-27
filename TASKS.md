@@ -11,7 +11,11 @@
 ## Backlog
 | ID | Title | Status | Owner | Notes |
 |---|---|---|---|---|
-| (none) |  |  |  |  |
+| T-008 | Implement capture and OCR test API core | doing | codex | Parent goal: add production-grade v1 capture source enumeration, ROI/manual OCR test, capture start/stop runtime status, privacy-safe OCR errors, and repeatable smoke evidence for First-Run/Capture Setup/OCR Preview dependencies. DB/API/UI impact: no schema bump expected; API capture/OCR endpoints; UI Capture Setup/OCR Preview/Home status readiness. |
+| T-008-002 | Capture source enumeration endpoint | doing | codex | PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion. |
+| T-008-003 | Manual OCR test endpoint | todo | codex | PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion. |
+| T-008-004 | Capture start stop runtime status | todo | codex | PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion. |
+| T-008-005 | Capture OCR smoke runbook and parent closeout | todo | codex | PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion. |
 
 ## Done
 | ID | Title | Date | Evidence |
@@ -39,3 +43,4 @@
 | T-007-004 | Theme and glossary API contracts |  | PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion. |
 | T-007-005 | Privacy settings and write-only key API |  | PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion. |
 | T-007-006 | Configuration API smoke runbook and parent closeout |  | Added npm run smoke:config, scripts/smoke-config-api.js, child-process regression test, and CONFIG_API_SMOKE_RUNBOOK_JA.md covering profiles/themes/glossary/privacy/provider-key write-delete no-readback. Local and Docker npm test/build/lint/smoke:server/smoke:config pass with 230 tests; git diff --check pass; Claude T-007-006-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0. |
+| T-008-001 | Capture and OCR API contract validation |  | Added capture/OCR API contract validators for CaptureSourcesResponse, CaptureStartRequest, OcrTestRequest, and OcrResult with per-CaptureSource unknown-field rejection, controlled OCR rejection reasons, value-free fieldErrors, and 65 focused contract tests. Local and Docker npm test/build/lint pass with 238 tests; git diff --check pass; Claude T-008-001-r3 module review clean with must_fix=0 and unresolved P1/P2=0. |

@@ -285,6 +285,14 @@ type DiagnosticBundle = {
   - `PUT/DELETE /api/keys/{provider}` return only `{ ok: true }`; `GET /api/keys/{provider}` proves there is no readback endpoint; unknown providers return `PROVIDER_UNKNOWN`.
 - Smoke output must be concise JSON and must not include provider keys, raw OCR/source text, translated debug text, screenshots, stack traces, or remote hosts.
 
+## Capture/OCR API Contract Validation
+- T-008-001 adds the executable contract validation boundary for the capture/OCR API surface before endpoint wiring.
+- `validateCaptureSourcesResponse({ sources })` validates `GET /api/capture/sources` output. `sources` must be an array of `CaptureSource` entries; each source accepts only `kind`, `id`, `label`, and optional `bounds`; `kind` must be in `["monitor", "window"]`, `id` and `label` must be non-empty, and `bounds` must be finite and positive when present.
+- `validateCaptureStartRequest({ profileId })` validates `POST /api/capture/start`; the only accepted field is a non-empty `profileId`.
+- `validateOcrTestRequest({ profileId, roi? })` validates `POST /api/ocr/test`; `profileId` is required and `roi`, when supplied, must satisfy the same finite positive `RoiRect` rules used by profiles.
+- `validateOcrResult(OcrResult)` validates OCR engine output before route responses or runtime status mapping. `text` and `normalizedText` must be strings, `confidence` must be finite in `[0, 1]`, `durationMs` must be finite and non-negative, `accepted` must be boolean, accepted results must omit `rejectionReason`, and rejected results must use the controlled `OCR_REJECTION_REASONS` vocabulary from `src/core/ocr-text.js`.
+- Unknown fields are rejected with field-level validation errors, and validation details must not include provider keys, raw OCR text, captured images, screenshots, stack traces, logs, or translated debug payloads.
+
 ### `/ws/overlay` Wire Contract
 - T-006-003 implements `/ws/overlay` in the dependency-free localhost server core. The production FastAPI sidecar must preserve the same observable behavior.
 - Upgrade behavior:
@@ -317,6 +325,8 @@ type DiagnosticBundle = {
 - `targetLang` is fixed to `"en"` in v1.
 - Provider ids are controlled vocabulary values registered by the backend; v1 required ids are `deepl` and `echo`.
 - Built-in theme ids are `classic_subtitle`, `stream_box`, and `minimal`; built-in themes are read-only and can only be duplicated into custom themes.
+- `CaptureStartRequest` accepts only `{ profileId }`; `OcrTestRequest` accepts only `{ profileId, roi? }`; `CaptureSourcesResponse` accepts only `{ sources: CaptureSource[] }`.
+- `OcrResult` accepted responses omit `rejectionReason`; rejected responses require `rejectionReason in ["EMPTY_TEXT", "CONFIDENCE_TOO_LOW", "NOISE_TEXT", "DUPLICATE_TEXT"]`.
 
 ### T-007-004 Theme And Glossary Contracts
 - `OverlayThemeCreateRequest` requires a non-empty `name` and either `baseThemeId` or `cssJson`. When `baseThemeId` is supplied, the new custom theme copies the base theme CSS unless `cssJson` is also supplied. `cssJson` is a JSON object whose values are strings, finite numbers, or booleans; nested objects, arrays, nulls, functions, provider keys, OCR text, translated text, screenshots, logs, and other forbidden diagnostic field names are rejected. Invalid `cssJson` returns `VALIDATION_ERROR` with `details.fieldErrors[].code` such as `THEME_CSS_INVALID`, `THEME_CSS_VALUE_INVALID`, or `THEME_CSS_FORBIDDEN_FIELD`.

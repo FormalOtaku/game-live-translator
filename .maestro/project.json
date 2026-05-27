@@ -28,14 +28,14 @@
     "slices_per_checkpoint": 3
   },
   "session_flow": {
-    "current_session_role": "supervisor",
-    "recommended_next_session_role": "spec",
-    "checkpoint_status": "satisfied",
-    "checkpoint_reason": "T-007 deterministic API smoke/runbook closeout evidence complete; no human validation required.",
-    "last_completed_slice": "T-007-006",
-    "handoff_summary": "T-007 complete: configuration API core parent closeout landed with npm run smoke:config, CONFIG_API_SMOKE_RUNBOOK_JA.md, child-process regression test, and spec/runbook/checklist updates. Local and Docker npm test/build/lint/smoke:server/smoke:config pass with 230 tests; git diff --check pass; Claude T-007-006-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0.",
-    "next_action": "Start spec session to select/decompose the next parent task for production-grade v1.",
-    "updated_at": "2026-05-27T21:25:50.217Z"
+    "current_session_role": "execution",
+    "recommended_next_session_role": "execution",
+    "checkpoint_status": "none",
+    "checkpoint_reason": "T-008 parent remains in progress; no human checkpoint required after validator slice.",
+    "last_completed_slice": "T-008-001",
+    "handoff_summary": "T-008-001 complete: added capture/OCR API contract validators for CaptureSourcesResponse, CaptureStartRequest, OcrTestRequest, and OcrResult with per-CaptureSource unknown-field rejection, controlled OCR rejection reasons from src/core/ocr-text.js, value-free fieldErrors, and 65 focused contract tests. Local and Docker npm test/build/lint pass with 238 tests; git diff --check pass; Claude T-008-001-r3 module review clean with must_fix=0 and unresolved P1/P2=0.",
+    "next_action": "Continue T-008-002 capture source enumeration endpoint.",
+    "updated_at": "2026-05-27T21:47:11.150Z"
   },
   "ui_design_policy": {
     "surface_priority": [
@@ -245,5 +245,12 @@
       ]
     },
     "note": "When true, Maestro may send repository context, diffs, prompts, and logs from this repo to interactive Claude Code sidecar sessions for review/patch/fix/design automation."
+  },
+  "active_task_id": "T-008",
+  "last_kickoff": {
+    "idea": "synced from task activation",
+    "started_at": "2026-05-27T21:27:38.400Z",
+    "task_id": "T-008",
+    "decision_id": "DEC-001"
   }
 }
