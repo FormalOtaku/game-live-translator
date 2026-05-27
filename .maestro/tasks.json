@@ -3,21 +3,21 @@
   "source_of_truth": "structured",
   "migrated_at": "2026-05-27T11:43:37.252Z",
   "source_path": "TASKS.md",
-  "source_sha256": "998053a5c34479b56cd34f13fb6f83397b7c24b31996c76ed4ff64e5e7cac196",
+  "source_sha256": "6a2ac7b65eada8a585b502d55d571a330cd941f629940fb0bbe4dc7bd1986a7b",
   "task_count": 4,
   "counts": {
-    "todo": 4,
+    "todo": 3,
     "doing": 0,
     "blocked": 0,
-    "done": 0
+    "done": 1
   },
   "tasks": [
     {
       "id": "T-001",
       "title": "Bootstrap project workflow",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": ""
+      "notes": "GitHub SSH remote verified; Claude sidecar review imported clean with unresolved P1/P2=0; npm test/build/lint passed"
     },
     {
       "id": "T-002",

@@ -15,7 +15,6 @@
 ## Backlog
 | ID | Title | Status | Owner | Notes |
 |---|---|---|---|---|
-| T-001 | Bootstrap project workflow | todo | codex | |
 | T-002 | Align PRODUCT/UI/API specs with kickoff scope | todo | codex | |
 | T-003 | Add/maintain regression tests first | todo | codex | |
 | T-004 | Stabilize build/test in devcontainer | todo | codex | |
@@ -23,3 +22,4 @@
 ## Done
 | ID | Title | Date | Evidence |
 |---|---|---|---|
+| T-001 | Bootstrap project workflow | 2026-05-27 | GitHub SSH remote verified; Claude sidecar review imported clean with unresolved P1/P2=0; `npm test`, `npm run build`, and `npm run lint` passed |

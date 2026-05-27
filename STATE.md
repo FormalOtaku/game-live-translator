@@ -36,32 +36,33 @@
 - Run build/test inside container for reproducibility
 
 ## Active Branch
-- branch:
-- base_branch:
+- branch: main
+- base_branch: origin/main
 
 ## Current Focus
 - milestone:
 - active_task_ids: (none)
+- connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-001
 - current_slice_id: T-001
 - current_slice_goal: Bootstrap project workflow
-- current_slice_status: todo
-- completed_slices: 0
+- current_slice_status: done
+- completed_slices: 1
 - total_slices: 1
-- progress_pct: 0
-- next_slice_id: T-001
-- next_slice_goal: Bootstrap project workflow
-- last_checkpoint: 2026-05-27T11:43:53.688Z
+- progress_pct: 100
+- next_slice_id: T-002
+- next_slice_goal: Align PRODUCT/UI/API specs with kickoff scope
+- last_checkpoint: 2026-05-27T12:07:44+09:00
 ## Session Flow
 - current_session_role: 
 - recommended_next_session_role: spec
-- checkpoint_status: none
-- checkpoint_reason: 
-- last_completed_slice: 
-- handoff_summary: 
-- next_action: start_spec_session
-- updated_at: 2026-05-27T11:43:37.247Z
+- checkpoint_status: ok
+- checkpoint_reason: T-001 bootstrap verified with clean Claude sidecar review and passing npm test/build/lint.
+- last_completed_slice: T-001
+- handoff_summary: Repository remote, kickoff docs, ignore rules, and Maestro/Claude review path are ready for product spec alignment.
+- next_action: start T-002 spec alignment slice
+- updated_at: 2026-05-27T12:09:00+09:00
 ## Risks
--
+- GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.
