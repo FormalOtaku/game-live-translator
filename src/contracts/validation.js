@@ -24,6 +24,7 @@ const ALLOWED_OCR_PRESETS = Object.freeze([
 ]);
 
 const ALLOWED_CAPTURE_SOURCE_KINDS = Object.freeze(['monitor', 'window']);
+const ALLOWED_GLOSSARY_IMPORT_FORMATS = Object.freeze(['json', 'csv']);
 
 // ProfileExport schema constants. Bump PROFILE_EXPORT_SCHEMA_VERSION through
 // MIGRATION_PLAN.md before changing the export shape.
@@ -277,6 +278,180 @@ function validateGlossary(glossary, basePath = 'glossary') {
     errors.push(...validateGlossaryTerm(glossary[i], `${basePath}[${i}]`));
   }
   return errors;
+}
+
+function validateThemeCssJson(cssJson, basePath = 'cssJson') {
+  if (!isPlainObject(cssJson)) {
+    return [fieldError(basePath, 'THEME_CSS_INVALID', `${basePath} must be an object`)];
+  }
+  const errors = [];
+  const forbidden = findForbiddenExportFields(cssJson);
+  for (const path of forbidden) {
+    errors.push(
+      fieldError(
+        `${basePath}.${path}`,
+        'THEME_CSS_FORBIDDEN_FIELD',
+        `${basePath}.${path} is not allowed in theme CSS JSON`,
+      ),
+    );
+  }
+  for (const [key, value] of Object.entries(cssJson)) {
+    if (!isNonEmptyString(key)) {
+      errors.push(fieldError(basePath, 'THEME_CSS_INVALID', 'cssJson keys must be non-empty strings'));
+      continue;
+    }
+    if (
+      typeof value !== 'string' &&
+      typeof value !== 'boolean' &&
+      !(typeof value === 'number' && Number.isFinite(value))
+    ) {
+      errors.push(
+        fieldError(
+          `${basePath}.${key}`,
+          'THEME_CSS_VALUE_INVALID',
+          `${basePath}.${key} must be a string, finite number, or boolean`,
+        ),
+      );
+    }
+  }
+  return errors;
+}
+
+const OVERLAY_THEME_CREATE_FIELDS = Object.freeze([
+  'name',
+  'baseThemeId',
+  'cssJson',
+]);
+
+const OVERLAY_THEME_UPDATE_FIELDS = Object.freeze([
+  'name',
+  'cssJson',
+]);
+
+function validateOverlayThemeCreateRequest(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'OverlayThemeCreateRequest must be an object'),
+    ];
+  }
+  const errors = [];
+  for (const field of Object.keys(payload)) {
+    if (!OVERLAY_THEME_CREATE_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_THEME_FIELD',
+          `${field} is not a writable theme field`,
+        ),
+      );
+    }
+  }
+  errors.push(...validateNonEmptyString(payload.name, 'name'));
+  if (payload.baseThemeId !== undefined) {
+    errors.push(...validateNonEmptyString(payload.baseThemeId, 'baseThemeId'));
+  }
+  if (payload.cssJson !== undefined) {
+    errors.push(...validateThemeCssJson(payload.cssJson, 'cssJson'));
+  }
+  if (payload.baseThemeId === undefined && payload.cssJson === undefined) {
+    errors.push(
+      fieldError(
+        '',
+        'VALIDATION_ERROR',
+        'OverlayThemeCreateRequest requires baseThemeId or cssJson',
+      ),
+    );
+  }
+  return errors;
+}
+
+function validateOverlayThemeUpdateRequest(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'OverlayThemeUpdateRequest must be an object'),
+    ];
+  }
+  const errors = [];
+  let provided = 0;
+  for (const field of Object.keys(payload)) {
+    if (!OVERLAY_THEME_UPDATE_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_THEME_FIELD',
+          `${field} is not a writable theme field`,
+        ),
+      );
+      continue;
+    }
+    provided += 1;
+    if (field === 'name') errors.push(...validateNonEmptyString(payload.name, 'name'));
+    if (field === 'cssJson') errors.push(...validateThemeCssJson(payload.cssJson, 'cssJson'));
+  }
+  if (provided === 0 && errors.length === 0) {
+    errors.push(
+      fieldError(
+        '',
+        'VALIDATION_ERROR',
+        'OverlayThemeUpdateRequest must update at least one field',
+      ),
+    );
+  }
+  return errors;
+}
+
+function assertOverlayThemeCreateRequest(payload) {
+  throwIfErrors(validateOverlayThemeCreateRequest(payload));
+  return payload;
+}
+
+function assertOverlayThemeUpdateRequest(payload) {
+  throwIfErrors(validateOverlayThemeUpdateRequest(payload));
+  return payload;
+}
+
+function validateGlossaryImportRequest(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'GlossaryImportRequest must be an object'),
+    ];
+  }
+  const errors = [];
+  for (const field of Object.keys(payload)) {
+    if (field !== 'format' && field !== 'content') {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_GLOSSARY_IMPORT_FIELD',
+          `${field} is not a glossary import field`,
+        ),
+      );
+    }
+  }
+  if (!ALLOWED_GLOSSARY_IMPORT_FORMATS.includes(payload.format)) {
+    errors.push(
+      fieldError(
+        'format',
+        'GLOSSARY_IMPORT_FORMAT_INVALID',
+        `format must be one of ${ALLOWED_GLOSSARY_IMPORT_FORMATS.join(', ')}`,
+      ),
+    );
+  }
+  if (typeof payload.content !== 'string' || payload.content.trim().length === 0) {
+    errors.push(
+      fieldError(
+        'content',
+        'VALIDATION_ERROR',
+        'content must be a non-empty string',
+      ),
+    );
+  }
+  return errors;
+}
+
+function assertGlossaryImportRequest(payload) {
+  throwIfErrors(validateGlossaryImportRequest(payload));
+  return payload;
 }
 
 // Shared per-field validators for ProfileCreateRequest fields. The map is
@@ -664,6 +839,7 @@ module.exports = {
   ALLOWED_PROVIDERS,
   ALLOWED_OCR_PRESETS,
   ALLOWED_CAPTURE_SOURCE_KINDS,
+  ALLOWED_GLOSSARY_IMPORT_FORMATS,
   PROFILE_EXPORT_SCHEMA_VERSION,
   PROFILE_EXPORT_FORBIDDEN_FIELDS_POLICY,
   FORBIDDEN_PROFILE_EXPORT_FIELDS,
@@ -681,6 +857,13 @@ module.exports = {
   validateCaptureSource,
   validateGlossaryTerm,
   validateGlossary,
+  validateThemeCssJson,
+  validateOverlayThemeCreateRequest,
+  assertOverlayThemeCreateRequest,
+  validateOverlayThemeUpdateRequest,
+  assertOverlayThemeUpdateRequest,
+  validateGlossaryImportRequest,
+  assertGlossaryImportRequest,
   validateProfileCreateRequest,
   assertProfileCreateRequest,
   validateProfileUpdateRequest,

@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T20:12:27.403Z",
+  "migrated_at": "2026-05-27T20:40:20.103Z",
   "source_path": "TASKS.md",
-  "source_sha256": "c400ac5d79d3df71337bc8d4f821ad6360875c1a978c74ed489b893c56c58077",
+  "source_sha256": "577eb2d0d297d466ae6ebe389c00060f701c3533794cc5ee383b03836843a87b",
   "task_count": 23,
   "counts": {
-    "todo": 3,
+    "todo": 2,
     "doing": 1,
     "blocked": 0,
-    "done": 19
+    "done": 20
   },
   "tasks": [
     {
@@ -155,14 +155,14 @@
     {
       "id": "T-007-004",
       "title": "Theme and glossary API contracts",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
     },
     {
       "id": "T-007-005",
       "title": "Privacy settings and write-only key API",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
     },

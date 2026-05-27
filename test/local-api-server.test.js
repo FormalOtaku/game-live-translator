@@ -116,6 +116,23 @@ function makeApiProfile(overrides = {}) {
   };
 }
 
+function makeApiTheme(overrides = {}) {
+  return {
+    id: 'custom_theme_001',
+    name: 'Custom Theme',
+    builtIn: false,
+    cssJson: {
+      fontFamily: 'Arial',
+      fontSizePx: 32,
+      textColor: '#ffffff',
+      visibleLines: 2,
+    },
+    createdAt: FIXED_TIME,
+    updatedAt: FIXED_TIME,
+    ...overrides,
+  };
+}
+
 function makeProfileCreatePayload(overrides = {}) {
   return {
     name: 'Created Profile',
@@ -616,6 +633,258 @@ test('profile API reports DB_UNAVAILABLE when no profile repository is installed
     assert.equal(response.statusCode, 503);
     assert.equal(response.parsed.error.code, 'DB_UNAVAILABLE');
     assert.equal(response.parsed.error.retryable, false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('theme API lists creates gets updates and deletes themes through the injected repository', async () => {
+  const calls = [];
+  const createdTheme = makeApiTheme({ id: 'theme_created', name: 'Created Theme' });
+  const repository = {
+    listThemes() {
+      calls.push(['listThemes']);
+      return [makeApiTheme({ id: 'classic_subtitle', builtIn: true })];
+    },
+    createTheme(payload) {
+      calls.push(['createTheme', payload]);
+      return createdTheme;
+    },
+    getTheme(themeId) {
+      calls.push(['getTheme', themeId]);
+      return makeApiTheme({ id: themeId });
+    },
+    updateTheme(themeId, payload) {
+      calls.push(['updateTheme', themeId, payload]);
+      return makeApiTheme({ id: themeId, name: payload.name });
+    },
+    deleteTheme(themeId) {
+      calls.push(['deleteTheme', themeId]);
+      return { ok: true };
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+  });
+  const started = await api.start();
+
+  try {
+    const list = await requestJson({ port: started.port, path: '/api/themes' });
+    assert.equal(list.statusCode, 200);
+    assert.deepEqual(list.parsed, {
+      themes: [makeApiTheme({ id: 'classic_subtitle', builtIn: true })],
+    });
+
+    const createPayload = { name: 'Created Theme', baseThemeId: 'classic_subtitle' };
+    const create = await requestJson({
+      port: started.port,
+      path: '/api/themes',
+      method: 'POST',
+      body: createPayload,
+    });
+    assert.equal(create.statusCode, 201);
+    assert.deepEqual(create.parsed, createdTheme);
+
+    const get = await requestJson({ port: started.port, path: '/api/themes/custom%20theme' });
+    assert.equal(get.statusCode, 200);
+    assert.equal(get.parsed.id, 'custom theme');
+
+    const updatePayload = { name: 'Readable Theme' };
+    const update = await requestJson({
+      port: started.port,
+      path: '/api/themes/custom%20theme',
+      method: 'PUT',
+      body: updatePayload,
+    });
+    assert.equal(update.statusCode, 200);
+    assert.equal(update.parsed.name, 'Readable Theme');
+
+    const deleted = await requestJson({
+      port: started.port,
+      path: '/api/themes/custom%20theme',
+      method: 'DELETE',
+    });
+    assert.equal(deleted.statusCode, 200);
+    assert.deepEqual(deleted.parsed, { ok: true });
+
+    const wrongCollectionMethod = await requestJson({
+      port: started.port,
+      path: '/api/themes',
+      method: 'PUT',
+    });
+    assert.equal(wrongCollectionMethod.statusCode, 405);
+    assert.equal(wrongCollectionMethod.headers.allow, 'GET, POST');
+
+    assert.deepEqual(calls, [
+      ['listThemes'],
+      ['createTheme', createPayload],
+      ['getTheme', 'custom theme'],
+      ['updateTheme', 'custom theme', updatePayload],
+      ['deleteTheme', 'custom theme'],
+    ]);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('glossary API exports and imports through the injected repository', async () => {
+  const calls = [];
+  const glossary = [{ id: 'g1', sourceTerm: '勇者', targetTerm: 'hero' }];
+  const repository = {
+    exportGlossary(profileId) {
+      calls.push(['exportGlossary', profileId]);
+      return { terms: glossary, format: 'json' };
+    },
+    importGlossary(profileId, payload) {
+      calls.push(['importGlossary', profileId, payload]);
+      return { terms: glossary, rejected: [] };
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+  });
+  const started = await api.start();
+
+  try {
+    const exported = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile%20001/glossary/export',
+    });
+    assert.equal(exported.statusCode, 200);
+    assert.deepEqual(exported.parsed, { terms: glossary, format: 'json' });
+
+    const importPayload = { format: 'csv', content: 'sourceTerm,targetTerm\n勇者,hero' };
+    const imported = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile%20001/glossary/import',
+      method: 'POST',
+      body: importPayload,
+    });
+    assert.equal(imported.statusCode, 200);
+    assert.deepEqual(imported.parsed, { terms: glossary, rejected: [] });
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile%20001/glossary/import',
+      method: 'GET',
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'POST');
+
+    assert.deepEqual(calls, [
+      ['exportGlossary', 'profile 001'],
+      ['importGlossary', 'profile 001', importPayload],
+    ]);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('theme and glossary APIs map repository errors to canonical redacted responses', async () => {
+  const repository = {
+    getTheme() {
+      throw new ContractError('THEME_NOT_FOUND', 'Missing theme');
+    },
+    updateTheme() {
+      throw new ContractError(
+        'CANNOT_UPDATE_BUILT_IN_THEME',
+        'token=sk-ABCDEFGHIJKLMNOP1234 cannot update theme',
+        { themeId: 'minimal' },
+      );
+    },
+    deleteTheme(themeId) {
+      if (themeId === 'in_use') {
+        throw new ContractError('THEME_IN_USE', 'Theme has active profiles', {
+          themeId,
+          profileId: 'profile_001',
+        });
+      }
+      throw new ContractError('CANNOT_DELETE_BUILT_IN_THEME', 'Built-in theme cannot be deleted');
+    },
+    importGlossary() {
+      throw new ContractError('GLOSSARY_IMPORT_INVALID', 'api_key=secretsecret123 rejected', {
+        rejected: [
+          {
+            row: 2,
+            code: 'CSV_ROW_INVALID',
+            message: 'token=sk-ABCDEFGHIJKLMNOP1234 bad row',
+          },
+        ],
+      });
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+  });
+  const started = await api.start();
+
+  try {
+    const missing = await requestJson({ port: started.port, path: '/api/themes/missing' });
+    assert.equal(missing.statusCode, 404);
+    assert.equal(missing.parsed.error.code, 'THEME_NOT_FOUND');
+
+    const updateConflict = await requestJson({
+      port: started.port,
+      path: '/api/themes/minimal',
+      method: 'PUT',
+      body: { name: 'Nope' },
+    });
+    assert.equal(updateConflict.statusCode, 409);
+    assert.equal(updateConflict.parsed.error.code, 'CANNOT_UPDATE_BUILT_IN_THEME');
+
+    const builtInDelete = await requestJson({
+      port: started.port,
+      path: '/api/themes/stream_box',
+      method: 'DELETE',
+    });
+    assert.equal(builtInDelete.statusCode, 409);
+    assert.equal(builtInDelete.parsed.error.code, 'CANNOT_DELETE_BUILT_IN_THEME');
+
+    const inUseDelete = await requestJson({
+      port: started.port,
+      path: '/api/themes/in_use',
+      method: 'DELETE',
+    });
+    assert.equal(inUseDelete.statusCode, 409);
+    assert.equal(inUseDelete.parsed.error.code, 'THEME_IN_USE');
+    assert.equal(inUseDelete.parsed.error.details.profileId, 'profile_001');
+
+    const glossaryImport = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile_001/glossary/import',
+      method: 'POST',
+      body: { format: 'json', content: '[]' },
+    });
+    assert.equal(glossaryImport.statusCode, 400);
+    assert.equal(glossaryImport.parsed.error.code, 'GLOSSARY_IMPORT_INVALID');
+
+    const serialized = JSON.stringify([updateConflict.parsed, glossaryImport.parsed]);
+    assert.equal(serialized.includes('sk-ABCDEFGHIJKLMNOP1234'), false);
+    assert.equal(serialized.includes('secretsecret123'), false);
+    assert.equal(serialized.includes('[REDACTED]'), true);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('theme and glossary APIs report DB_UNAVAILABLE when repository methods are absent', async () => {
+  const api = createLocalApiServer({ preferredPort: 0 });
+  const started = await api.start();
+
+  try {
+    const themes = await requestJson({ port: started.port, path: '/api/themes' });
+    assert.equal(themes.statusCode, 503);
+    assert.equal(themes.parsed.error.code, 'DB_UNAVAILABLE');
+
+    const glossary = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile_001/glossary/export',
+    });
+    assert.equal(glossary.statusCode, 503);
+    assert.equal(glossary.parsed.error.code, 'DB_UNAVAILABLE');
   } finally {
     await api.stop();
   }

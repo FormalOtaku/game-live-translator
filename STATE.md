@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-007
-- current_slice_id: T-007-004
-- current_slice_goal: Theme and glossary API contracts
+- current_slice_id: T-007-005
+- current_slice_goal: Privacy settings and write-only key API
 - current_slice_status: doing
-- completed_slices: 3
+- completed_slices: 4
 - total_slices: 6
-- progress_pct: 50
-- next_slice_id: T-007-005
-- next_slice_goal: Privacy settings and write-only key API
-- last_checkpoint: 2026-05-27T20:12:43.980Z
+- progress_pct: 67
+- next_slice_id: T-007-006
+- next_slice_goal: Configuration API smoke runbook and parent closeout
+- last_checkpoint: 2026-05-27T20:40:49.290Z
 ## Session Flow
 - current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: none
 - checkpoint_reason: T-007 parent still in progress; no human checkpoint required until parent closeout.
-- last_completed_slice: T-007-003
-- handoff_summary: T-007-003 complete: profile CRUD/active/export API core added. SQLite repository now supports list/get/update/delete/get-active/set-active/export with schema v1, reserved id rejection for active/import, transactional write checks, and safe ProfileExport validation. Local API server now exposes profile list/create/get/update/delete/activate/export routes with canonical redacted ApiError mapping and validation details. Specs/decisions/migration notes updated. Local npm test/build/lint and Docker npm test/build/lint pass; git diff --check pass; Claude sidecar T-007-003-r2 imported clean with must_fix=0 and unresolved P1/P2=0.
-- next_action: continue T-007-004
-- updated_at: 2026-05-27T20:12:43.978Z
+- last_completed_slice: T-007-004
+- handoff_summary: T-007-004 complete: theme/glossary API contracts landed. Added OverlayTheme create/update request validators, theme cssJson validation, SQLite theme list/get/create/update/delete with built-in/in-use guards, glossary JSON/CSV export/import with all-or-nothing validation, CSV BOM and malformed-row diagnostics, localhost API routes, and spec/decision/migration updates. Local and Docker npm test/build/lint pass with 217 tests; git diff --check passes; Claude sidecar T-007-004-r2 clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: start T-007-005 privacy settings and write-only key API
+- updated_at: 2026-05-27T20:40:49.287Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

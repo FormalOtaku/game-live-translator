@@ -208,10 +208,10 @@ type DiagnosticBundle = {
 | POST | `/api/profiles/import` | Import profile JSON | `ProfileExport` | `Profile` | `IMPORT_SCHEMA_INVALID`, `IMPORT_CONTAINS_FORBIDDEN_FIELD` |
 | GET | `/api/profiles/{id}/export` | Export profile JSON | - | `ProfileExport` | `PROFILE_NOT_FOUND` |
 | GET | `/api/profiles/{id}/glossary/export` | Export glossary only | - | `{ terms: GlossaryTerm[], format: "json" }` | `PROFILE_NOT_FOUND` |
-| POST | `/api/profiles/{id}/glossary/import` | Import glossary JSON/CSV | `{ format: "json" | "csv", content: string }` | `{ terms: GlossaryTerm[], rejected: object[] }` | `PROFILE_NOT_FOUND`, `GLOSSARY_IMPORT_INVALID` |
+| POST | `/api/profiles/{id}/glossary/import` | Import glossary JSON/CSV | `{ format: "json" | "csv", content: string }` | `{ terms: GlossaryTerm[], rejected: object[] }` | `PROFILE_NOT_FOUND`, `GLOSSARY_IMPORT_INVALID`, `VALIDATION_ERROR` |
 | GET | `/api/themes` | List themes | - | `{ themes: OverlayTheme[] }` | `DB_UNAVAILABLE` |
 | POST | `/api/themes` | Create custom theme or duplicate built-in | `OverlayThemeCreateRequest` | `OverlayTheme` | `THEME_NOT_FOUND`, `VALIDATION_ERROR` |
-| PUT | `/api/themes/{id}` | Update theme | `OverlayThemeUpdateRequest` | `OverlayTheme` | `THEME_NOT_FOUND`, `VALIDATION_ERROR` |
+| PUT | `/api/themes/{id}` | Update theme | `OverlayThemeUpdateRequest` | `OverlayTheme` | `THEME_NOT_FOUND`, `CANNOT_UPDATE_BUILT_IN_THEME`, `VALIDATION_ERROR` |
 | DELETE | `/api/themes/{id}` | Delete custom theme | - | `{ ok: true }` | `THEME_NOT_FOUND`, `CANNOT_DELETE_BUILT_IN_THEME`, `THEME_IN_USE` |
 | GET | `/api/settings/privacy` | Read privacy settings | - | `PrivacySettings` | `DB_UNAVAILABLE` |
 | PUT | `/api/settings/privacy` | Update privacy settings | `PrivacySettings` | `PrivacySettings` | `VALIDATION_ERROR`, `DB_WRITE_FAILED` |
@@ -233,6 +233,7 @@ type DiagnosticBundle = {
   - `WS UPGRADE /ws/app` is the local app status stream; non-upgrade GET requests return the same canonical retryable `WS_REJECTED` `ApiError`. The endpoint is configurable through `appWsPath` and defaults to `/ws/app`.
   - `GET /api/status` returns `AppStatus`; `overlayUrl` is computed from the selected local port, `overlayClients` comes from `OverlayState.snapshot()`, and `lastSubtitle` is sanitized with no `sourceText` field by default. If the runtime-status producer fails, the endpoint still returns a redacted `AppStatus` with `backend: "error"` and `translation.code: "RUNTIME_STATUS_SOURCE_FAILED"` instead of leaking the raw exception.
   - T-007-003 adds `GET/POST /api/profiles`, `GET/PUT/DELETE /api/profiles/{id}`, `PUT /api/profiles/active`, and `GET /api/profiles/{id}/export` to the same dependency-free server core. These routes require an injected `profileRepository`, accept/return the canonical profile contracts, preserve `VALIDATION_ERROR.details.fieldErrors`, map `PROFILE_NOT_FOUND` to HTTP 404 and `CANNOT_DELETE_ACTIVE_PROFILE` to HTTP 409, and return `DB_UNAVAILABLE` if the repository dependency is absent.
+  - T-007-004 adds `GET/POST /api/themes`, `GET/PUT/DELETE /api/themes/{id}`, `GET /api/profiles/{id}/glossary/export`, and `POST /api/profiles/{id}/glossary/import`. These routes use the same injected configuration repository, map `THEME_NOT_FOUND` to HTTP 404, map built-in/update/delete and in-use conflicts to HTTP 409, and map `GLOSSARY_IMPORT_INVALID` to HTTP 400 with redacted row-level details.
   - Unsupported paths and methods return `ApiError` envelopes; raw exception text, provider keys, OCR text, translated text, captured images, and debug payloads must not be included.
   - CORS must not use `*`; responses may echo only configured local Electron origins or same-port localhost overlay origins. `allowSamePortLocalhostOrigin` defaults to `true` and may be set to `false` by a future hardened deployment that wants configured origins only. Profile CRUD expands preflight methods to `GET, POST, PUT, DELETE, OPTIONS`.
 
@@ -304,6 +305,15 @@ type DiagnosticBundle = {
 - `targetLang` is fixed to `"en"` in v1.
 - Provider ids are controlled vocabulary values registered by the backend; v1 required ids are `deepl` and `echo`.
 - Built-in theme ids are `classic_subtitle`, `stream_box`, and `minimal`; built-in themes are read-only and can only be duplicated into custom themes.
+
+### T-007-004 Theme And Glossary Contracts
+- `OverlayThemeCreateRequest` requires a non-empty `name` and either `baseThemeId` or `cssJson`. When `baseThemeId` is supplied, the new custom theme copies the base theme CSS unless `cssJson` is also supplied. `cssJson` is a JSON object whose values are strings, finite numbers, or booleans; nested objects, arrays, nulls, functions, provider keys, OCR text, translated text, screenshots, logs, and other forbidden diagnostic field names are rejected. Invalid `cssJson` returns `VALIDATION_ERROR` with `details.fieldErrors[].code` such as `THEME_CSS_INVALID`, `THEME_CSS_VALUE_INVALID`, or `THEME_CSS_FORBIDDEN_FIELD`.
+- `OverlayThemeUpdateRequest` accepts a non-empty subset of `name` and `cssJson`. Built-in themes cannot be updated or deleted; duplicate a built-in theme first and edit the custom copy.
+- Theme reads return `OverlayTheme` with `builtIn: boolean` and parsed `cssJson`. Theme writes persist booleans as `0`/`1` and JSON through the `overlay_themes.css_json` column. Custom theme ids are generated by the repository and must not collide with built-in theme ids.
+- Deleting a custom theme checks `profile_settings.overlay_theme_id` first. If any profile still references the theme, the API returns `THEME_IN_USE` rather than orphaning profile settings.
+- Glossary export returns `{ terms, format: "json" }` from the current profile and does not include glossary revision, OCR text, translation text, source screenshots, provider keys, logs, or diagnostic payloads.
+- Glossary import accepts `{ format: "json", content }` where `content` is either a JSON array of `GlossaryTerm` or an object `{ "terms": GlossaryTerm[] }`. It also accepts `{ format: "csv", content }` with a required header containing `sourceTerm,targetTerm` and optional `id,note`. CSV uses RFC4180-style quoted fields. Missing CSV ids are generated by the repository.
+- Glossary import is all-or-nothing in v1. If parsing, shape validation, duplicate ids, or duplicate normalized source terms fail, no profile rows are written and the API returns `GLOSSARY_IMPORT_INVALID` or `VALIDATION_ERROR` with `details.rejected`/`details.fieldErrors`. On success it replaces the profile glossary through the same profile update path and returns `{ terms, rejected: [] }`.
 
 ### T-007-001 Contract Validation Boundary
 - `src/contracts/validation.js` is the single executable contract surface that the
@@ -534,6 +544,8 @@ type DiagnosticBundle = {
 - `setActiveProfile(profileId)` must verify that the profile exists, then upsert `app_meta.active_profile_id`.
 - `exportProfile(profileId)` must return a frozen `ProfileExport` with `schemaVersion: 1`, the current `forbiddenFieldsPolicy`, `exportedAt`, and a validated `profile`. The export must not include provider API keys, OCR text history, translated text history, captured images, screenshots, logs, stack traces, or diagnostics.
 - Profile ids `active` and `import` are reserved by the v1 route surface (`/api/profiles/active` and future `/api/profiles/import`) and must be rejected at the repository boundary if an injected id factory or import path tries to create them.
+- `listThemes()`, `getTheme(themeId)`, `createTheme(OverlayThemeCreateRequest)`, `updateTheme(themeId, OverlayThemeUpdateRequest)`, and `deleteTheme(themeId)` must use the schema version 1 `overlay_themes` table, keep built-in themes read-only, and block deletion while a profile uses the theme.
+- `exportGlossary(profileId)` and `importGlossary(profileId, GlossaryImportRequest)` must operate on the profile glossary only, update `profile_settings.glossary_revision` through the existing profile update path, and must not persist or return raw OCR text, translated text, provider keys, screenshots, logs, or diagnostic payloads.
 - `savePrivacySettings(PrivacySettings)` must call `assertPrivacySettings` before any SQLite write and persists boolean values as `0`/`1`.
 - Provider API key writes are intentionally out of scope for this repository. There is no `saveProviderKey`/read-key method because `PUT /api/keys/{provider}` must use OS secure storage and return only `{ ok: true }`.
 - Privacy invariant: schema statements and repository write parameters must not introduce provider API keys, raw OCR text/source text, translated text, image/screenshot blobs, log payloads, stack traces, or diagnostic bundles. The only source-text-like field in normal SQLite is `source_text_hash`.

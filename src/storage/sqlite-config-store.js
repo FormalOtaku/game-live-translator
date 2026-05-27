@@ -6,6 +6,7 @@ const {
   BUILTIN_THEME_IDS,
   ContractError,
   DEFAULT_PRIVACY_SETTINGS,
+  assertThemeDeletable,
 } = require('../contracts/security');
 const {
   ALLOWED_CAPTURE_HZ,
@@ -14,11 +15,15 @@ const {
   ALLOWED_TARGET_LANGS,
   assertProfileExport,
   assertPrivacySettings,
+  assertGlossaryImportRequest,
+  assertOverlayThemeCreateRequest,
+  assertOverlayThemeUpdateRequest,
   assertProfileCreateRequest,
   assertProfileUpdateRequest,
   fieldError,
   PROFILE_EXPORT_FORBIDDEN_FIELDS_POLICY,
   PROFILE_EXPORT_SCHEMA_VERSION,
+  validateGlossary,
 } = require('../contracts/validation');
 const {
   EMPTY_GLOSSARY_REVISION,
@@ -55,6 +60,15 @@ const GLOSSARY_SELECT_SQL = `SELECT
   note AS note,
   position AS position
 FROM glossary_terms`;
+
+const THEME_SELECT_SQL = `SELECT
+  id AS id,
+  name AS name,
+  built_in AS builtIn,
+  css_json AS cssJson,
+  created_at AS createdAt,
+  updated_at AS updatedAt
+FROM overlay_themes`;
 
 function sqlStringList(values) {
   return values.map((value) => `'${value.replaceAll("'", "''")}'`).join(', ');
@@ -266,12 +280,13 @@ function defaultIdFactory(kind) {
   return `${kind}_${crypto.randomUUID()}`;
 }
 
+// Entity-specific callers still own reserved-id checks after this shared normalization.
 function createId(idFactory, kind) {
   const id = idFactory(kind);
   if (typeof id !== 'string' || id.trim().length === 0) {
     throw new ContractError('VALIDATION_ERROR', `${kind} id must be a non-empty string`);
   }
-  return assertProfileId(id, `${kind}Id`);
+  return id.normalize('NFKC').trim();
 }
 
 function boolToInteger(value) {
@@ -293,6 +308,14 @@ function parseJsonOrUndefined(value, field) {
       causeCode: error && error.code,
     });
   }
+}
+
+function parseJsonRequired(value, field) {
+  const parsed = parseJsonOrUndefined(value, field);
+  if (parsed === undefined) {
+    throw new ContractError('DB_READ_FAILED', `${field} is required`);
+  }
+  return parsed;
 }
 
 function normalizeProfileForReturn(profile) {
@@ -336,6 +359,17 @@ function normalizePrivacySettingsForReturn(settings) {
     output.debugScreenshotDirectory = settings.debugScreenshotDirectory;
   }
   return deepFreeze(output);
+}
+
+function normalizeThemeForReturn(theme) {
+  return deepFreeze({
+    id: theme.id,
+    name: theme.name,
+    builtIn: theme.builtIn === true,
+    cssJson: cloneJson(theme.cssJson),
+    createdAt: theme.createdAt,
+    updatedAt: theme.updatedAt,
+  });
 }
 
 function run(database, sql, params) {
@@ -389,6 +423,51 @@ function assertProfileId(profileId, field = 'profileId') {
 function profileNotFound(profileId) {
   return new ContractError('PROFILE_NOT_FOUND', `Profile not found: ${profileId}`, {
     profileId,
+  });
+}
+
+function assertThemeId(themeId, field = 'themeId') {
+  if (typeof themeId !== 'string' || themeId.trim().length === 0) {
+    throw new ContractError('VALIDATION_ERROR', `${field} must be a non-empty string`, {
+      fieldErrors: [
+        fieldError(field, 'VALIDATION_ERROR', `${field} must be a non-empty string`),
+      ],
+    });
+  }
+  return themeId.normalize('NFKC').trim();
+}
+
+function assertNewCustomThemeId(themeId) {
+  const normalized = assertThemeId(themeId, 'themeId');
+  if (BUILTIN_THEME_IDS.includes(normalized)) {
+    throw new ContractError('VALIDATION_ERROR', 'themeId is reserved for a built-in theme', {
+      fieldErrors: [
+        fieldError(
+          'themeId',
+          'THEME_ID_RESERVED',
+          'themeId cannot use a built-in theme id',
+        ),
+      ],
+    });
+  }
+  return normalized;
+}
+
+function themeNotFound(themeId) {
+  return new ContractError('THEME_NOT_FOUND', `Theme not found: ${themeId}`, {
+    themeId,
+  });
+}
+
+function themeFromRow(row) {
+  const builtInValue = rowValue(row, 'builtIn', 'built_in');
+  return normalizeThemeForReturn({
+    id: rowValue(row, 'id'),
+    name: rowValue(row, 'name'),
+    builtIn: builtInValue === true || builtInValue === 1,
+    cssJson: parseJsonRequired(rowValue(row, 'cssJson', 'css_json'), 'cssJson'),
+    createdAt: rowValue(row, 'createdAt', 'created_at'),
+    updatedAt: rowValue(row, 'updatedAt', 'updated_at'),
   });
 }
 
@@ -461,6 +540,241 @@ function mergeProfileUpdate(currentProfile, patch) {
   return merged;
 }
 
+function glossaryImportInvalid(message, details) {
+  return new ContractError('GLOSSARY_IMPORT_INVALID', message, details);
+}
+
+function rejectedFromFieldErrors(fieldErrors) {
+  return fieldErrors.map((error) => ({
+    field: error.field,
+    code: error.code,
+    message: error.message,
+  }));
+}
+
+function throwGlossaryImportInvalidFromValidation(error) {
+  if (!(error instanceof ContractError) || error.code !== 'VALIDATION_ERROR') {
+    throw error;
+  }
+  const details = error.details && typeof error.details === 'object'
+    ? error.details
+    : {};
+  const fieldErrors = Array.isArray(details.fieldErrors) ? details.fieldErrors : [];
+  throw glossaryImportInvalid('Glossary import contained invalid terms', {
+    ...details,
+    fieldErrors,
+    rejected: rejectedFromFieldErrors(fieldErrors),
+  });
+}
+
+function validateImportedGlossaryTerms(terms) {
+  const fieldErrors = validateGlossary(terms);
+  if (fieldErrors.length > 0) {
+    throw glossaryImportInvalid('Glossary import contained invalid terms', {
+      fieldErrors,
+      rejected: rejectedFromFieldErrors(fieldErrors),
+    });
+  }
+}
+
+function glossaryTermsFromJsonContent(content) {
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch (_) {
+    throw glossaryImportInvalid('Glossary JSON import content is not valid JSON', {
+      rejected: [
+        {
+          row: 0,
+          code: 'JSON_INVALID',
+          message: 'content must be valid JSON',
+        },
+      ],
+    });
+  }
+  const terms = Array.isArray(parsed)
+    ? parsed
+    : parsed && typeof parsed === 'object' && Array.isArray(parsed.terms)
+      ? parsed.terms
+      : null;
+  if (terms === null) {
+    throw glossaryImportInvalid('Glossary JSON import must be an array or object with terms[]', {
+      rejected: [
+        {
+          row: 0,
+          code: 'GLOSSARY_JSON_SHAPE_INVALID',
+          message: 'content must be a JSON array or { "terms": [] }',
+        },
+      ],
+    });
+  }
+  validateImportedGlossaryTerms(terms);
+  return terms.map((term) => {
+    const normalized = {
+      id: term.id,
+      sourceTerm: term.sourceTerm,
+      targetTerm: term.targetTerm,
+    };
+    if (term.note !== undefined) normalized.note = term.note;
+    return normalized;
+  });
+}
+
+function parseCsvRecords(content) {
+  const input = content.startsWith('\uFEFF') ? content.slice(1) : content;
+  const records = [];
+  let record = [];
+  let field = '';
+  let inQuotes = false;
+  for (let index = 0; index < input.length; index += 1) {
+    const char = input[index];
+    const next = input[index + 1];
+    if (inQuotes) {
+      if (char === '"' && next === '"') {
+        field += '"';
+        index += 1;
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        field += char;
+      }
+      continue;
+    }
+    if (char === '"') {
+      inQuotes = true;
+      continue;
+    }
+    if (char === ',') {
+      record.push(field);
+      field = '';
+      continue;
+    }
+    if (char === '\n') {
+      record.push(field);
+      records.push(record);
+      record = [];
+      field = '';
+      continue;
+    }
+    if (char === '\r') {
+      continue;
+    }
+    field += char;
+  }
+  if (inQuotes) {
+    throw glossaryImportInvalid('Glossary CSV import has an unterminated quoted field', {
+      rejected: [
+        {
+          row: records.length + 1,
+          code: 'CSV_QUOTE_UNTERMINATED',
+          message: 'quoted field was not closed',
+        },
+      ],
+    });
+  }
+  record.push(field);
+  records.push(record);
+  return records.filter((row) => row.some((value) => value.trim().length > 0));
+}
+
+function glossaryTermsFromCsvContent(content, idFactory) {
+  const rows = parseCsvRecords(content);
+  if (rows.length < 2) {
+    throw glossaryImportInvalid('Glossary CSV import requires a header and at least one data row', {
+      rejected: [
+        {
+          row: 0,
+          code: 'CSV_EMPTY',
+          message: 'content must include a header and at least one data row',
+        },
+      ],
+    });
+  }
+  const header = rows[0].map((value) => value.trim());
+  const indexByName = new Map(header.map((name, index) => [name, index]));
+  const sourceIndex = indexByName.get('sourceTerm');
+  const targetIndex = indexByName.get('targetTerm');
+  if (sourceIndex === undefined || targetIndex === undefined) {
+    throw glossaryImportInvalid('Glossary CSV import requires sourceTerm and targetTerm headers', {
+      rejected: [
+        {
+          row: 1,
+          code: 'CSV_HEADER_INVALID',
+          message: 'header must include sourceTerm and targetTerm',
+        },
+      ],
+    });
+  }
+  for (const name of header) {
+    if (!['id', 'sourceTerm', 'targetTerm', 'note'].includes(name)) {
+      throw glossaryImportInvalid('Glossary CSV import contains an unknown header', {
+        rejected: [
+          {
+            row: 1,
+            code: 'CSV_HEADER_UNKNOWN',
+            message: `${name} is not a supported glossary CSV header`,
+          },
+        ],
+      });
+    }
+  }
+
+  const idIndex = indexByName.get('id');
+  const noteIndex = indexByName.get('note');
+  const terms = rows.slice(1).map((row, index) => {
+    const term = {
+      id: idIndex === undefined || (row[idIndex] ?? '').trim().length === 0
+        ? createId(idFactory, 'glossary')
+        : row[idIndex].trim(),
+      sourceTerm: (row[sourceIndex] ?? '').trim(),
+      targetTerm: (row[targetIndex] ?? '').trim(),
+    };
+    const note = noteIndex === undefined ? undefined : (row[noteIndex] ?? '').trim();
+    if (note !== undefined && note.length > 0) term.note = note;
+    if (row.length > header.length) {
+      term.__rowError = {
+        field: `glossary[${index}]`,
+        code: 'CSV_ROW_TOO_MANY_FIELDS',
+        message: 'row has more fields than the CSV header',
+      };
+    } else if (row.length < header.length) {
+      term.__rowError = {
+        field: `glossary[${index}]`,
+        code: 'CSV_ROW_TOO_FEW_FIELDS',
+        message: 'row has fewer fields than the CSV header',
+      };
+    }
+    return term;
+  });
+  const rowErrors = terms
+    .filter((term) => term.__rowError !== undefined)
+    .map((term) => term.__rowError);
+  if (rowErrors.length > 0) {
+    throw glossaryImportInvalid('Glossary CSV import contained malformed rows', {
+      fieldErrors: rowErrors,
+      rejected: rowErrors,
+    });
+  }
+  const cleanTerms = terms.map(({ __rowError, ...term }) => term);
+  validateImportedGlossaryTerms(cleanTerms);
+  return cleanTerms;
+}
+
+function parseGlossaryImportTerms(request, idFactory) {
+  assertGlossaryImportRequest(request);
+  if (request.format === 'json') return glossaryTermsFromJsonContent(request.content);
+  if (request.format === 'csv') return glossaryTermsFromCsvContent(request.content, idFactory);
+  throw glossaryImportInvalid('Unsupported glossary import format', {
+    rejected: [
+      {
+        row: 0,
+        code: 'GLOSSARY_IMPORT_FORMAT_INVALID',
+        message: 'format must be json or csv',
+      },
+    ],
+  });
+}
+
 function assertSchemaVersionSeeded(result) {
   if (result && typeof result.changes === 'number' && result.changes === 0) {
     throw new ContractError(
@@ -492,6 +806,15 @@ function assertUniqueGlossaryTermIds(glossary) {
     throw new ContractError('VALIDATION_ERROR', 'Glossary validation failed', {
       fieldErrors: errors,
     });
+  }
+}
+
+function assertGlossaryImportTermsAccepted(terms) {
+  try {
+    assertUniqueGlossaryTermIds(terms);
+    buildGlossaryRevision(terms);
+  } catch (error) {
+    throwGlossaryImportInvalidFromValidation(error);
   }
 }
 
@@ -621,7 +944,7 @@ ON CONFLICT(id) DO NOTHING;`,
     const now = timestampFromClock(clock);
     const profile = normalizeProfileForReturn({
       ...request,
-      id: createId(idFactory, 'profile'),
+      id: assertProfileId(createId(idFactory, 'profile'), 'profileId'),
       createdAt: now,
       updatedAt: now,
     });
@@ -950,6 +1273,163 @@ ON CONFLICT(key) DO UPDATE SET
     return deepFreeze(payload);
   }
 
+  function listThemes() {
+    const rows = all(
+      database,
+      `${THEME_SELECT_SQL}
+ORDER BY built_in DESC, name ASC, id ASC;`,
+      {},
+    );
+    return deepFreeze(rows.map((row) => themeFromRow(row)));
+  }
+
+  function getTheme(themeId) {
+    const normalizedThemeId = assertThemeId(themeId);
+    const row = get(
+      database,
+      `${THEME_SELECT_SQL}
+WHERE id = :themeId
+LIMIT 1;`,
+      { themeId: normalizedThemeId },
+    );
+    if (row === null) throw themeNotFound(normalizedThemeId);
+    return themeFromRow(row);
+  }
+
+  function createTheme(request) {
+    assertOverlayThemeCreateRequest(request);
+    const now = timestampFromClock(clock);
+    const themeId = assertNewCustomThemeId(createId(idFactory, 'theme'));
+    let theme;
+    withTransaction(database, () => {
+      const baseTheme = request.baseThemeId === undefined ? null : getTheme(request.baseThemeId);
+      theme = normalizeThemeForReturn({
+        id: themeId,
+        name: request.name,
+        builtIn: false,
+        cssJson: request.cssJson === undefined ? baseTheme.cssJson : request.cssJson,
+        createdAt: now,
+        updatedAt: now,
+      });
+      run(
+        database,
+        `INSERT INTO overlay_themes (
+  id,
+  name,
+  built_in,
+  css_json,
+  created_at,
+  updated_at
+) VALUES (
+  :id,
+  :name,
+  :builtIn,
+  :cssJson,
+  :createdAt,
+  :updatedAt
+);`,
+        {
+          id: theme.id,
+          name: theme.name,
+          builtIn: boolToInteger(theme.builtIn),
+          cssJson: JSON.stringify(theme.cssJson),
+          createdAt: theme.createdAt,
+          updatedAt: theme.updatedAt,
+        },
+      );
+    });
+    return theme;
+  }
+
+  function updateTheme(themeId, patch) {
+    const normalizedThemeId = assertThemeId(themeId);
+    assertOverlayThemeUpdateRequest(patch);
+    let theme;
+    withTransaction(database, () => {
+      const currentTheme = getTheme(normalizedThemeId);
+      if (currentTheme.builtIn === true || BUILTIN_THEME_IDS.includes(currentTheme.id)) {
+        throw new ContractError(
+          'CANNOT_UPDATE_BUILT_IN_THEME',
+          'Built-in themes cannot be updated; duplicate to a custom theme instead',
+          { themeId: normalizedThemeId },
+        );
+      }
+      const updatedAt = timestampFromClock(clock);
+      theme = normalizeThemeForReturn({
+        ...currentTheme,
+        name: patch.name === undefined ? currentTheme.name : patch.name,
+        cssJson: patch.cssJson === undefined ? currentTheme.cssJson : patch.cssJson,
+        updatedAt,
+      });
+      run(
+        database,
+        `UPDATE overlay_themes
+SET
+  name = :name,
+  css_json = :cssJson,
+  updated_at = :updatedAt
+WHERE id = :themeId;`,
+        {
+          themeId: normalizedThemeId,
+          name: theme.name,
+          cssJson: JSON.stringify(theme.cssJson),
+          updatedAt: theme.updatedAt,
+        },
+      );
+    });
+    return theme;
+  }
+
+  function deleteTheme(themeId) {
+    const normalizedThemeId = assertThemeId(themeId);
+    withTransaction(database, () => {
+      const theme = getTheme(normalizedThemeId);
+      assertThemeDeletable(theme);
+      const inUse = get(
+        database,
+        `SELECT profile_id AS profileId
+FROM profile_settings
+WHERE overlay_theme_id = :themeId
+LIMIT 1;`,
+        { themeId: normalizedThemeId },
+      );
+      if (inUse !== null) {
+        throw new ContractError(
+          'THEME_IN_USE',
+          'Theme cannot be deleted while profiles reference it',
+          {
+            themeId: normalizedThemeId,
+            profileId: rowValue(inUse, 'profileId', 'profile_id'),
+          },
+        );
+      }
+      run(
+        database,
+        'DELETE FROM overlay_themes WHERE id = :themeId;',
+        { themeId: normalizedThemeId },
+      );
+    });
+    return deepFreeze({ ok: true });
+  }
+
+  function exportGlossary(profileId) {
+    const profile = getProfile(profileId);
+    return deepFreeze({
+      terms: profile.glossary,
+      format: 'json',
+    });
+  }
+
+  function importGlossary(profileId, request) {
+    const terms = parseGlossaryImportTerms(request, idFactory);
+    assertGlossaryImportTermsAccepted(terms);
+    const profile = updateProfile(profileId, { glossary: terms });
+    return deepFreeze({
+      terms: profile.glossary,
+      rejected: [],
+    });
+  }
+
   function savePrivacySettings(settings) {
     assertPrivacySettings(settings);
     const normalized = normalizePrivacySettingsForReturn(settings);
@@ -1010,6 +1490,13 @@ ON CONFLICT(id) DO UPDATE SET
     getActiveProfileId,
     setActiveProfile,
     exportProfile,
+    listThemes,
+    getTheme,
+    createTheme,
+    updateTheme,
+    deleteTheme,
+    exportGlossary,
+    importGlossary,
     savePrivacySettings,
   });
 }

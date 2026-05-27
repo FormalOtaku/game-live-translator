@@ -27,6 +27,7 @@ const {
   ALLOWED_TARGET_LANGS,
   ALLOWED_PROVIDERS,
   ALLOWED_OCR_PRESETS,
+  ALLOWED_GLOSSARY_IMPORT_FORMATS,
   PROFILE_EXPORT_SCHEMA_VERSION,
   PROFILE_EXPORT_FORBIDDEN_FIELDS_POLICY,
   validateCaptureHz,
@@ -39,6 +40,13 @@ const {
   assertProfileCreateRequest,
   validateProfileUpdateRequest,
   assertProfileUpdateRequest,
+  validateThemeCssJson,
+  validateOverlayThemeCreateRequest,
+  assertOverlayThemeCreateRequest,
+  validateOverlayThemeUpdateRequest,
+  assertOverlayThemeUpdateRequest,
+  validateGlossaryImportRequest,
+  assertGlossaryImportRequest,
   validatePrivacySettings,
   assertPrivacySettings,
   validateProviderKeyWriteRequest,
@@ -775,6 +783,112 @@ test('ALLOWED_OCR_PRESETS exposes the v1 controlled vocabulary', () => {
     'adv_textbox',
     'menu_text',
   ]);
+});
+
+test('OverlayThemeCreateRequest: requires name plus cssJson or baseThemeId', () => {
+  assert.deepEqual(
+    validateOverlayThemeCreateRequest({
+      name: 'Readable Theme',
+      cssJson: {
+        fontFamily: 'Arial',
+        fontSizePx: 32,
+        visibleLines: 2,
+        builtInStyle: true,
+      },
+    }),
+    [],
+  );
+  assert.deepEqual(
+    assertOverlayThemeCreateRequest({
+      name: 'Duplicate Classic',
+      baseThemeId: 'classic_subtitle',
+    }),
+    { name: 'Duplicate Classic', baseThemeId: 'classic_subtitle' },
+  );
+
+  const missingSource = validateOverlayThemeCreateRequest({ name: 'No Source' });
+  assert.ok(
+    missingSource.some((error) => error.message.includes('baseThemeId or cssJson')),
+  );
+
+  const unknown = validateOverlayThemeCreateRequest({
+    name: 'Bad',
+    cssJson: { fontFamily: 'Arial' },
+    apiKey: 'should-not-enter-db',
+  });
+  assert.ok(
+    unknown.some(
+      (error) => error.field === 'apiKey' && error.code === 'UNKNOWN_THEME_FIELD',
+    ),
+  );
+});
+
+test('Theme cssJson rejects nested, non-finite, null, and forbidden fields', () => {
+  const errors = validateThemeCssJson({
+    okString: 'Arial',
+    okNumber: 42,
+    okBoolean: false,
+    nested: { color: '#fff' },
+    badNumber: Infinity,
+    nullValue: null,
+    apiKey: 'secret',
+    translatedText: 'hello',
+  });
+  assert.ok(errors.some((error) => error.field === 'cssJson.nested'));
+  assert.ok(errors.some((error) => error.field === 'cssJson.badNumber'));
+  assert.ok(errors.some((error) => error.field === 'cssJson.nullValue'));
+  assert.ok(errors.some((error) => error.code === 'THEME_CSS_FORBIDDEN_FIELD'));
+  assert.equal(JSON.stringify(errors).includes('secret'), false);
+});
+
+test('OverlayThemeUpdateRequest: partial update accepted and empty/unknown rejected', () => {
+  assert.deepEqual(
+    assertOverlayThemeUpdateRequest({ name: 'Updated Theme' }),
+    { name: 'Updated Theme' },
+  );
+  assert.deepEqual(
+    validateOverlayThemeUpdateRequest({ cssJson: { fontSizePx: 28 } }),
+    [],
+  );
+
+  const empty = validateOverlayThemeUpdateRequest({});
+  assert.ok(empty.some((error) => error.message.includes('at least one field')));
+
+  const unknown = validateOverlayThemeUpdateRequest({ baseThemeId: 'minimal' });
+  assert.ok(
+    unknown.some(
+      (error) => error.field === 'baseThemeId' && error.code === 'UNKNOWN_THEME_FIELD',
+    ),
+  );
+});
+
+test('GlossaryImportRequest: format and content are controlled', () => {
+  assert.deepEqual([...ALLOWED_GLOSSARY_IMPORT_FORMATS], ['json', 'csv']);
+  for (const format of ALLOWED_GLOSSARY_IMPORT_FORMATS) {
+    assert.deepEqual(
+      assertGlossaryImportRequest({ format, content: 'sourceTerm,targetTerm\n勇者,hero' }),
+      { format, content: 'sourceTerm,targetTerm\n勇者,hero' },
+    );
+  }
+
+  const invalid = validateGlossaryImportRequest({
+    format: 'xlsx',
+    content: '',
+    apiKey: 'should-not-enter-db',
+  });
+  assert.ok(
+    invalid.some(
+      (error) => error.field === 'format' && error.code === 'GLOSSARY_IMPORT_FORMAT_INVALID',
+    ),
+  );
+  assert.ok(invalid.some((error) => error.field === 'content'));
+  assert.ok(
+    invalid.some(
+      (error) =>
+        error.field === 'apiKey' &&
+        error.code === 'UNKNOWN_GLOSSARY_IMPORT_FIELD',
+    ),
+  );
 });
 
 test('assertThemeDeletable rejects built-ins and allows custom themes', () => {

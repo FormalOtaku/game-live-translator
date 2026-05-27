@@ -353,12 +353,21 @@ function readJsonBody(req, limitBytes = JSON_BODY_LIMIT_BYTES) {
 function statusCodeForContractError(error) {
   const code = error && error.code;
   if (code === 'PROFILE_NOT_FOUND') return 404;
+  if (code === 'THEME_NOT_FOUND') return 404;
   if (code === 'CANNOT_DELETE_ACTIVE_PROFILE') return 409;
+  if (
+    code === 'CANNOT_UPDATE_BUILT_IN_THEME' ||
+    code === 'CANNOT_DELETE_BUILT_IN_THEME' ||
+    code === 'THEME_IN_USE'
+  ) {
+    return 409;
+  }
   if (
     code === 'VALIDATION_ERROR' ||
     code === 'BAD_REQUEST' ||
     code === 'IMPORT_SCHEMA_INVALID' ||
-    code === 'IMPORT_CONTAINS_FORBIDDEN_FIELD'
+    code === 'IMPORT_CONTAINS_FORBIDDEN_FIELD' ||
+    code === 'GLOSSARY_IMPORT_INVALID'
   ) {
     return 400;
   }
@@ -624,6 +633,27 @@ function createLocalApiServer(options = {}) {
 
       if (segments.length === 3 && segments[2] === 'import') return false;
 
+      if (segments.length === 5 && segments[3] === 'glossary' && segments[4] === 'export') {
+        if (req.method !== 'GET') {
+          writeMethodNotAllowed(res, ['GET']);
+          return true;
+        }
+        const repository = getProfileRepository(profileRepository, ['exportGlossary']);
+        writeJson(res, 200, repository.exportGlossary(decodePathSegment(segments[2])));
+        return true;
+      }
+
+      if (segments.length === 5 && segments[3] === 'glossary' && segments[4] === 'import') {
+        if (req.method !== 'POST') {
+          writeMethodNotAllowed(res, ['POST']);
+          return true;
+        }
+        const repository = getProfileRepository(profileRepository, ['importGlossary']);
+        const payload = await readJsonBody(req);
+        writeJson(res, 200, repository.importGlossary(decodePathSegment(segments[2]), payload));
+        return true;
+      }
+
       if (segments.length === 4 && segments[3] === 'export') {
         if (req.method !== 'GET') {
           writeMethodNotAllowed(res, ['GET']);
@@ -650,6 +680,56 @@ function createLocalApiServer(options = {}) {
         if (req.method === 'DELETE') {
           const repository = getProfileRepository(profileRepository, ['deleteProfile']);
           writeJson(res, 200, repository.deleteProfile(profileId));
+          return true;
+        }
+        writeMethodNotAllowed(res, ['GET', 'PUT', 'DELETE']);
+        return true;
+      }
+    } catch (error) {
+      writeContractError(res, error);
+      return true;
+    }
+
+    return false;
+  }
+
+  async function handleThemeRoute(pathname, req, res) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'api' || segments[1] !== 'themes') return false;
+
+    try {
+      if (segments.length === 2) {
+        if (req.method === 'GET') {
+          const repository = getProfileRepository(profileRepository, ['listThemes']);
+          writeJson(res, 200, Object.freeze({ themes: repository.listThemes() }));
+          return true;
+        }
+        if (req.method === 'POST') {
+          const repository = getProfileRepository(profileRepository, ['createTheme']);
+          const payload = await readJsonBody(req);
+          writeJson(res, 201, repository.createTheme(payload));
+          return true;
+        }
+        writeMethodNotAllowed(res, ['GET', 'POST']);
+        return true;
+      }
+
+      if (segments.length === 3) {
+        const themeId = decodePathSegment(segments[2]);
+        if (req.method === 'GET') {
+          const repository = getProfileRepository(profileRepository, ['getTheme']);
+          writeJson(res, 200, repository.getTheme(themeId));
+          return true;
+        }
+        if (req.method === 'PUT') {
+          const repository = getProfileRepository(profileRepository, ['updateTheme']);
+          const payload = await readJsonBody(req);
+          writeJson(res, 200, repository.updateTheme(themeId, payload));
+          return true;
+        }
+        if (req.method === 'DELETE') {
+          const repository = getProfileRepository(profileRepository, ['deleteTheme']);
+          writeJson(res, 200, repository.deleteTheme(themeId));
           return true;
         }
         writeMethodNotAllowed(res, ['GET', 'PUT', 'DELETE']);
@@ -745,6 +825,7 @@ function createLocalApiServer(options = {}) {
     }
 
     if (await handleProfileRoute(pathname, req, res)) return;
+    if (await handleThemeRoute(pathname, req, res)) return;
 
     writeApiError(res, 404, 'NOT_FOUND', 'Resource not found');
   }

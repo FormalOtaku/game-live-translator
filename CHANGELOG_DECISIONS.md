@@ -187,3 +187,16 @@
 - Regression tests added first: focused repository tests cover list/get/update/delete/active/export behavior, validator-before-write ordering, glossary rewrite transactions, active delete conflict, missing profiles, frozen return shapes, and forbidden export exclusions. Local API tests cover all new profile routes, request parsing, status/error mapping, CORS methods, and secret redaction in error envelopes.
 - Migration needed: None. Existing schema version 1 tables and export schema version 1 are unchanged.
 - Rollback plan: Revert the profile CRUD repository/API implementation, focused tests, and spec/decision entries. No persisted schema migration is required.
+
+### CHG-20260528-015
+- Date: 2026-05-28
+- Summary: Added overlay theme CRUD and glossary import/export API contracts for T-007-004.
+- Reason: The Profiles, Glossary, and Overlay Theme Editor flows need durable theme and glossary endpoints before first-run/UI integration can be reliable. Built-in theme immutability and glossary import safety must live below the UI so the future FastAPI sidecar preserves the same behavior.
+- Impact scope (DB/API/UI):
+  - DB: Reuses schema version 1 `overlay_themes`, `glossary_terms`, and `profile_settings.glossary_revision`. No schema bump, no key storage movement, and no raw OCR/translation/image/log persistence.
+  - API: Adds validators for `OverlayThemeCreateRequest`, `OverlayThemeUpdateRequest`, and `GlossaryImportRequest`; adds repository methods and localhost routes for theme list/create/get/update/delete plus profile glossary export/import. Built-in theme updates/deletes and in-use deletes surface conflict errors; glossary import is all-or-nothing.
+  - UI: Overlay Theme Editor can duplicate built-ins into custom themes, edit/delete only safe custom themes, and show deterministic in-use/built-in conflicts. Glossary UI can export current terms and import JSON/CSV with canonical row-level error details.
+- Risk: CSV support is dependency-free and intentionally headered/all-or-nothing. Future lenient import behavior must be added as a new explicit contract instead of silently changing this default.
+- Regression tests added first: focused contract, repository, and local API tests cover theme validation, built-in guards, theme-in-use checks, glossary JSON/CSV parsing, duplicate rejection before writes, frozen return shapes, route status/error mapping, and redaction.
+- Migration needed: None. Existing schema version 1 and profile export schema version 1 are unchanged.
+- Rollback plan: Revert the theme/glossary validators, repository/API methods, focused tests, and spec/decision entries. No persisted schema migration is required.

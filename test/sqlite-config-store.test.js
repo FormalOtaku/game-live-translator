@@ -117,6 +117,23 @@ function storedGlossaryRows(profileId = 'profile_001') {
   ];
 }
 
+function storedThemeRow(overrides = {}) {
+  return {
+    id: 'custom_theme_001',
+    name: 'Custom Theme',
+    builtIn: 0,
+    cssJson: JSON.stringify({
+      fontFamily: 'Arial',
+      fontSizePx: 32,
+      textColor: '#ffffff',
+      visibleLines: 2,
+    }),
+    createdAt: '2026-05-27T00:00:00.000Z',
+    updatedAt: '2026-05-27T01:00:00.000Z',
+    ...overrides,
+  };
+}
+
 function makeProfileCreateRequest(overrides = {}) {
   return {
     name: 'Test Profile',
@@ -215,6 +232,143 @@ test('sqlite config schema: built-in theme seeds match controlled theme ids', ()
     assert.equal(row.builtIn, true);
     assert.equal(typeof row.cssJson.fontSizePx, 'number');
   }
+});
+
+test('sqlite config repository: listThemes returns parsed frozen theme rows', () => {
+  const database = new QueuedDatabase({
+    alls: [[
+      storedThemeRow({
+        id: 'classic_subtitle',
+        name: 'Classic Subtitle',
+        builtIn: 1,
+      }),
+      storedThemeRow(),
+    ]],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const themes = repository.listThemes();
+
+  assert.deepEqual(themes.map((theme) => theme.id), ['classic_subtitle', 'custom_theme_001']);
+  assert.equal(themes[0].builtIn, true);
+  assert.equal(themes[1].builtIn, false);
+  assert.equal(themes[1].cssJson.fontSizePx, 32);
+  assert.equal(Object.isFrozen(themes), true);
+  assert.equal(Object.isFrozen(themes[0].cssJson), true);
+  assert.match(database.allCalls[0].sql, /ORDER BY built_in DESC/);
+});
+
+test('sqlite config repository: getTheme reports missing themes', () => {
+  const database = new QueuedDatabase({ gets: [null] });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.getTheme('missing_theme'),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'THEME_NOT_FOUND' &&
+      error.details.themeId === 'missing_theme',
+  );
+  assert.equal(database.runs.length, 0);
+});
+
+test('sqlite config repository: createTheme validates before any read or write', () => {
+  const database = new QueuedDatabase({
+    gets: [storedThemeRow({ id: 'classic_subtitle', builtIn: 1 })],
+  });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.createTheme({
+      name: 'Bad Theme',
+      cssJson: { fontFamily: 'Arial' },
+      apiKey: 'should-not-enter-db',
+    }),
+    (error) => {
+      assertContractError(error);
+      assert.ok(
+        error.details.fieldErrors.some(
+          (fieldError) =>
+            fieldError.field === 'apiKey' &&
+            fieldError.code === 'UNKNOWN_THEME_FIELD',
+        ),
+      );
+      return true;
+    },
+  );
+  assert.deepEqual(database.getCalls, []);
+  assert.deepEqual(database.runs, []);
+});
+
+test('sqlite config repository: createTheme duplicates a base theme into a custom row', () => {
+  const database = new QueuedDatabase({
+    gets: [storedThemeRow({
+      id: 'classic_subtitle',
+      name: 'Classic Subtitle',
+      builtIn: 1,
+      cssJson: JSON.stringify({ fontFamily: 'Arial', fontSizePx: 42 }),
+    })],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const theme = repository.createTheme({
+    name: 'Custom Classic',
+    baseThemeId: 'classic_subtitle',
+  });
+
+  assert.equal(theme.id, 'theme_001');
+  assert.equal(theme.name, 'Custom Classic');
+  assert.equal(theme.builtIn, false);
+  assert.deepEqual(theme.cssJson, { fontFamily: 'Arial', fontSizePx: 42 });
+  assert.equal(Object.isFrozen(theme), true);
+
+  const run = findRun(database, 'overlay_themes');
+  assert.equal(run.params.id, 'theme_001');
+  assert.equal(run.params.name, 'Custom Classic');
+  assert.equal(run.params.builtIn, 0);
+  assert.equal(run.params.cssJson, JSON.stringify({ fontFamily: 'Arial', fontSizePx: 42 }));
+  assert.deepEqual(database.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'COMMIT;']);
+});
+
+test('sqlite config repository: createTheme rolls back when base theme is missing', () => {
+  const database = new QueuedDatabase({ gets: [null] });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.createTheme({
+      name: 'Missing Base',
+      baseThemeId: 'missing_theme',
+    }),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'THEME_NOT_FOUND' &&
+      error.details.themeId === 'missing_theme',
+  );
+  assert.deepEqual(database.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'ROLLBACK;']);
+  assert.deepEqual(database.runs, []);
+});
+
+test('sqlite config repository: createTheme rejects generated built-in ids before writes', () => {
+  const database = new RecordingDatabase();
+  const repository = createSqliteConfigRepository({
+    database,
+    clock: () => '2026-05-28T00:00:00.000Z',
+    idFactory: () => 'minimal',
+  });
+
+  assert.throws(
+    () => repository.createTheme({
+      name: 'Reserved Theme',
+      cssJson: { fontFamily: 'Arial', fontSizePx: 28 },
+    }),
+    (error) => {
+      assertContractError(error);
+      assert.equal(error.details.fieldErrors[0].code, 'THEME_ID_RESERVED');
+      return true;
+    },
+  );
+  assert.deepEqual(database.execs, []);
+  assert.deepEqual(database.runs, []);
 });
 
 test('sqlite config repository: initialize applies schema version, privacy defaults, and built-in themes', () => {
@@ -734,6 +888,292 @@ test('sqlite config repository: reserved profile ids are rejected before writes'
     assert.deepEqual(database.execs, []);
     assert.deepEqual(database.runs, []);
   }
+});
+
+test('sqlite config repository: updateTheme rejects built-in themes without writes', () => {
+  const database = new QueuedDatabase({
+    gets: [storedThemeRow({ id: 'minimal', builtIn: 1 })],
+  });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.updateTheme('minimal', { name: 'Cannot Update' }),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'CANNOT_UPDATE_BUILT_IN_THEME' &&
+      error.details.themeId === 'minimal',
+  );
+  assert.deepEqual(database.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'ROLLBACK;']);
+  assert.deepEqual(database.runs, []);
+});
+
+test('sqlite config repository: updateTheme and deleteTheme roll back missing themes', () => {
+  const updateDatabase = new QueuedDatabase({ gets: [null] });
+  const updateRepository = fixedRepository(updateDatabase).repository;
+
+  assert.throws(
+    () => updateRepository.updateTheme('missing_theme', { name: 'Missing' }),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'THEME_NOT_FOUND' &&
+      error.details.themeId === 'missing_theme',
+  );
+  assert.deepEqual(updateDatabase.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'ROLLBACK;']);
+  assert.deepEqual(updateDatabase.runs, []);
+
+  const deleteDatabase = new QueuedDatabase({ gets: [null] });
+  const deleteRepository = fixedRepository(deleteDatabase).repository;
+
+  assert.throws(
+    () => deleteRepository.deleteTheme('missing_theme'),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'THEME_NOT_FOUND' &&
+      error.details.themeId === 'missing_theme',
+  );
+  assert.deepEqual(deleteDatabase.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'ROLLBACK;']);
+  assert.deepEqual(deleteDatabase.runs, []);
+});
+
+test('sqlite config repository: updateTheme writes custom theme changes transactionally', () => {
+  const database = new QueuedDatabase({
+    gets: [storedThemeRow()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const theme = repository.updateTheme('custom_theme_001', {
+    name: 'Readable Custom',
+    cssJson: { fontFamily: 'Inter', fontSizePx: 30, visibleLines: 3 },
+  });
+
+  assert.equal(theme.name, 'Readable Custom');
+  assert.deepEqual(theme.cssJson, { fontFamily: 'Inter', fontSizePx: 30, visibleLines: 3 });
+  assert.equal(theme.updatedAt, '2026-05-28T00:00:00.000Z');
+  assert.deepEqual(database.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'COMMIT;']);
+  assert.equal(database.runs.length, 1);
+  assert.match(database.runs[0].sql, /UPDATE overlay_themes/);
+  assert.equal(database.runs[0].params.themeId, 'custom_theme_001');
+  assert.equal(database.runs[0].params.cssJson, JSON.stringify(theme.cssJson));
+});
+
+test('sqlite config repository: deleteTheme rejects built-in and in-use themes', () => {
+  const builtInDatabase = new QueuedDatabase({
+    gets: [storedThemeRow({ id: 'stream_box', builtIn: 1 })],
+  });
+  const builtInRepository = fixedRepository(builtInDatabase).repository;
+
+  assert.throws(
+    () => builtInRepository.deleteTheme('stream_box'),
+    (error) => error instanceof ContractError && error.code === 'CANNOT_DELETE_BUILT_IN_THEME',
+  );
+  assert.deepEqual(builtInDatabase.runs, []);
+
+  const inUseDatabase = new QueuedDatabase({
+    gets: [storedThemeRow(), { profileId: 'profile_001' }],
+  });
+  const inUseRepository = fixedRepository(inUseDatabase).repository;
+  assert.throws(
+    () => inUseRepository.deleteTheme('custom_theme_001'),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'THEME_IN_USE' &&
+      error.details.profileId === 'profile_001',
+  );
+  assert.deepEqual(inUseDatabase.runs, []);
+});
+
+test('sqlite config repository: deleteTheme deletes unused custom themes', () => {
+  const database = new QueuedDatabase({
+    gets: [storedThemeRow(), null],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const result = repository.deleteTheme('custom_theme_001');
+
+  assert.deepEqual(result, { ok: true });
+  assert.equal(Object.isFrozen(result), true);
+  assert.deepEqual(database.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'COMMIT;']);
+  assert.equal(database.runs.length, 1);
+  assert.match(database.runs[0].sql, /DELETE FROM overlay_themes/);
+  assert.equal(database.runs[0].params.themeId, 'custom_theme_001');
+});
+
+test('sqlite config repository: exportGlossary returns terms only', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const exported = repository.exportGlossary('profile_001');
+
+  assert.deepEqual(exported, {
+    terms: [
+      { id: 'g1', sourceTerm: '勇者', targetTerm: 'hero' },
+      { id: 'g2', sourceTerm: '魔王', targetTerm: 'demon lord', note: 'Boss title' },
+    ],
+    format: 'json',
+  });
+  assert.equal(Object.isFrozen(exported), true);
+  assert.equal(Object.isFrozen(exported.terms[0]), true);
+  assert.equal(JSON.stringify(exported).includes('apiKey'), false);
+  assert.equal(JSON.stringify(exported).includes('translatedText'), false);
+});
+
+test('sqlite config repository: importGlossary accepts JSON terms and updates profile glossary', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+  const terms = [
+    { id: 'j1', sourceTerm: '王女', targetTerm: 'princess', note: 'Royalty' },
+  ];
+
+  const result = repository.importGlossary('profile_001', {
+    format: 'json',
+    content: JSON.stringify({ terms }),
+  });
+
+  assert.deepEqual(result, { terms, rejected: [] });
+  assert.deepEqual(database.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'COMMIT;']);
+  const settingsRun = database.runs.find((entry) => entry.sql.startsWith('UPDATE profile_settings'));
+  assert.equal(settingsRun.params.glossaryRevision, buildGlossaryRevision(terms));
+  const glossaryRuns = runsFor(database, 'glossary_terms');
+  assert.equal(glossaryRuns.length, 1);
+  assert.equal(glossaryRuns[0].params.id, 'j1');
+});
+
+test('sqlite config repository: importGlossary accepts headered CSV', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const result = repository.importGlossary('profile_001', {
+    format: 'csv',
+    content: [
+      '\uFEFFid,sourceTerm,targetTerm,note',
+      'c1,"王,女",princess,"quoted, note"',
+    ].join('\n'),
+  });
+
+  assert.deepEqual(result.terms, [
+    { id: 'c1', sourceTerm: '王,女', targetTerm: 'princess', note: 'quoted, note' },
+  ]);
+  assert.deepEqual(result.rejected, []);
+});
+
+test('sqlite config repository: importGlossary rejects invalid content before writes', () => {
+  const invalidJsonDatabase = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const invalidJsonRepository = fixedRepository(invalidJsonDatabase).repository;
+
+  assert.throws(
+    () => invalidJsonRepository.importGlossary('profile_001', {
+      format: 'json',
+      content: '{bad json',
+    }),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'GLOSSARY_IMPORT_INVALID' &&
+      Array.isArray(error.details.rejected),
+  );
+  assert.deepEqual(invalidJsonDatabase.execs, []);
+  assert.deepEqual(invalidJsonDatabase.runs, []);
+
+  const duplicateDatabase = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const duplicateRepository = fixedRepository(duplicateDatabase).repository;
+
+  assert.throws(
+    () => duplicateRepository.importGlossary('profile_001', {
+      format: 'json',
+      content: JSON.stringify([
+        { id: 'dup', sourceTerm: '勇者', targetTerm: 'hero' },
+        { id: 'dup', sourceTerm: '村', targetTerm: 'village' },
+      ]),
+    }),
+    (error) => {
+      assert.equal(error instanceof ContractError, true);
+      assert.equal(error.code, 'GLOSSARY_IMPORT_INVALID');
+      assert.ok(error.details.fieldErrors.some((fieldError) => fieldError.code === 'GLOSSARY_ID_DUPLICATE'));
+      assert.ok(error.details.rejected.some((rejected) => rejected.code === 'GLOSSARY_ID_DUPLICATE'));
+      return true;
+    },
+  );
+  assert.deepEqual(duplicateDatabase.execs, []);
+  assert.deepEqual(duplicateDatabase.runs, []);
+
+  const duplicateSourceDatabase = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const duplicateSourceRepository = fixedRepository(duplicateSourceDatabase).repository;
+
+  assert.throws(
+    () => duplicateSourceRepository.importGlossary('profile_001', {
+      format: 'json',
+      content: JSON.stringify([
+        { id: 'one', sourceTerm: '勇者', targetTerm: 'hero' },
+        { id: 'two', sourceTerm: '  勇者 ', targetTerm: 'brave' },
+      ]),
+    }),
+    (error) => {
+      assert.equal(error instanceof ContractError, true);
+      assert.equal(error.code, 'GLOSSARY_IMPORT_INVALID');
+      assert.ok(error.details.fieldErrors.some((fieldError) => fieldError.code === 'GLOSSARY_SOURCE_DUPLICATE'));
+      return true;
+    },
+  );
+  assert.deepEqual(duplicateSourceDatabase.execs, []);
+  assert.deepEqual(duplicateSourceDatabase.runs, []);
+
+  const shortCsvDatabase = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const shortCsvRepository = fixedRepository(shortCsvDatabase).repository;
+
+  assert.throws(
+    () => shortCsvRepository.importGlossary('profile_001', {
+      format: 'csv',
+      content: 'id,sourceTerm,targetTerm,note\nc1,勇者,hero',
+    }),
+    (error) => {
+      assert.equal(error instanceof ContractError, true);
+      assert.equal(error.code, 'GLOSSARY_IMPORT_INVALID');
+      assert.ok(error.details.rejected.some((rejected) => rejected.code === 'CSV_ROW_TOO_FEW_FIELDS'));
+      return true;
+    },
+  );
+  assert.deepEqual(shortCsvDatabase.execs, []);
+  assert.deepEqual(shortCsvDatabase.runs, []);
+});
+
+test('sqlite config repository: importGlossary rolls back when profile is missing', () => {
+  const database = new QueuedDatabase({ gets: [null] });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.importGlossary('missing_profile', {
+      format: 'json',
+      content: JSON.stringify([
+        { id: 'g1', sourceTerm: '勇者', targetTerm: 'hero' },
+      ]),
+    }),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'PROFILE_NOT_FOUND' &&
+      error.details.profileId === 'missing_profile',
+  );
+  assert.deepEqual(database.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'ROLLBACK;']);
+  assert.deepEqual(database.runs, []);
 });
 
 test('sqlite config repository: invalid Date clocks surface ContractError', () => {
