@@ -1,0 +1,22 @@
+{
+  "schema_version": "maestro.pending-review-evidence.v1",
+  "task_id": "T-003",
+  "evidence": [
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-003/claude/review/review.json; receive=.maestro/agent-pass/T-003/claude/review/receive-report.json",
+    "review.json; reviewed_files=8; findings=9; must_fix=0",
+    "unresolved P1/P2=0",
+    "agent-pass review limitation: Whether 'last_checkpoint' in .maestro/state.json is conventionally bumped on slice-status transitions (relevant to F-008).",
+    "agent-pass review limitation: Whether ROI rect screen-bounds validation is expected at this contract layer or deferred to the capture layer (relevant to F-007)."
+  ],
+  "sources": [
+    {
+      "slice_id": "T-003",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-003/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-003/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T12:49:01.326Z"
+    }
+  ],
+  "updated_at": "2026-05-27T12:49:01.326Z"
+}

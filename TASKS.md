@@ -15,7 +15,6 @@
 ## Backlog
 | ID | Title | Status | Owner | Notes |
 |---|---|---|---|---|
-| T-003 | Add/maintain regression tests first | todo | codex | |
 | T-004 | Stabilize build/test in devcontainer | todo | codex | |
 
 ## Done
@@ -23,3 +22,4 @@
 |---|---|---|---|
 | T-001 | Bootstrap project workflow | 2026-05-27 | GitHub SSH remote verified; Claude sidecar review imported clean with unresolved P1/P2=0; `npm test`, `npm run build`, and `npm run lint` passed |
 | T-002 | Align PRODUCT/UI/API specs with kickoff scope | 2026-05-27 | PRODUCT/UI/API/brief/migration/decision specs aligned; Claude sidecar re-review clean with unresolved P1/P2=0 and must_fix=0; `npm test`, `npm run build`, and `npm run lint` passed |
+| T-003 | Add/maintain regression tests first | 2026-05-27 | Added foundational contract helpers and 23 regression tests for localhost-only bind, profile export safety, secret redaction, overlay escaping, validation, and built-in theme protection; Claude sidecar review clean with unresolved P1/P2=0 and must_fix=0; `npm test`, `npm run build`, and `npm run lint` passed |

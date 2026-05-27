@@ -3,13 +3,13 @@
   "source_of_truth": "structured",
   "migrated_at": "2026-05-27T11:43:37.252Z",
   "source_path": "TASKS.md",
-  "source_sha256": "1ff4e55d37090cb5bc0a501f31ebd3c28d9369e0819c9d234bf424500753abfc",
+  "source_sha256": "2df0aeabafcc920c797b9bc9d374c075735686ef13ba21f6bc5c1bd168585582",
   "task_count": 4,
   "counts": {
-    "todo": 2,
+    "todo": 1,
     "doing": 0,
     "blocked": 0,
-    "done": 2
+    "done": 3
   },
   "tasks": [
     {
@@ -29,9 +29,9 @@
     {
       "id": "T-003",
       "title": "Add/maintain regression tests first",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": ""
+      "notes": "Added foundational contract helpers and 23 regression tests; Claude sidecar review clean with unresolved P1/P2=0 and must_fix=0; npm test/build/lint passed"
     },
     {
       "id": "T-004",

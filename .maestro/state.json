@@ -3,29 +3,29 @@
   "source_of_truth": "structured",
   "migrated_at": "2026-05-27T11:43:53.689Z",
   "source_path": "STATE.md",
-  "source_sha256": "ecf1f9529c328cb5729a350f55f6a6f1336b65d3b60b2e83024de1216fbf9d7f",
+  "source_sha256": "8a6804bfcc0d1686d8f17ed487c4ad479eb87281491425fad335c17de3800e5f",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
-    "current_slice_prefix": "T-002",
-    "current_slice_id": "T-002",
-    "current_slice_goal": "Align PRODUCT/UI/API specs with kickoff scope",
+    "current_slice_prefix": "T-003",
+    "current_slice_id": "T-003",
+    "current_slice_goal": "Add/maintain regression tests first",
     "current_slice_status": "done",
-    "completed_slices": 2,
+    "completed_slices": 3,
     "total_slices": 4,
-    "progress_pct": 50,
-    "next_slice_id": "T-003",
-    "next_slice_goal": "Add/maintain regression tests first",
-    "last_checkpoint": "2026-05-27T12:33:28+09:00",
+    "progress_pct": 75,
+    "next_slice_id": "T-004",
+    "next_slice_goal": "Stabilize build/test in devcontainer",
+    "last_checkpoint": "2026-05-27T12:49:01+09:00",
     "done": [
       "T-001",
-      "T-002"
+      "T-002",
+      "T-003"
     ],
     "doing": [],
     "todo": [
-      "T-003",
       "T-004"
     ]
   }

@@ -45,24 +45,24 @@
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-002
-- current_slice_id: T-002
-- current_slice_goal: Align PRODUCT/UI/API specs with kickoff scope
+- current_slice_prefix: T-003
+- current_slice_id: T-003
+- current_slice_goal: Add/maintain regression tests first
 - current_slice_status: done
-- completed_slices: 2
+- completed_slices: 3
 - total_slices: 4
-- progress_pct: 50
-- next_slice_id: T-003
-- next_slice_goal: Add/maintain regression tests first
-- last_checkpoint: 2026-05-27T12:33:28+09:00
+- progress_pct: 75
+- next_slice_id: T-004
+- next_slice_goal: Stabilize build/test in devcontainer
+- last_checkpoint: 2026-05-27T12:49:01+09:00
 ## Session Flow
 - current_session_role: 
-- recommended_next_session_role: spec
+- recommended_next_session_role: execution
 - checkpoint_status: ok
-- checkpoint_reason: T-002 spec alignment verified with passing tests/build/lint and clean Claude sidecar re-review.
-- last_completed_slice: T-002
-- handoff_summary: Authoritative v1 core specs now define scope, UI states, API contracts, DB impact, privacy/security invariants, DeepL baseline provider, theme/glossary APIs, and regression test strategy.
-- next_action: start T-003 regression tests for localhost bind, secret redaction, profile export safety, overlay escaping, and API contract validation
-- updated_at: 2026-05-27T12:34:00+09:00
+- checkpoint_reason: T-003 verified with 23 passing node tests, build/lint, and clean Claude sidecar review.
+- last_completed_slice: T-003
+- handoff_summary: Foundational Node contract helpers now lock v1 privacy/security/API invariants before broader implementation. Tests cover localhost-only bind enforcement, profile export forbidden-field rejection, write-only API key response, diagnostics secret redaction, overlay HTML escaping, captureHz/RoiRect/ocrConfidenceFloor/targetLang/provider validation, and built-in theme delete rejection.
+- next_action: start T-004 build/test stabilization and replace placeholder build/lint scripts with meaningful checks
+- updated_at: 2026-05-27T12:50:00+09:00
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.
