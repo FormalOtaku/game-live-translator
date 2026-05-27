@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T14:15:09.293Z",
+  "migrated_at": "2026-05-27T14:42:34.661Z",
   "source_path": "TASKS.md",
-  "source_sha256": "b1403ecb7f86def7624f861ca2d2344239d32fdf42f43522f7bfed4ffc50c69c",
+  "source_sha256": "b3100734f6aa1fbb113cf8b977e27437f6d05080a4a2affb9220ab58ddaa4f31",
   "task_count": 10,
   "counts": {
-    "todo": 4,
+    "todo": 3,
     "doing": 0,
     "blocked": 0,
-    "done": 6
+    "done": 7
   },
   "tasks": [
     {
@@ -45,7 +45,7 @@
       "title": "Implement deterministic core runtime pipeline",
       "status": "todo",
       "owner": "codex",
-      "notes": "Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 and T-005-002 complete, next T-005-003"
+      "notes": "Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 through T-005-003 complete, next T-005-004"
     },
     {
       "id": "T-005-001",
@@ -64,9 +64,9 @@
     {
       "id": "T-005-003",
       "title": "Translation provider adapters and provider error mapping",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "Production-grade core pipeline slices for v1 Japanese-to-English OBS flow"
+      "notes": "Added deterministic echo and injected DeepL provider adapters with controlled provider error mapping and 19 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0"
     },
     {
       "id": "T-005-004",

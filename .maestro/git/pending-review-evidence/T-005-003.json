@@ -1,0 +1,33 @@
+{
+  "schema_version": "maestro.pending-review-evidence.v1",
+  "task_id": "T-005-003",
+  "evidence": [
+    "agent-pass claude review completed; scope=module; status=findings; artifact=.maestro/agent-pass/T-005-003/claude/review/review.json; receive=.maestro/agent-pass/T-005-003/claude/review/receive-report.json",
+    "review.json; reviewed_files=10; findings=6; must_fix=1",
+    "unresolved P1/P2=0; must_fix=1",
+    "agent-pass review limitation: Whether `assertProvider` is intended to be consumed by an upcoming slice (e.g. FastAPI request validation in T-005 follow-ups) or whether it is dead code that should be removed before merge. Captured diff has no caller.",
+    "agent-pass review limitation: Whether the future cache layer (T-005-002 cache key + this slice's adapters) is expected to wrap adapters and set cacheHit=true externally, or whether adapters will gain a cache hook in a later slice.",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-005-003-r2/claude/review/review.json; receive=.maestro/agent-pass/T-005-003-r2/claude/review/receive-report.json",
+    "review.json; reviewed_files=11; findings=0; must_fix=0",
+    "unresolved P1/P2=0"
+  ],
+  "sources": [
+    {
+      "slice_id": "T-005-003",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-005-003/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-005-003/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T14:38:08.798Z"
+    },
+    {
+      "slice_id": "T-005-003-r2",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-005-003-r2/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-005-003-r2/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T14:42:16.048Z"
+    }
+  ],
+  "updated_at": "2026-05-27T14:42:16.048Z"
+}

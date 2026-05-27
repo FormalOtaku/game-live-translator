@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-005
-- current_slice_id: T-005-003
-- current_slice_goal: Translation provider adapters and provider error mapping
+- current_slice_id: T-005-004
+- current_slice_goal: Subtitle frame and overlay state primitives
 - current_slice_status: todo
-- completed_slices: 2
+- completed_slices: 3
 - total_slices: 5
-- progress_pct: 40
-- next_slice_id: T-005-003
-- next_slice_goal: Translation provider adapters and provider error mapping
-- last_checkpoint: 2026-05-27T14:18:46.768Z
+- progress_pct: 60
+- next_slice_id: T-005-004
+- next_slice_goal: Subtitle frame and overlay state primitives
+- last_checkpoint: 2026-05-27T14:44:25.918Z
 ## Session Flow
 - current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-005-002 verification and Claude sidecar review evidence are complete.
-- last_completed_slice: T-005-002
-- handoff_summary: T-005-002 complete: deterministic glossary application and privacy-safe translation cache keys landed with 10 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-002-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0.
-- next_action: Start T-005-003 translation provider adapters and provider error mapping slice.
-- updated_at: 2026-05-27T14:18:46.766Z
+- checkpoint_reason: T-005-003 verification and Claude sidecar review evidence are complete.
+- last_completed_slice: T-005-003
+- handoff_summary: T-005-003 complete: deterministic echo and injected DeepL provider adapters landed with controlled provider error mapping and 19 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-003-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0.
+- next_action: Start T-005-004 subtitle frame and overlay state primitives slice.
+- updated_at: 2026-05-27T14:44:25.915Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

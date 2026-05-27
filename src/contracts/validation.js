@@ -85,6 +85,44 @@ function validateTargetLang(value) {
   return errors;
 }
 
+function assertTargetLang(value) {
+  if (!ALLOWED_TARGET_LANGS.includes(value)) {
+    throw new ContractError(
+      'TARGET_LANG_INVALID',
+      `targetLang must be one of ${ALLOWED_TARGET_LANGS.join(', ')}`,
+      {
+        fieldErrors: [
+          fieldError(
+            'targetLang',
+            'TARGET_LANG_INVALID',
+            `targetLang must be one of ${ALLOWED_TARGET_LANGS.join(', ')}`,
+          ),
+        ],
+      },
+    );
+  }
+  return value;
+}
+
+function assertProvider(value) {
+  if (!ALLOWED_PROVIDERS.includes(value)) {
+    throw new ContractError(
+      'PROVIDER_UNKNOWN',
+      `translationProvider must be one of ${ALLOWED_PROVIDERS.join(', ')}`,
+      {
+        fieldErrors: [
+          fieldError(
+            'translationProvider',
+            'PROVIDER_UNKNOWN',
+            `translationProvider must be one of ${ALLOWED_PROVIDERS.join(', ')}`,
+          ),
+        ],
+      },
+    );
+  }
+  return value;
+}
+
 function validateProvider(value) {
   const errors = [];
   if (!ALLOWED_PROVIDERS.includes(value)) {
@@ -131,7 +169,9 @@ module.exports = {
   validateRoiRect,
   validateOcrConfidenceFloor,
   validateTargetLang,
+  assertTargetLang,
   validateProvider,
+  assertProvider,
   validateProfileCore,
   throwIfErrors,
 };

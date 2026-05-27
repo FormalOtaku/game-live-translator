@@ -44,3 +44,16 @@
 - Regression tests added first: `test/translation-cache.test.js` covers longest-term glossary application, deterministic code-unit tie breakers, non-cascading replacements, invalid glossary input, order-independent glossary revisions, privacy-safe cache key shape, target/provider validation, and cache-key changes when glossary targets, source text, or provider change.
 - Migration needed: None.
 - Rollback plan: Revert the new core module, tests, and spec/decision entries; no persisted data is introduced.
+
+### CHG-20260527-004
+- Date: 2026-05-27
+- Summary: Added the deterministic v1 translation provider adapters (`echo`, `deepl`) and the controlled provider error code map for T-005-003.
+- Reason: The capture -> OCR -> glossary -> translation pipeline needs a stable provider surface before the FastAPI sidecar and runtime translation loop wire up. Provider failures must categorize cleanly into the `ApiError` codes published in `API_SPEC.md` and must not leak DeepL keys into logs or diagnostics.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. Provider adapters do not persist anything; cache hit/miss attribution stays in the future cache layer.
+  - API: Confirms `/api/translate/test` provider failure codes (`PROVIDER_KEY_MISSING`, `PROVIDER_AUTH_FAILED`, `PROVIDER_RATE_LIMITED`, `PROVIDER_QUOTA_EXCEEDED`, `PROVIDER_NETWORK_ERROR`, `PROVIDER_RESPONSE_INVALID`, `PROVIDER_UNKNOWN`) and adds `TARGET_LANG_INVALID` as a pre-call validation code. Adds the documented adapter interface and dependency-injection contract for `fetchClient`/`apiKeyResolver`.
+  - UI: First-run wizard, OCR Preview "Translate test" button, and Home/Status error toasts can map these provider codes to recovery copy with explicit retryable hints (`PROVIDER_RATE_LIMITED`, `PROVIDER_NETWORK_ERROR`).
+- Risk: DeepL HTTP semantics may drift over time; status-code-to-error-code mapping is centralized so a future change only requires editing `src/core/translation-providers.js` and the focused tests. Echo provider intentionally returns the normalized source text; it is for tests and offline runs only and must not be exposed as a production-default provider.
+- Regression tests added first: `test/translation-providers.test.js` covers 19 cases for the provider error code enum, the retryable subset, echo determinism, target-language gating, DeepL adapter construction validation, success path with injected fetch, endpoint override handling, and every documented failure-to-code mapping including API-key-leak prevention in error payloads and request URLs.
+- Migration needed: None.
+- Rollback plan: Revert the new core module, tests, and spec/decision entries; remove `assertTargetLang`/`assertProvider` helpers from `src/contracts/validation.js`. No persisted data or runtime surface is introduced.

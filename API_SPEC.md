@@ -196,7 +196,7 @@ type DiagnosticBundle = {
 | POST | `/api/capture/start` | Start capture loop | `{ profileId: string }` | `{ ok: true }` | `PROFILE_NOT_FOUND`, `CAPTURE_SOURCE_MISSING`, `CAPTURE_FAILED` |
 | POST | `/api/capture/stop` | Stop capture loop | - | `{ ok: true }` | `CAPTURE_NOT_RUNNING` |
 | POST | `/api/ocr/test` | Run one OCR pass with active profile or supplied ROI | `{ profileId: string, roi?: RoiRect }` | `OcrResult` | `PROFILE_NOT_FOUND`, `ROI_MISSING`, `OCR_ENGINE_ERROR` |
-| POST | `/api/translate/test` | Test provider with supplied text | `{ profileId: string, text: string }` | `TranslationResult` | `PROVIDER_KEY_MISSING`, `PROVIDER_AUTH_FAILED`, `PROVIDER_RATE_LIMITED`, `PROVIDER_NETWORK_ERROR` |
+| POST | `/api/translate/test` | Test provider with supplied text | `{ profileId: string, text: string }` | `TranslationResult` | `PROVIDER_KEY_MISSING`, `PROVIDER_AUTH_FAILED`, `PROVIDER_RATE_LIMITED`, `PROVIDER_QUOTA_EXCEEDED`, `PROVIDER_NETWORK_ERROR`, `PROVIDER_RESPONSE_INVALID`, `PROVIDER_UNKNOWN`, `TARGET_LANG_INVALID` |
 | GET | `/api/profiles` | List profiles | - | `{ profiles: Profile[] }` | `DB_UNAVAILABLE` |
 | POST | `/api/profiles` | Create profile | `ProfileCreateRequest` | `Profile` | `VALIDATION_ERROR`, `DB_WRITE_FAILED` |
 | GET | `/api/profiles/{id}` | Get profile | - | `Profile` | `PROFILE_NOT_FOUND` |
@@ -264,6 +264,27 @@ type DiagnosticBundle = {
   - `targetLang` is fixed to `en` in v1.
   - Provider ids must be controlled vocabulary values from the profile contract.
 - Translation cache keys and glossary revisions must never include raw OCR text, glossary target text, provider API keys, or translated output.
+
+## Translation Provider Adapters
+- Provider adapters live in `src/core/translation-providers.js` and expose a common interface: `provider.name` plus `await provider.translate({ sourceText, targetLang })`. Adapter internals such as DeepL endpoint URLs are not exposed on the adapter object.
+- `translate` always returns a frozen `TranslationResult` containing `sourceText` (NFKC + whitespace-collapsed), `translatedText`, `provider`, `durationMs`, and `cacheHit: false`. Cache hit/miss attribution is the responsibility of a future caching layer, not the adapter.
+- `sourceText` must be a string; non-strings raise `VALIDATION_ERROR`. `targetLang` is validated against the v1 contract (`en` only) and invalid values throw `TARGET_LANG_INVALID` before any provider call.
+- v1 required adapters:
+  - `createEchoProvider({ clock? })` — deterministic, local, no network. Returns the normalized source text as the translated text so tests and offline runs can exercise the pipeline without provider credentials. Without an injected clock, `durationMs` is `0`.
+  - `createDeepLProvider({ fetchClient, apiKeyResolver, endpoint?, clock? })` — never opens its own network connection. The caller must inject a `fetchClient` (a `fetch`-like function returning `{ status, json() }`) and an `apiKeyResolver` (async function that returns the DeepL API key from OS secure storage). The endpoint defaults to the DeepL Free endpoint and can be overridden for tests.
+- Unrecognized options passed to `createProvider` are ignored by adapters that do not require them; adapters must not throw for unknown options.
+- DeepL request shape: `POST endpoint` with `Authorization: DeepL-Auth-Key <key>` header and a URL-encoded body containing `text`, `target_lang=EN`, and `source_lang=JA`. The API key only appears in the `Authorization` header; it must never appear in the URL, query string, error message, error details, or any log output.
+- Provider failure mapping (DeepL adapter, all `ContractError`):
+  - Missing, empty, or whitespace-only resolved key, or resolver throws -> `PROVIDER_KEY_MISSING`.
+  - HTTP `401` or `403` -> `PROVIDER_AUTH_FAILED`.
+  - HTTP `429` -> `PROVIDER_RATE_LIMITED` (retryable).
+  - HTTP `456` -> `PROVIDER_QUOTA_EXCEEDED`.
+  - HTTP `5xx` or thrown fetch/network exceptions -> `PROVIDER_NETWORK_ERROR` (retryable).
+  - HTTP `2xx` with missing/invalid JSON or missing `translations[0].text` -> `PROVIDER_RESPONSE_INVALID`.
+  - Other non-`2xx` statuses -> `PROVIDER_UNKNOWN`.
+- `RETRYABLE_PROVIDER_ERROR_CODES` is `['PROVIDER_RATE_LIMITED', 'PROVIDER_NETWORK_ERROR']`. All other adapter errors are non-retryable until user action.
+- Adapter errors set `error.details.provider` to the provider id and, for HTTP failures, `error.details.status` so the API layer can map to `ApiError.retryable` without re-parsing message text.
+- `createProvider(name, options)` is a factory that returns the matching adapter for `name in ['echo', 'deepl']`; unknown names throw `PROVIDER_UNKNOWN`.
 
 ## Error Model
 - Canonical error shape: `ApiError`.
