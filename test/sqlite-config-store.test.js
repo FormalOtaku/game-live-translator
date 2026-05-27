@@ -11,6 +11,7 @@ const {
 const { buildGlossaryRevision } = require('../src/core/translation-cache');
 const {
   SQLITE_SCHEMA_VERSION,
+  RESERVED_PROFILE_IDS,
   SQLITE_SCHEMA_STATEMENTS,
   EMPTY_GLOSSARY_REVISION,
   createSqliteConfigRepository,
@@ -34,6 +35,28 @@ class RecordingDatabase {
   }
 }
 
+class QueuedDatabase extends RecordingDatabase {
+  constructor({ gets = [], alls = [] } = {}) {
+    super();
+    this.getQueue = [...gets];
+    this.allQueue = [...alls];
+    this.getCalls = [];
+    this.allCalls = [];
+  }
+
+  get(sql, params = {}) {
+    this.getCalls.push({ sql, params });
+    const next = this.getQueue.shift();
+    return typeof next === 'function' ? next(sql, params) : (next ?? null);
+  }
+
+  all(sql, params = {}) {
+    this.allCalls.push({ sql, params });
+    const next = this.allQueue.shift();
+    return typeof next === 'function' ? next(sql, params) : (next ?? []);
+  }
+}
+
 function fixedRepository(database = new RecordingDatabase()) {
   return {
     database,
@@ -43,6 +66,55 @@ function fixedRepository(database = new RecordingDatabase()) {
       idFactory: (kind) => `${kind}_001`,
     }),
   };
+}
+
+function storedProfileRow(overrides = {}) {
+  return {
+    id: 'profile_001',
+    name: 'Stored Profile',
+    gameTitle: 'Stored Game',
+    captureSourceJson: JSON.stringify({
+      kind: 'window',
+      id: 'window-1',
+      label: 'Game Window',
+      bounds: { x: 0, y: 0, width: 1280, height: 720 },
+    }),
+    roiJson: JSON.stringify({ x: 10, y: 20, width: 640, height: 120 }),
+    ocrPreset: 'default_dialogue',
+    ocrConfidenceFloor: 0.65,
+    captureHz: 2,
+    translationProvider: 'deepl',
+    targetLang: 'en',
+    overlayThemeId: 'classic_subtitle',
+    glossaryRevision: buildGlossaryRevision([
+      { id: 'g1', sourceTerm: '勇者', targetTerm: 'hero' },
+      { id: 'g2', sourceTerm: '魔王', targetTerm: 'demon lord' },
+    ]),
+    createdAt: '2026-05-27T00:00:00.000Z',
+    updatedAt: '2026-05-27T01:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function storedGlossaryRows(profileId = 'profile_001') {
+  return [
+    {
+      profileId,
+      id: 'g1',
+      sourceTerm: '勇者',
+      targetTerm: 'hero',
+      note: null,
+      position: 0,
+    },
+    {
+      profileId,
+      id: 'g2',
+      sourceTerm: '魔王',
+      targetTerm: 'demon lord',
+      note: 'Boss title',
+      position: 1,
+    },
+  ];
 }
 
 function makeProfileCreateRequest(overrides = {}) {
@@ -378,6 +450,290 @@ test('sqlite config repository: createProfile rolls back if a write fails', () =
 
   assert.throws(() => repository.createProfile(makeProfileCreateRequest()), /simulated/);
   assert.deepEqual(database.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'ROLLBACK;']);
+});
+
+test('sqlite config repository: getProfile reconstructs a frozen profile from rows', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const profile = repository.getProfile('profile_001');
+
+  assert.equal(profile.id, 'profile_001');
+  assert.equal(profile.name, 'Stored Profile');
+  assert.deepEqual(profile.captureSource.bounds, { x: 0, y: 0, width: 1280, height: 720 });
+  assert.deepEqual(profile.roi, { x: 10, y: 20, width: 640, height: 120 });
+  assert.equal(profile.glossary[1].note, 'Boss title');
+  assert.equal(Object.isFrozen(profile), true);
+  assert.equal(Object.isFrozen(profile.captureSource), true);
+  assert.equal(Object.isFrozen(profile.glossary[0]), true);
+  assert.equal(database.getCalls[0].params.profileId, 'profile_001');
+  assert.equal(database.allCalls[0].params.profileId, 'profile_001');
+});
+
+test('sqlite config repository: listProfiles returns profiles with their glossary terms', () => {
+  const database = new QueuedDatabase({
+    alls: [
+      [
+        storedProfileRow({ id: 'profile_002', name: 'Second' }),
+        storedProfileRow({ id: 'profile_001', name: 'First' }),
+      ],
+      [
+        ...storedGlossaryRows('profile_001'),
+        { profileId: 'profile_002', id: 's1', sourceTerm: '村', targetTerm: 'village', note: null, position: 0 },
+      ],
+    ],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const profiles = repository.listProfiles();
+
+  assert.deepEqual(profiles.map((profile) => profile.id), ['profile_002', 'profile_001']);
+  assert.deepEqual(profiles[0].glossary, [
+    { id: 's1', sourceTerm: '村', targetTerm: 'village' },
+  ]);
+  assert.equal(Object.isFrozen(profiles), true);
+  assert.match(database.allCalls[0].sql, /ORDER BY p\.updated_at DESC/);
+});
+
+test('sqlite config repository: getProfile reports missing profiles without glossary reads', () => {
+  const database = new QueuedDatabase({ gets: [null] });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.getProfile('missing'),
+    (error) => error instanceof ContractError && error.code === 'PROFILE_NOT_FOUND',
+  );
+  assert.equal(database.getCalls.length, 1);
+  assert.equal(database.allCalls.length, 0);
+  assert.equal(database.runs.length, 0);
+});
+
+test('sqlite config repository: updateProfile validates update body before any read or write', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.updateProfile('profile_001', { apiKey: 'should-not-enter-db' }),
+    (error) => {
+      assertContractError(error);
+      assert.ok(
+        error.details.fieldErrors.some(
+          (fieldError) =>
+            fieldError.field === 'apiKey' &&
+            fieldError.code === 'UNKNOWN_PROFILE_FIELD',
+        ),
+      );
+      return true;
+    },
+  );
+  assert.deepEqual(database.getCalls, []);
+  assert.deepEqual(database.allCalls, []);
+  assert.deepEqual(database.execs, []);
+  assert.deepEqual(database.runs, []);
+});
+
+test('sqlite config repository: updateProfile rejects empty patches before any read or write', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.updateProfile('profile_001', {}),
+    (error) => {
+      assertContractError(error);
+      assert.ok(
+        error.details.fieldErrors.some(
+          (fieldError) => fieldError.message.includes('at least one field'),
+        ),
+      );
+      return true;
+    },
+  );
+  assert.deepEqual(database.getCalls, []);
+  assert.deepEqual(database.allCalls, []);
+  assert.deepEqual(database.execs, []);
+  assert.deepEqual(database.runs, []);
+});
+
+test('sqlite config repository: updateProfile merges fields and rewrites glossary transactionally', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+  const glossary = [
+    { id: 'g9', sourceTerm: '王女', targetTerm: 'princess', note: 'Royalty' },
+  ];
+
+  const profile = repository.updateProfile('profile_001', {
+    name: 'Updated Profile',
+    ocrConfidenceFloor: 0.8,
+    glossary,
+  });
+
+  assert.equal(profile.name, 'Updated Profile');
+  assert.equal(profile.ocrConfidenceFloor, 0.8);
+  assert.deepEqual(profile.glossary, glossary);
+  assert.equal(profile.createdAt, '2026-05-27T00:00:00.000Z');
+  assert.equal(profile.updatedAt, '2026-05-28T00:00:00.000Z');
+  assert.deepEqual(database.execs, ['BEGIN IMMEDIATE TRANSACTION;', 'COMMIT;']);
+
+  const profileRun = database.runs.find((entry) => entry.sql.startsWith('UPDATE profiles'));
+  assert.equal(profileRun.params.name, 'Updated Profile');
+
+  const settingsRun = database.runs.find((entry) => entry.sql.startsWith('UPDATE profile_settings'));
+  assert.equal(settingsRun.params.ocrConfidenceFloor, 0.8);
+  assert.equal(settingsRun.params.glossaryRevision, buildGlossaryRevision(glossary));
+
+  const deleteRun = database.runs.find((entry) => entry.sql.startsWith('DELETE FROM glossary_terms'));
+  assert.equal(deleteRun.params.profileId, 'profile_001');
+
+  const glossaryRuns = runsFor(database, 'glossary_terms');
+  assert.equal(glossaryRuns.length, 1);
+  assert.equal(glossaryRuns[0].params.id, 'g9');
+  assert.equal(glossaryRuns[0].params.note, 'Royalty');
+});
+
+test('sqlite config repository: updateProfile rejects duplicate glossary ids before writes', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.updateProfile('profile_001', {
+      glossary: [
+        { id: 'dup', sourceTerm: '勇者', targetTerm: 'hero' },
+        { id: 'dup', sourceTerm: '村', targetTerm: 'village' },
+      ],
+    }),
+    (error) => {
+      assertContractError(error);
+      assert.ok(error.details.fieldErrors.some((fieldError) => fieldError.code === 'GLOSSARY_ID_DUPLICATE'));
+      return true;
+    },
+  );
+  assert.deepEqual(database.execs, []);
+  assert.deepEqual(database.runs, []);
+});
+
+test('sqlite config repository: deleteProfile blocks deleting the active profile', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow(), { value: 'profile_001' }],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  assert.throws(
+    () => repository.deleteProfile('profile_001'),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'CANNOT_DELETE_ACTIVE_PROFILE' &&
+      error.details.profileId === 'profile_001',
+  );
+  assert.deepEqual(database.runs, []);
+});
+
+test('sqlite config repository: deleteProfile deletes inactive profiles', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow(), { value: 'profile_other' }],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const result = repository.deleteProfile('profile_001');
+
+  assert.deepEqual(result, { ok: true });
+  assert.equal(Object.isFrozen(result), true);
+  assert.equal(database.runs.length, 1);
+  assert.match(database.runs[0].sql, /DELETE FROM profiles/);
+  assert.equal(database.runs[0].params.profileId, 'profile_001');
+});
+
+test('sqlite config repository: setActiveProfile verifies existence and stores app metadata', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const result = repository.setActiveProfile('profile_001');
+
+  assert.deepEqual(result, { ok: true });
+  assert.equal(database.runs.length, 1);
+  assert.match(database.runs[0].sql, /INSERT INTO app_meta/);
+  assert.equal(database.runs[0].params.key, 'active_profile_id');
+  assert.equal(database.runs[0].params.value, 'profile_001');
+  assert.equal(database.runs[0].params.updatedAt, '2026-05-28T00:00:00.000Z');
+});
+
+test('sqlite config repository: getActiveProfileId returns null when unset', () => {
+  const database = new QueuedDatabase({ gets: [null] });
+  const repository = fixedRepository(database).repository;
+
+  assert.equal(repository.getActiveProfileId(), null);
+  assert.equal(database.getCalls[0].params.key, 'active_profile_id');
+});
+
+test('sqlite config repository: exportProfile returns schema v1 without forbidden fields', () => {
+  const database = new QueuedDatabase({
+    gets: [storedProfileRow()],
+    alls: [storedGlossaryRows()],
+  });
+  const repository = fixedRepository(database).repository;
+
+  const exported = repository.exportProfile('profile_001');
+
+  assert.equal(exported.schemaVersion, 1);
+  assert.equal(exported.forbiddenFieldsPolicy, 'reject_api_keys_ocr_text_translation_text_images_logs');
+  assert.equal(exported.exportedAt, '2026-05-28T00:00:00.000Z');
+  assert.equal(exported.profile.id, 'profile_001');
+  assert.equal(Object.isFrozen(exported), true);
+  assert.equal(Object.isFrozen(exported.profile), true);
+
+  const serialized = JSON.stringify(exported);
+  for (const forbidden of [
+    'apiKey',
+    'providerApiKey',
+    'providerKeys',
+    'ocrText',
+    'recentOcrText',
+    'translatedText',
+    'screenshots',
+    'logs',
+  ]) {
+    assert.equal(serialized.includes(`"${forbidden}"`), false);
+  }
+});
+
+test('sqlite config repository: reserved profile ids are rejected before writes', () => {
+  for (const reservedId of RESERVED_PROFILE_IDS) {
+    const database = new RecordingDatabase();
+    const repository = createSqliteConfigRepository({
+      database,
+      clock: () => '2026-05-28T00:00:00.000Z',
+      idFactory: () => reservedId,
+    });
+    assert.throws(
+      () => repository.createProfile(makeProfileCreateRequest()),
+      (error) =>
+        error instanceof ContractError &&
+        error.code === 'VALIDATION_ERROR' &&
+        error.details.fieldErrors[0].code === 'PROFILE_ID_RESERVED',
+      `expected ${reservedId} to be rejected`,
+    );
+    assert.deepEqual(database.execs, []);
+    assert.deepEqual(database.runs, []);
+  }
 });
 
 test('sqlite config repository: invalid Date clocks surface ContractError', () => {

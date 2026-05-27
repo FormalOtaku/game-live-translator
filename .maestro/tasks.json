@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T19:46:12.474Z",
+  "migrated_at": "2026-05-27T20:12:27.403Z",
   "source_path": "TASKS.md",
-  "source_sha256": "11beff6cc8cfd515b29a407eb2a065f694aa30c303838b248442fb4738786fac",
+  "source_sha256": "c400ac5d79d3df71337bc8d4f821ad6360875c1a978c74ed489b893c56c58077",
   "task_count": 23,
   "counts": {
-    "todo": 4,
+    "todo": 3,
     "doing": 1,
     "blocked": 0,
-    "done": 18
+    "done": 19
   },
   "tasks": [
     {
@@ -148,14 +148,14 @@
     {
       "id": "T-007-003",
       "title": "Profile CRUD active profile and safe export API",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
+      "notes": "Added SQLite repository list/get/update/delete/get-active/set-active/export methods, reserved profile id rejection, transactional profile write checks, safe ProfileExport validation, and localhost API routes for profile list/create/get/update/delete/activate/export with canonical redacted ApiError mapping; local and Docker npm test/build/lint pass with 193 tests; git diff --check pass; Claude T-007-003-r2 module review clean with must_fix=0 and unresolved P1/P2=0."
     },
     {
       "id": "T-007-004",
       "title": "Theme and glossary API contracts",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
     },

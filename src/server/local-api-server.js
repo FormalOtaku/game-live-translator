@@ -24,6 +24,8 @@ const {
 const DEFAULT_PREFERRED_PORT = 39600;
 const DEFAULT_MAX_PORT_ATTEMPTS = 8;
 const DEFAULT_VERSION = '0.1.0';
+const JSON_BODY_LIMIT_BYTES = 64 * 1024;
+const PROFILE_CORS_METHODS = 'GET, POST, PUT, DELETE, OPTIONS';
 
 const RUNTIME_STATUS_STATES = Object.freeze([
   'idle',
@@ -270,9 +272,118 @@ function writeApiError(res, statusCode, code, message, options) {
   writeJson(res, statusCode, buildApiError(code, message, options));
 }
 
-function writeMethodNotAllowed(res) {
-  res.setHeader('Allow', 'GET');
+function writeMethodNotAllowed(res, allowedMethods = ['GET']) {
+  res.setHeader('Allow', allowedMethods.join(', '));
   writeApiError(res, 405, 'METHOD_NOT_ALLOWED', 'Method not allowed');
+}
+
+function profileRepositoryUnavailable() {
+  return new ContractError(
+    'DB_UNAVAILABLE',
+    'Profile repository is not available',
+  );
+}
+
+function getProfileRepository(repository, methods) {
+  if (!isObject(repository)) throw profileRepositoryUnavailable();
+  for (const method of methods) {
+    if (typeof repository[method] !== 'function') throw profileRepositoryUnavailable();
+  }
+  return repository;
+}
+
+function decodePathSegment(segment) {
+  try {
+    return decodeURIComponent(segment);
+  } catch (_) {
+    throw new ContractError('BAD_REQUEST', 'Invalid URL path segment', {
+      fieldErrors: [
+        fieldError('path', 'PATH_INVALID', 'URL path segment must be percent-decodable'),
+      ],
+    });
+  }
+}
+
+function readJsonBody(req, limitBytes = JSON_BODY_LIMIT_BYTES) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    let settled = false;
+
+    function finish(callback, value) {
+      if (settled) return;
+      settled = true;
+      callback(value);
+    }
+
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > limitBytes) {
+        finish(reject, new ContractError('BAD_REQUEST', 'JSON request body is too large', {
+          limitBytes,
+        }));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      if (settled) return;
+      const rawBody = Buffer.concat(chunks).toString('utf8');
+      if (rawBody.trim().length === 0) {
+        finish(resolve, {});
+        return;
+      }
+      try {
+        finish(resolve, JSON.parse(rawBody));
+      } catch (_) {
+        finish(reject, new ContractError('BAD_REQUEST', 'Malformed JSON request body', {
+          fieldErrors: [
+            fieldError('', 'JSON_INVALID', 'Request body must be valid JSON'),
+          ],
+        }));
+      }
+    });
+    req.on('error', (error) => {
+      finish(reject, error);
+    });
+  });
+}
+
+function statusCodeForContractError(error) {
+  const code = error && error.code;
+  if (code === 'PROFILE_NOT_FOUND') return 404;
+  if (code === 'CANNOT_DELETE_ACTIVE_PROFILE') return 409;
+  if (
+    code === 'VALIDATION_ERROR' ||
+    code === 'BAD_REQUEST' ||
+    code === 'IMPORT_SCHEMA_INVALID' ||
+    code === 'IMPORT_CONTAINS_FORBIDDEN_FIELD'
+  ) {
+    return 400;
+  }
+  if (code === 'DB_UNAVAILABLE') return 503;
+  if (code === 'DB_READ_FAILED') return 500;
+  return 500;
+}
+
+function writeContractError(res, error) {
+  if (!(error instanceof ContractError)) {
+    writeApiError(res, 500, 'INTERNAL_ERROR', error && error.message ? error.message : 'Internal error');
+    return;
+  }
+  const code = typeof error.code === 'string' && error.code.trim().length > 0
+    ? error.code
+    : 'INTERNAL_ERROR';
+  const retryable = providerErrorRetryable(code) || RETRYABLE_API_ERROR_CODES.includes(code);
+  writeJson(res, statusCodeForContractError(error), buildApiError(
+    code,
+    typeof error.message === 'string' ? error.message : code,
+    {
+      retryable,
+      details: error.details,
+    },
+  ));
 }
 
 function listenOnPort(server, bindAddress, port) {
@@ -330,19 +441,18 @@ function createLocalApiServer(options = {}) {
     ? Object.freeze([...options.allowedOrigins])
     : Object.freeze([]);
   const allowSamePortLocalhostOrigin = options.allowSamePortLocalhostOrigin !== false;
+  const profileRepository = options.profileRepository;
   let selectedPort = null;
   let upgradeAttached = false;
 
   const server = http.createServer((req, res) => {
-    try {
-      handleRequest(req, res);
-    } catch (error) {
+    Promise.resolve(handleRequest(req, res)).catch((error) => {
       if (res.headersSent) {
         res.destroy(error);
         return;
       }
       writeApiError(res, 500, 'INTERNAL_ERROR', error && error.message ? error.message : 'Internal error');
-    }
+    });
   });
   const isOriginAllowedForWs = (origin) => resolveCorsOrigin(origin, {
     allowedOrigins,
@@ -473,7 +583,87 @@ function createLocalApiServer(options = {}) {
   overlayWebSocket.start();
   appStatusWebSocket.start();
 
-  function handleRequest(req, res) {
+  async function handleProfileRoute(pathname, req, res) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'api' || segments[1] !== 'profiles') return false;
+
+    try {
+      if (segments.length === 2) {
+        if (req.method === 'GET') {
+          const repository = getProfileRepository(profileRepository, ['listProfiles']);
+          writeJson(res, 200, Object.freeze({ profiles: repository.listProfiles() }));
+          return true;
+        }
+        if (req.method === 'POST') {
+          const repository = getProfileRepository(profileRepository, ['createProfile']);
+          const payload = await readJsonBody(req);
+          writeJson(res, 201, repository.createProfile(payload));
+          return true;
+        }
+        writeMethodNotAllowed(res, ['GET', 'POST']);
+        return true;
+      }
+
+      if (segments.length === 3 && segments[2] === 'active') {
+        if (req.method !== 'PUT') {
+          writeMethodNotAllowed(res, ['PUT']);
+          return true;
+        }
+        const repository = getProfileRepository(profileRepository, ['setActiveProfile']);
+        const payload = await readJsonBody(req);
+        if (!isObject(payload) || typeof payload.profileId !== 'string') {
+          throw new ContractError('VALIDATION_ERROR', 'profileId is required', {
+            fieldErrors: [
+              fieldError('profileId', 'VALIDATION_ERROR', 'profileId must be a non-empty string'),
+            ],
+          });
+        }
+        writeJson(res, 200, repository.setActiveProfile(payload.profileId));
+        return true;
+      }
+
+      if (segments.length === 3 && segments[2] === 'import') return false;
+
+      if (segments.length === 4 && segments[3] === 'export') {
+        if (req.method !== 'GET') {
+          writeMethodNotAllowed(res, ['GET']);
+          return true;
+        }
+        const repository = getProfileRepository(profileRepository, ['exportProfile']);
+        writeJson(res, 200, repository.exportProfile(decodePathSegment(segments[2])));
+        return true;
+      }
+
+      if (segments.length === 3) {
+        const profileId = decodePathSegment(segments[2]);
+        if (req.method === 'GET') {
+          const repository = getProfileRepository(profileRepository, ['getProfile']);
+          writeJson(res, 200, repository.getProfile(profileId));
+          return true;
+        }
+        if (req.method === 'PUT') {
+          const repository = getProfileRepository(profileRepository, ['updateProfile']);
+          const payload = await readJsonBody(req);
+          writeJson(res, 200, repository.updateProfile(profileId, payload));
+          return true;
+        }
+        if (req.method === 'DELETE') {
+          const repository = getProfileRepository(profileRepository, ['deleteProfile']);
+          writeJson(res, 200, repository.deleteProfile(profileId));
+          return true;
+        }
+        writeMethodNotAllowed(res, ['GET', 'PUT', 'DELETE']);
+        return true;
+      }
+    } catch (error) {
+      writeContractError(res, error);
+      return true;
+    }
+
+    return false;
+  }
+
+  async function handleRequest(req, res) {
     const hasOrigin = typeof req.headers.origin === 'string' && req.headers.origin.trim() !== '';
     const origin = resolveCorsOrigin(req.headers.origin, {
       allowedOrigins,
@@ -490,7 +680,7 @@ function createLocalApiServer(options = {}) {
     if (req.method === 'OPTIONS') {
       res.statusCode = 204;
       if (origin !== null) {
-        res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        res.setHeader('Access-Control-Allow-Methods', PROFILE_CORS_METHODS);
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
       }
       res.end();
@@ -553,6 +743,8 @@ function createLocalApiServer(options = {}) {
       writeJson(res, 200, status);
       return;
     }
+
+    if (await handleProfileRoute(pathname, req, res)) return;
 
     writeApiError(res, 404, 'NOT_FOUND', 'Resource not found');
   }
@@ -623,6 +815,7 @@ function buildApiErrorFromContractError(error, options = {}) {
     : providerErrorRetryable(code) || RETRYABLE_API_ERROR_CODES.includes(code);
   return buildApiError(code, typeof error.message === 'string' ? error.message : code, {
     retryable,
+    details: error.details,
   });
 }
 

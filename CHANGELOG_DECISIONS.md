@@ -174,3 +174,16 @@
 - Regression tests added first: `test/sqlite-config-store.test.js` covers schema/table/version statements, forbidden storage identifier checks, initialization seeds and schema-version mismatch handling, validator-before-write behavior for invalid profiles/privacy settings, required-only and full profile writes, duplicate glossary-id rejection, frozen return shape, default/updated privacy persistence, built-in theme seeds, invalid clock handling, and absence of provider-key repository methods.
 - Migration needed: This is the initial schema boundary. Future schema changes must add forward-only migration steps from `schema_version=1` and keep profile export compatibility in sync.
 - Rollback plan: Revert the storage module, focused tests, and spec/decision entries. No live user database migration is needed until the concrete SQLite driver/sidecar is wired.
+
+### CHG-20260528-014
+- Date: 2026-05-28
+- Summary: Added profile CRUD, active profile selection, and safe profile export API contracts for T-007-003.
+- Reason: Profiles must be durable and controllable before the UI can build first-run, Profiles, Capture Setup, and OBS setup flows. The repository already created profiles, but lacked read/update/delete, active selection, and HTTP route behavior.
+- Impact scope (DB/API/UI):
+  - DB: Reuses schema version 1. Adds repository behavior for profile reads, updates, deletes, `app_meta.active_profile_id`, and export construction; no schema bump and no provider-key/raw OCR/translation/image/log persistence.
+  - API: Adds dependency-injected profile routes to the localhost server harness for list/create/get/update/delete/activate/export. Route errors use canonical `ApiError`, preserve validation details, map not-found to 404, active-profile delete conflicts to 409, and return `DB_UNAVAILABLE` when no repository is installed.
+  - UI: Profiles and first-run flows can rely on stable active-profile and export contracts, including inline validation errors and a deterministic conflict when a user tries to delete the active profile.
+- Risk: This remains a contract harness over an injected SQLite-like adapter, not the final Python/FastAPI driver. Future sidecar integration must preserve the same SQL-visible behavior and HTTP response shapes.
+- Regression tests added first: focused repository tests cover list/get/update/delete/active/export behavior, validator-before-write ordering, glossary rewrite transactions, active delete conflict, missing profiles, frozen return shapes, and forbidden export exclusions. Local API tests cover all new profile routes, request parsing, status/error mapping, CORS methods, and secret redaction in error envelopes.
+- Migration needed: None. Existing schema version 1 tables and export schema version 1 are unchanged.
+- Rollback plan: Revert the profile CRUD repository/API implementation, focused tests, and spec/decision entries. No persisted schema migration is required.

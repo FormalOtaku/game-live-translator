@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-007
-- current_slice_id: T-007-003
-- current_slice_goal: Profile CRUD active profile and safe export API
+- current_slice_id: T-007-004
+- current_slice_goal: Theme and glossary API contracts
 - current_slice_status: doing
-- completed_slices: 2
+- completed_slices: 3
 - total_slices: 6
-- progress_pct: 33
-- next_slice_id: T-007-004
-- next_slice_goal: Theme and glossary API contracts
-- last_checkpoint: 2026-05-27T19:47:15.777Z
+- progress_pct: 50
+- next_slice_id: T-007-005
+- next_slice_goal: Privacy settings and write-only key API
+- last_checkpoint: 2026-05-27T20:12:43.980Z
 ## Session Flow
 - current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: none
-- checkpoint_reason: T-007 parent still in progress; no major checkpoint required until parent closeout.
-- last_completed_slice: T-007-002
-- handoff_summary: T-007-002 complete: SQLite schema_version=1 configuration repository boundary added with injected exec/run adapter, guarded schema_version seed, transactional default seeds, profile/privacy validator-before-write persistence, provider-key exclusion, and 15 focused storage tests. Local and Docker npm test/build/lint pass with 175 tests; git diff --check pass; Claude T-007-002-r2 module review clean with findings=0, must_fix=0, unresolved P1/P2=0. T-007-003 is active next for profile CRUD active profile and safe export API.
-- next_action: continue T-007-003
-- updated_at: 2026-05-27T19:47:15.775Z
+- checkpoint_reason: T-007 parent still in progress; no human checkpoint required until parent closeout.
+- last_completed_slice: T-007-003
+- handoff_summary: T-007-003 complete: profile CRUD/active/export API core added. SQLite repository now supports list/get/update/delete/get-active/set-active/export with schema v1, reserved id rejection for active/import, transactional write checks, and safe ProfileExport validation. Local API server now exposes profile list/create/get/update/delete/activate/export routes with canonical redacted ApiError mapping and validation details. Specs/decisions/migration notes updated. Local npm test/build/lint and Docker npm test/build/lint pass; git diff --check pass; Claude sidecar T-007-003-r2 imported clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: continue T-007-004
+- updated_at: 2026-05-27T20:12:43.978Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

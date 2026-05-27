@@ -221,7 +221,7 @@ type DiagnosticBundle = {
 
 ## Localhost HTTP Server Core
 - T-006 introduces a dependency-free localhost server core in `src/server/local-api-server.js` as the executable wire-contract harness for the v1 local API. The production sidecar may wrap or port this contract to Python FastAPI, but endpoint shapes, bind restrictions, error envelopes, and privacy rules must remain compatible.
-- `createLocalApiServer({ bindAddress, preferredPort, maxPortAttempts, version, overlayState, runtimeStatus, activeProfileId, allowedOrigins, allowSamePortLocalhostOrigin, overlayWsPath, appWsPath })` is the T-006 server factory.
+- `createLocalApiServer({ bindAddress, preferredPort, maxPortAttempts, version, overlayState, runtimeStatus, activeProfileId, allowedOrigins, allowSamePortLocalhostOrigin, overlayWsPath, appWsPath, profileRepository })` is the T-006/T-007 server factory.
 - Bind behavior:
   - `bindAddress` defaults to `127.0.0.1` and any other value, including `0.0.0.0`, `::`, LAN IPs, or hostnames, raises `NON_LOCALHOST_BIND_REJECTED` before listening.
   - `preferredPort` defaults to `39600`; when unavailable, the server may try sequential local ports up to `maxPortAttempts` and must report the selected port through `/health` and `/api/status`.
@@ -232,8 +232,9 @@ type DiagnosticBundle = {
   - `WS UPGRADE /ws/overlay` is the OBS subtitle stream. Non-upgrade HTTP requests to this path return a canonical `WS_REJECTED` `ApiError` instead of exposing a partial HTML or debug response.
   - `WS UPGRADE /ws/app` is the local app status stream; non-upgrade GET requests return the same canonical retryable `WS_REJECTED` `ApiError`. The endpoint is configurable through `appWsPath` and defaults to `/ws/app`.
   - `GET /api/status` returns `AppStatus`; `overlayUrl` is computed from the selected local port, `overlayClients` comes from `OverlayState.snapshot()`, and `lastSubtitle` is sanitized with no `sourceText` field by default. If the runtime-status producer fails, the endpoint still returns a redacted `AppStatus` with `backend: "error"` and `translation.code: "RUNTIME_STATUS_SOURCE_FAILED"` instead of leaking the raw exception.
+  - T-007-003 adds `GET/POST /api/profiles`, `GET/PUT/DELETE /api/profiles/{id}`, `PUT /api/profiles/active`, and `GET /api/profiles/{id}/export` to the same dependency-free server core. These routes require an injected `profileRepository`, accept/return the canonical profile contracts, preserve `VALIDATION_ERROR.details.fieldErrors`, map `PROFILE_NOT_FOUND` to HTTP 404 and `CANNOT_DELETE_ACTIVE_PROFILE` to HTTP 409, and return `DB_UNAVAILABLE` if the repository dependency is absent.
   - Unsupported paths and methods return `ApiError` envelopes; raw exception text, provider keys, OCR text, translated text, captured images, and debug payloads must not be included.
-  - CORS must not use `*`; responses may echo only configured local Electron origins or same-port localhost overlay origins. `allowSamePortLocalhostOrigin` defaults to `true` and may be set to `false` by a future hardened deployment that wants configured origins only.
+  - CORS must not use `*`; responses may echo only configured local Electron origins or same-port localhost overlay origins. `allowSamePortLocalhostOrigin` defaults to `true` and may be set to `false` by a future hardened deployment that wants configured origins only. Profile CRUD expands preflight methods to `GET, POST, PUT, DELETE, OPTIONS`.
 
 ## OBS Overlay HTML Renderer
 - `renderOverlayHtml({ initialFrame?, themeId?, maxLines?, statusPath?, wsPath? })` returns a complete HTML document for `/overlay`.
@@ -526,6 +527,13 @@ type DiagnosticBundle = {
 - `initialize()` executes all schema statements, upserts `app_meta.schema_version = "1"`, inserts the singleton default privacy row with `ON CONFLICT DO NOTHING`, and inserts the built-in theme rows with `ON CONFLICT DO NOTHING` so existing user settings are not overwritten.
 - `initialize()` must not silently downgrade or overwrite a non-`1` `schema_version`. The SQL upsert is guarded against mismatched existing values, and adapters that expose `changes=0` surface `DB_SCHEMA_INCOMPATIBLE`.
 - `createProfile(ProfileCreateRequest)` must call `assertProfileCreateRequest` and compute glossary revision before any SQLite write. It writes `profiles`, `profile_settings`, and `glossary_terms`, then returns a `Profile` object with `id`, `createdAt`, and `updatedAt`.
+- `listProfiles()` reads all profile rows with settings and glossary terms and returns frozen `Profile[]` values ordered by recent update.
+- `getProfile(profileId)` reads one profile by id and throws `PROFILE_NOT_FOUND` when absent.
+- `updateProfile(profileId, ProfileUpdateRequest)` must validate the patch before any write, merge it with the existing profile, recompute glossary revision when needed, update `profiles`, `profile_settings`, and `glossary_terms` in one transaction, and return the updated frozen `Profile`.
+- `deleteProfile(profileId)` must throw `PROFILE_NOT_FOUND` when absent, throw `CANNOT_DELETE_ACTIVE_PROFILE` when `app_meta.active_profile_id` matches the target id, and otherwise delete profile rows through the schema cascade.
+- `setActiveProfile(profileId)` must verify that the profile exists, then upsert `app_meta.active_profile_id`.
+- `exportProfile(profileId)` must return a frozen `ProfileExport` with `schemaVersion: 1`, the current `forbiddenFieldsPolicy`, `exportedAt`, and a validated `profile`. The export must not include provider API keys, OCR text history, translated text history, captured images, screenshots, logs, stack traces, or diagnostics.
+- Profile ids `active` and `import` are reserved by the v1 route surface (`/api/profiles/active` and future `/api/profiles/import`) and must be rejected at the repository boundary if an injected id factory or import path tries to create them.
 - `savePrivacySettings(PrivacySettings)` must call `assertPrivacySettings` before any SQLite write and persists boolean values as `0`/`1`.
 - Provider API key writes are intentionally out of scope for this repository. There is no `saveProviderKey`/read-key method because `PUT /api/keys/{provider}` must use OS secure storage and return only `{ ok: true }`.
 - Privacy invariant: schema statements and repository write parameters must not introduce provider API keys, raw OCR text/source text, translated text, image/screenshot blobs, log payloads, stack traces, or diagnostic bundles. The only source-text-like field in normal SQLite is `source_text_hash`.

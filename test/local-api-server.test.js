@@ -23,14 +23,21 @@ function fixedClock() {
   return FIXED_TIME;
 }
 
-function requestJson({ port, path, method = 'GET', headers = {} }) {
+function requestJson({ port, path, method = 'GET', headers = {}, body }) {
   return new Promise((resolve, reject) => {
+    let requestBody = null;
+    const requestHeaders = { ...headers };
+    if (body !== undefined) {
+      requestBody = typeof body === 'string' ? body : JSON.stringify(body);
+      requestHeaders['Content-Type'] = requestHeaders['Content-Type'] ?? 'application/json';
+      requestHeaders['Content-Length'] = Buffer.byteLength(requestBody);
+    }
     const req = http.request({
       host: '127.0.0.1',
       port,
       path,
       method,
-      headers,
+      headers: requestHeaders,
     }, (res) => {
       let body = '';
       res.setEncoding('utf8');
@@ -43,7 +50,7 @@ function requestJson({ port, path, method = 'GET', headers = {} }) {
       });
     });
     req.on('error', reject);
-    req.end();
+    req.end(requestBody);
   });
 }
 
@@ -87,6 +94,40 @@ function closeServer(server) {
   return new Promise((resolve, reject) => {
     server.close((error) => (error ? reject(error) : resolve()));
   });
+}
+
+function makeApiProfile(overrides = {}) {
+  return {
+    id: 'profile_001',
+    name: 'Main Profile',
+    gameTitle: 'Game',
+    ocrPreset: 'default_dialogue',
+    ocrConfidenceFloor: 0.65,
+    captureHz: 2,
+    translationProvider: 'deepl',
+    targetLang: 'en',
+    overlayThemeId: 'classic_subtitle',
+    glossary: [
+      { id: 'g1', sourceTerm: '勇者', targetTerm: 'hero' },
+    ],
+    createdAt: FIXED_TIME,
+    updatedAt: FIXED_TIME,
+    ...overrides,
+  };
+}
+
+function makeProfileCreatePayload(overrides = {}) {
+  return {
+    name: 'Created Profile',
+    ocrPreset: 'menu_text',
+    ocrConfidenceFloor: 0.5,
+    captureHz: 0,
+    translationProvider: 'echo',
+    targetLang: 'en',
+    overlayThemeId: 'minimal',
+    glossary: [],
+    ...overrides,
+  };
 }
 
 test('createLocalApiServer rejects non-localhost bind addresses before listening', () => {
@@ -377,6 +418,239 @@ test('unsupported routes and methods return canonical ApiError envelopes', async
   }
 });
 
+test('profile API lists and creates profiles through the injected repository', async () => {
+  const calls = [];
+  const createdProfile = makeApiProfile({ id: 'profile_created', name: 'Created Profile' });
+  const repository = {
+    listProfiles() {
+      calls.push(['listProfiles']);
+      return [makeApiProfile()];
+    },
+    createProfile(payload) {
+      calls.push(['createProfile', payload]);
+      return createdProfile;
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+  });
+  const started = await api.start();
+
+  try {
+    const list = await requestJson({ port: started.port, path: '/api/profiles' });
+    assert.equal(list.statusCode, 200);
+    assert.deepEqual(list.parsed, { profiles: [makeApiProfile()] });
+
+    const payload = makeProfileCreatePayload();
+    const create = await requestJson({
+      port: started.port,
+      path: '/api/profiles',
+      method: 'POST',
+      body: payload,
+    });
+    assert.equal(create.statusCode, 201);
+    assert.deepEqual(create.parsed, createdProfile);
+    assert.deepEqual(calls, [
+      ['listProfiles'],
+      ['createProfile', payload],
+    ]);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('profile API gets updates deletes activates and exports profiles', async () => {
+  const calls = [];
+  const repository = {
+    getProfile(profileId) {
+      calls.push(['getProfile', profileId]);
+      return makeApiProfile({ id: profileId });
+    },
+    updateProfile(profileId, payload) {
+      calls.push(['updateProfile', profileId, payload]);
+      return makeApiProfile({ id: profileId, name: payload.name });
+    },
+    deleteProfile(profileId) {
+      calls.push(['deleteProfile', profileId]);
+      return { ok: true };
+    },
+    setActiveProfile(profileId) {
+      calls.push(['setActiveProfile', profileId]);
+      return { ok: true };
+    },
+    exportProfile(profileId) {
+      calls.push(['exportProfile', profileId]);
+      return {
+        schemaVersion: 1,
+        profile: makeApiProfile({ id: profileId }),
+        exportedAt: FIXED_TIME,
+        forbiddenFieldsPolicy: 'reject_api_keys_ocr_text_translation_text_images_logs',
+      };
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+  });
+  const started = await api.start();
+
+  try {
+    const get = await requestJson({ port: started.port, path: '/api/profiles/profile_001' });
+    assert.equal(get.statusCode, 200);
+    assert.equal(get.parsed.id, 'profile_001');
+
+    const updatePayload = { name: 'Renamed' };
+    const update = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile_001',
+      method: 'PUT',
+      body: updatePayload,
+    });
+    assert.equal(update.statusCode, 200);
+    assert.equal(update.parsed.name, 'Renamed');
+
+    const activate = await requestJson({
+      port: started.port,
+      path: '/api/profiles/active',
+      method: 'PUT',
+      body: { profileId: 'profile_001' },
+    });
+    assert.equal(activate.statusCode, 200);
+    assert.deepEqual(activate.parsed, { ok: true });
+
+    const exported = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile_001/export',
+    });
+    assert.equal(exported.statusCode, 200);
+    assert.equal(exported.parsed.schemaVersion, 1);
+    assert.equal(JSON.stringify(exported.parsed).includes('apiKey'), false);
+    assert.equal(JSON.stringify(exported.parsed).includes('translatedText'), false);
+
+    const deleted = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile_001',
+      method: 'DELETE',
+    });
+    assert.equal(deleted.statusCode, 200);
+    assert.deepEqual(deleted.parsed, { ok: true });
+
+    assert.deepEqual(calls, [
+      ['getProfile', 'profile_001'],
+      ['updateProfile', 'profile_001', updatePayload],
+      ['setActiveProfile', 'profile_001'],
+      ['exportProfile', 'profile_001'],
+      ['deleteProfile', 'profile_001'],
+    ]);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('profile API maps repository errors to canonical redacted ApiError responses', async () => {
+  const repository = {
+    getProfile() {
+      throw new ContractError('PROFILE_NOT_FOUND', 'Missing profile');
+    },
+    deleteProfile() {
+      throw new ContractError('CANNOT_DELETE_ACTIVE_PROFILE', 'Active profile cannot be deleted');
+    },
+    updateProfile() {
+      throw new ContractError('VALIDATION_ERROR', 'token=sk-ABCDEFGHIJKLMNOP1234 failed', {
+        fieldErrors: [
+          {
+            field: 'apiKey',
+            code: 'UNKNOWN_PROFILE_FIELD',
+            message: 'apiKey=secretsecret123 is not allowed',
+          },
+        ],
+      });
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+  });
+  const started = await api.start();
+
+  try {
+    const missing = await requestJson({ port: started.port, path: '/api/profiles/missing' });
+    assert.equal(missing.statusCode, 404);
+    assert.equal(missing.parsed.error.code, 'PROFILE_NOT_FOUND');
+    assert.equal(missing.parsed.error.retryable, false);
+
+    const conflict = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile_001',
+      method: 'DELETE',
+    });
+    assert.equal(conflict.statusCode, 409);
+    assert.equal(conflict.parsed.error.code, 'CANNOT_DELETE_ACTIVE_PROFILE');
+
+    const invalid = await requestJson({
+      port: started.port,
+      path: '/api/profiles/profile_001',
+      method: 'PUT',
+      body: { apiKey: 'secretsecret123' },
+    });
+    assert.equal(invalid.statusCode, 400);
+    assert.equal(invalid.parsed.error.code, 'VALIDATION_ERROR');
+    assert.equal(Array.isArray(invalid.parsed.error.details.fieldErrors), true);
+    const serialized = JSON.stringify(invalid.parsed);
+    assert.equal(serialized.includes('sk-ABCDEFGHIJKLMNOP1234'), false);
+    assert.equal(serialized.includes('secretsecret123'), false);
+    assert.equal(serialized.includes('[REDACTED]'), true);
+    assert.equal(Object.hasOwn(invalid.parsed.error, 'stack'), false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('profile API reports DB_UNAVAILABLE when no profile repository is installed', async () => {
+  const api = createLocalApiServer({ preferredPort: 0 });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({ port: started.port, path: '/api/profiles' });
+    assert.equal(response.statusCode, 503);
+    assert.equal(response.parsed.error.code, 'DB_UNAVAILABLE');
+    assert.equal(response.parsed.error.retryable, false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('profile API rejects malformed JSON before repository calls', async () => {
+  const calls = [];
+  const repository = {
+    createProfile(payload) {
+      calls.push(payload);
+      return makeApiProfile({ id: 'profile_created' });
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/profiles',
+      method: 'POST',
+      body: '{"name":',
+    });
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.parsed.error.code, 'BAD_REQUEST');
+    assert.equal(response.parsed.error.details.fieldErrors[0].code, 'JSON_INVALID');
+    assert.deepEqual(calls, []);
+  } finally {
+    await api.stop();
+  }
+});
+
 test('GET /api/status turns runtime status producer failures into redacted status snapshots', async () => {
   const api = createLocalApiServer({
     preferredPort: 0,
@@ -476,7 +750,7 @@ test('OPTIONS preflight only exposes allowed methods for allowed local origins',
     });
     assert.equal(allowed.statusCode, 204);
     assert.equal(allowed.headers['access-control-allow-origin'], allowedOrigin);
-    assert.equal(allowed.headers['access-control-allow-methods'], 'GET, OPTIONS');
+    assert.equal(allowed.headers['access-control-allow-methods'], 'GET, POST, PUT, DELETE, OPTIONS');
     assert.equal(allowed.headers['access-control-allow-headers'], 'Content-Type');
   } finally {
     await api.stop();

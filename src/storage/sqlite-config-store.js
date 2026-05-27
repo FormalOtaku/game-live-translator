@@ -12,9 +12,13 @@ const {
   ALLOWED_OCR_PRESETS,
   ALLOWED_PROVIDERS,
   ALLOWED_TARGET_LANGS,
+  assertProfileExport,
   assertPrivacySettings,
   assertProfileCreateRequest,
+  assertProfileUpdateRequest,
   fieldError,
+  PROFILE_EXPORT_FORBIDDEN_FIELDS_POLICY,
+  PROFILE_EXPORT_SCHEMA_VERSION,
 } = require('../contracts/validation');
 const {
   EMPTY_GLOSSARY_REVISION,
@@ -22,6 +26,35 @@ const {
 } = require('../core/translation-cache');
 
 const SQLITE_SCHEMA_VERSION = 1;
+const ACTIVE_PROFILE_META_KEY = 'active_profile_id';
+const RESERVED_PROFILE_IDS = Object.freeze(['active', 'import']);
+
+const PROFILE_SELECT_SQL = `SELECT
+  p.id AS id,
+  p.name AS name,
+  p.game_title AS gameTitle,
+  p.created_at AS createdAt,
+  p.updated_at AS updatedAt,
+  ps.capture_source_json AS captureSourceJson,
+  ps.roi_json AS roiJson,
+  ps.ocr_preset AS ocrPreset,
+  ps.ocr_confidence_floor AS ocrConfidenceFloor,
+  ps.capture_hz AS captureHz,
+  ps.translation_provider AS translationProvider,
+  ps.target_lang AS targetLang,
+  ps.overlay_theme_id AS overlayThemeId,
+  ps.glossary_revision AS glossaryRevision
+FROM profiles p
+JOIN profile_settings ps ON ps.profile_id = p.id`;
+
+const GLOSSARY_SELECT_SQL = `SELECT
+  profile_id AS profileId,
+  id AS id,
+  source_term AS sourceTerm,
+  target_term AS targetTerm,
+  note AS note,
+  position AS position
+FROM glossary_terms`;
 
 function sqlStringList(values) {
   return values.map((value) => `'${value.replaceAll("'", "''")}'`).join(', ');
@@ -197,6 +230,19 @@ function assertDatabaseAdapter(database) {
   }
 }
 
+function assertReadDatabaseAdapter(database) {
+  if (
+    database == null ||
+    typeof database.get !== 'function' ||
+    typeof database.all !== 'function'
+  ) {
+    throw new ContractError(
+      'DB_UNAVAILABLE',
+      'SQLite adapter must provide get(sql, params) and all(sql, params) for profile reads',
+    );
+  }
+}
+
 function timestampFromClock(clock) {
   const value = typeof clock === 'function' ? clock() : new Date();
   if (value instanceof Date) {
@@ -225,7 +271,7 @@ function createId(idFactory, kind) {
   if (typeof id !== 'string' || id.trim().length === 0) {
     throw new ContractError('VALIDATION_ERROR', `${kind} id must be a non-empty string`);
   }
-  return id;
+  return assertProfileId(id, `${kind}Id`);
 }
 
 function boolToInteger(value) {
@@ -234,6 +280,19 @@ function boolToInteger(value) {
 
 function jsonOrNull(value) {
   return value === undefined ? null : JSON.stringify(value);
+}
+
+function parseJsonOrUndefined(value, field) {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value !== 'string') return cloneJson(value);
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    throw new ContractError('DB_READ_FAILED', `${field} contained invalid JSON`, {
+      field,
+      causeCode: error && error.code,
+    });
+  }
 }
 
 function normalizeProfileForReturn(profile) {
@@ -281,6 +340,125 @@ function normalizePrivacySettingsForReturn(settings) {
 
 function run(database, sql, params) {
   return database.run(sql, params);
+}
+
+function get(database, sql, params) {
+  assertReadDatabaseAdapter(database);
+  return database.get(sql, params) ?? null;
+}
+
+function all(database, sql, params) {
+  assertReadDatabaseAdapter(database);
+  const rows = database.all(sql, params);
+  if (!Array.isArray(rows)) {
+    throw new ContractError('DB_READ_FAILED', 'SQLite adapter all(sql, params) must return an array');
+  }
+  return rows;
+}
+
+function rowValue(row, ...keys) {
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(row, key)) return row[key];
+  }
+  return undefined;
+}
+
+function assertProfileId(profileId, field = 'profileId') {
+  if (typeof profileId !== 'string' || profileId.trim().length === 0) {
+    throw new ContractError('VALIDATION_ERROR', `${field} must be a non-empty string`, {
+      fieldErrors: [
+        fieldError(field, 'VALIDATION_ERROR', `${field} must be a non-empty string`),
+      ],
+    });
+  }
+  const normalized = profileId.normalize('NFKC').trim();
+  if (RESERVED_PROFILE_IDS.includes(normalized)) {
+    throw new ContractError('VALIDATION_ERROR', `${field} is reserved`, {
+      fieldErrors: [
+        fieldError(
+          field,
+          'PROFILE_ID_RESERVED',
+          `${field} cannot be one of ${RESERVED_PROFILE_IDS.join(', ')}`,
+        ),
+      ],
+    });
+  }
+  return normalized;
+}
+
+function profileNotFound(profileId) {
+  return new ContractError('PROFILE_NOT_FOUND', `Profile not found: ${profileId}`, {
+    profileId,
+  });
+}
+
+function glossaryTermsFromRows(rows) {
+  return rows.map((row) => {
+    const term = {
+      id: rowValue(row, 'id'),
+      sourceTerm: rowValue(row, 'sourceTerm', 'source_term'),
+      targetTerm: rowValue(row, 'targetTerm', 'target_term'),
+    };
+    const note = rowValue(row, 'note');
+    if (note !== null && note !== undefined) term.note = note;
+    return term;
+  });
+}
+
+function profileFromRow(row, glossaryRows) {
+  const profile = {
+    id: rowValue(row, 'id', 'profile_id'),
+    name: rowValue(row, 'name'),
+    ocrPreset: rowValue(row, 'ocrPreset', 'ocr_preset'),
+    ocrConfidenceFloor: Number(rowValue(row, 'ocrConfidenceFloor', 'ocr_confidence_floor')),
+    captureHz: Number(rowValue(row, 'captureHz', 'capture_hz')),
+    translationProvider: rowValue(row, 'translationProvider', 'translation_provider'),
+    targetLang: rowValue(row, 'targetLang', 'target_lang'),
+    overlayThemeId: rowValue(row, 'overlayThemeId', 'overlay_theme_id'),
+    glossary: glossaryTermsFromRows(glossaryRows),
+    createdAt: rowValue(row, 'createdAt', 'created_at'),
+    updatedAt: rowValue(row, 'updatedAt', 'updated_at'),
+  };
+  const gameTitle = rowValue(row, 'gameTitle', 'game_title');
+  const captureSource = parseJsonOrUndefined(
+    rowValue(row, 'captureSourceJson', 'capture_source_json'),
+    'captureSource',
+  );
+  const roi = parseJsonOrUndefined(rowValue(row, 'roiJson', 'roi_json'), 'roi');
+  if (gameTitle !== null && gameTitle !== undefined) profile.gameTitle = gameTitle;
+  if (captureSource !== undefined) profile.captureSource = captureSource;
+  if (roi !== undefined) profile.roi = roi;
+  return normalizeProfileForReturn(profile);
+}
+
+function profileCreateFieldsFromProfile(profile) {
+  const fields = {
+    name: profile.name,
+    ocrPreset: profile.ocrPreset,
+    ocrConfidenceFloor: profile.ocrConfidenceFloor,
+    captureHz: profile.captureHz,
+    translationProvider: profile.translationProvider,
+    targetLang: profile.targetLang,
+    overlayThemeId: profile.overlayThemeId,
+    glossary: profile.glossary,
+  };
+  for (const field of ['gameTitle', 'captureSource', 'roi']) {
+    if (profile[field] !== undefined) fields[field] = cloneJson(profile[field]);
+  }
+  return fields;
+}
+
+function mergeProfileUpdate(currentProfile, patch) {
+  const merged = profileCreateFieldsFromProfile(currentProfile);
+  for (const [field, value] of Object.entries(patch)) {
+    if (value === undefined) {
+      delete merged[field];
+    } else {
+      merged[field] = cloneJson(value);
+    }
+  }
+  assertProfileCreateRequest(merged);
+  return merged;
 }
 
 function assertSchemaVersionSeeded(result) {
@@ -553,6 +731,225 @@ ON CONFLICT(id) DO NOTHING;`,
     return profile;
   }
 
+  function listProfiles() {
+    const profileRows = all(
+      database,
+      `${PROFILE_SELECT_SQL}
+ORDER BY p.updated_at DESC, p.name ASC;`,
+      {},
+    );
+    const glossaryRows = all(
+      database,
+      `${GLOSSARY_SELECT_SQL}
+ORDER BY profile_id ASC, position ASC, id ASC;`,
+      {},
+    );
+    const termsByProfileId = new Map();
+    for (const row of glossaryRows) {
+      const profileId = rowValue(row, 'profileId', 'profile_id');
+      if (!termsByProfileId.has(profileId)) termsByProfileId.set(profileId, []);
+      termsByProfileId.get(profileId).push(row);
+    }
+    return deepFreeze(profileRows.map((row) => {
+      const profileId = rowValue(row, 'id', 'profile_id');
+      return profileFromRow(row, termsByProfileId.get(profileId) ?? []);
+    }));
+  }
+
+  function getProfile(profileId) {
+    const normalizedProfileId = assertProfileId(profileId);
+    const profileRow = get(
+      database,
+      `${PROFILE_SELECT_SQL}
+WHERE p.id = :profileId
+LIMIT 1;`,
+      { profileId: normalizedProfileId },
+    );
+    if (profileRow === null) throw profileNotFound(normalizedProfileId);
+    const glossaryRows = all(
+      database,
+      `${GLOSSARY_SELECT_SQL}
+WHERE profile_id = :profileId
+ORDER BY position ASC, id ASC;`,
+      { profileId: normalizedProfileId },
+    );
+    return profileFromRow(profileRow, glossaryRows);
+  }
+
+  function updateProfile(profileId, patch) {
+    const normalizedProfileId = assertProfileId(profileId);
+    assertProfileUpdateRequest(patch);
+    if (Array.isArray(patch.glossary)) {
+      assertUniqueGlossaryTermIds(patch.glossary);
+      buildGlossaryRevision(patch.glossary);
+    }
+
+    let profile;
+    withTransaction(database, () => {
+      const currentProfile = getProfile(normalizedProfileId);
+      const merged = mergeProfileUpdate(currentProfile, patch);
+      assertUniqueGlossaryTermIds(merged.glossary);
+      const glossaryRevision = buildGlossaryRevision(merged.glossary);
+      const now = timestampFromClock(clock);
+      profile = normalizeProfileForReturn({
+        ...merged,
+        id: normalizedProfileId,
+        createdAt: currentProfile.createdAt,
+        updatedAt: now,
+      });
+
+      run(
+        database,
+        `UPDATE profiles
+SET
+  name = :name,
+  game_title = :gameTitle,
+  updated_at = :updatedAt
+WHERE id = :profileId;`,
+        {
+          profileId: normalizedProfileId,
+          name: profile.name,
+          gameTitle: profile.gameTitle ?? null,
+          updatedAt: profile.updatedAt,
+        },
+      );
+      run(
+        database,
+        `UPDATE profile_settings
+SET
+  capture_source_json = :captureSourceJson,
+  roi_json = :roiJson,
+  ocr_preset = :ocrPreset,
+  ocr_confidence_floor = :ocrConfidenceFloor,
+  capture_hz = :captureHz,
+  translation_provider = :translationProvider,
+  target_lang = :targetLang,
+  overlay_theme_id = :overlayThemeId,
+  glossary_revision = :glossaryRevision,
+  updated_at = :updatedAt
+WHERE profile_id = :profileId;`,
+        {
+          profileId: normalizedProfileId,
+          captureSourceJson: jsonOrNull(profile.captureSource),
+          roiJson: jsonOrNull(profile.roi),
+          ocrPreset: profile.ocrPreset,
+          ocrConfidenceFloor: profile.ocrConfidenceFloor,
+          captureHz: profile.captureHz,
+          translationProvider: profile.translationProvider,
+          targetLang: profile.targetLang,
+          overlayThemeId: profile.overlayThemeId,
+          glossaryRevision,
+          updatedAt: profile.updatedAt,
+        },
+      );
+      run(
+        database,
+        'DELETE FROM glossary_terms WHERE profile_id = :profileId;',
+        { profileId: normalizedProfileId },
+      );
+      profile.glossary.forEach((term, index) => {
+        run(
+          database,
+          `INSERT INTO glossary_terms (
+  profile_id,
+  id,
+  source_term,
+  target_term,
+  note,
+  position,
+  created_at,
+  updated_at
+) VALUES (
+  :profileId,
+  :id,
+  :sourceTerm,
+  :targetTerm,
+  :note,
+  :position,
+  :createdAt,
+  :updatedAt
+);`,
+          {
+            profileId: normalizedProfileId,
+            id: term.id,
+            sourceTerm: term.sourceTerm,
+            targetTerm: term.targetTerm,
+            note: term.note ?? null,
+            position: index,
+            createdAt: profile.updatedAt,
+            updatedAt: profile.updatedAt,
+          },
+        );
+      });
+    });
+
+    return profile;
+  }
+
+  function getActiveProfileId() {
+    const row = get(
+      database,
+      'SELECT value FROM app_meta WHERE key = :key LIMIT 1;',
+      { key: ACTIVE_PROFILE_META_KEY },
+    );
+    const value = row === null ? null : rowValue(row, 'value');
+    return typeof value === 'string' && value.trim().length > 0 ? value : null;
+  }
+
+  function setActiveProfile(profileId) {
+    const normalizedProfileId = assertProfileId(profileId);
+    withTransaction(database, () => {
+      getProfile(normalizedProfileId);
+      const updatedAt = timestampFromClock(clock);
+      run(
+        database,
+        `INSERT INTO app_meta (key, value, updated_at)
+VALUES (:key, :value, :updatedAt)
+ON CONFLICT(key) DO UPDATE SET
+  value = excluded.value,
+  updated_at = excluded.updated_at;`,
+        {
+          key: ACTIVE_PROFILE_META_KEY,
+          value: normalizedProfileId,
+          updatedAt,
+        },
+      );
+    });
+    return deepFreeze({ ok: true });
+  }
+
+  function deleteProfile(profileId) {
+    const normalizedProfileId = assertProfileId(profileId);
+    withTransaction(database, () => {
+      getProfile(normalizedProfileId);
+      if (getActiveProfileId() === normalizedProfileId) {
+        throw new ContractError(
+          'CANNOT_DELETE_ACTIVE_PROFILE',
+          'The active profile cannot be deleted until another profile is activated',
+          { profileId: normalizedProfileId },
+        );
+      }
+      run(
+        database,
+        'DELETE FROM profiles WHERE id = :profileId;',
+        { profileId: normalizedProfileId },
+      );
+    });
+    return deepFreeze({ ok: true });
+  }
+
+  function exportProfile(profileId) {
+    const profile = getProfile(profileId);
+    const payload = {
+      schemaVersion: PROFILE_EXPORT_SCHEMA_VERSION,
+      profile,
+      exportedAt: timestampFromClock(clock),
+      forbiddenFieldsPolicy: PROFILE_EXPORT_FORBIDDEN_FIELDS_POLICY,
+    };
+    assertProfileExport(payload);
+    return deepFreeze(payload);
+  }
+
   function savePrivacySettings(settings) {
     assertPrivacySettings(settings);
     const normalized = normalizePrivacySettingsForReturn(settings);
@@ -606,12 +1003,21 @@ ON CONFLICT(id) DO UPDATE SET
   return Object.freeze({
     initialize,
     createProfile,
+    listProfiles,
+    getProfile,
+    updateProfile,
+    deleteProfile,
+    getActiveProfileId,
+    setActiveProfile,
+    exportProfile,
     savePrivacySettings,
   });
 }
 
 module.exports = {
   SQLITE_SCHEMA_VERSION,
+  ACTIVE_PROFILE_META_KEY,
+  RESERVED_PROFILE_IDS,
   SQLITE_SCHEMA_STATEMENTS,
   EMPTY_GLOSSARY_REVISION,
   getSqliteSchemaSql,

@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T19:47:15.778Z",
+  "migrated_at": "2026-05-27T20:12:43.981Z",
   "source_path": "STATE.md",
-  "source_sha256": "93b3ec096069185a6a65077909ced9e244387d521c6f0a150b2dab69db31f35d",
+  "source_sha256": "451fa68fe96f6d617faae555629d2d8a30c1c18c8922cb35bb1a3ca2992c8caf",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
     "current_slice_prefix": "T-007",
-    "current_slice_id": "T-007-003",
-    "current_slice_goal": "Profile CRUD active profile and safe export API",
+    "current_slice_id": "T-007-004",
+    "current_slice_goal": "Theme and glossary API contracts",
     "current_slice_status": "doing",
-    "completed_slices": 2,
+    "completed_slices": 3,
     "total_slices": 6,
-    "progress_pct": 33,
-    "next_slice_id": "T-007-004",
-    "next_slice_goal": "Theme and glossary API contracts",
-    "last_checkpoint": "2026-05-27T19:47:15.777Z",
+    "progress_pct": 50,
+    "next_slice_id": "T-007-005",
+    "next_slice_goal": "Privacy settings and write-only key API",
+    "last_checkpoint": "2026-05-27T20:12:43.980Z",
     "done": [],
     "doing": [],
     "todo": []
