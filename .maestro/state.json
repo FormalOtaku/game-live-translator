@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T20:40:49.290Z",
+  "migrated_at": "2026-05-27T21:03:59.614Z",
   "source_path": "STATE.md",
-  "source_sha256": "6bde1946543fe4e8520fd80c45907d74fc64e01bd3ed271145c0557f138a59bf",
+  "source_sha256": "27f83116f1dd42a175d0906641da9df278206e592e6a8d12a31ecbbee0d67342",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
     "current_slice_prefix": "T-007",
-    "current_slice_id": "T-007-005",
-    "current_slice_goal": "Privacy settings and write-only key API",
+    "current_slice_id": "T-007-006",
+    "current_slice_goal": "Configuration API smoke runbook and parent closeout",
     "current_slice_status": "doing",
-    "completed_slices": 4,
+    "completed_slices": 5,
     "total_slices": 6,
-    "progress_pct": 67,
-    "next_slice_id": "T-007-006",
-    "next_slice_goal": "Configuration API smoke runbook and parent closeout",
-    "last_checkpoint": "2026-05-27T20:40:49.290Z",
+    "progress_pct": 83,
+    "next_slice_id": null,
+    "next_slice_goal": null,
+    "last_checkpoint": "2026-05-27T21:03:59.614Z",
     "done": [],
     "doing": [],
     "todo": []

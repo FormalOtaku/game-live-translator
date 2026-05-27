@@ -361,6 +361,39 @@ function normalizePrivacySettingsForReturn(settings) {
   return deepFreeze(output);
 }
 
+function privacySettingsFromRow(row) {
+  if (row === null) return normalizePrivacySettingsForReturn(DEFAULT_PRIVACY_SETTINGS);
+  const debugScreenshotDirectory = rowValue(
+    row,
+    'debugScreenshotDirectory',
+    'debug_screenshot_directory',
+  );
+  const settings = {
+    saveRecentOcrText: rowValue(row, 'saveRecentOcrText', 'save_recent_ocr_text') === 1,
+    recentOcrLimit: rowValue(row, 'recentOcrLimit', 'recent_ocr_limit'),
+    saveRecentTranslations: rowValue(
+      row,
+      'saveRecentTranslations',
+      'save_recent_translations',
+    ) === 1,
+    recentTranslationLimit: rowValue(
+      row,
+      'recentTranslationLimit',
+      'recent_translation_limit',
+    ),
+    saveDebugScreenshots: rowValue(
+      row,
+      'saveDebugScreenshots',
+      'save_debug_screenshots',
+    ) === 1,
+    debugRetentionDays: rowValue(row, 'debugRetentionDays', 'debug_retention_days'),
+  };
+  if (debugScreenshotDirectory !== null && debugScreenshotDirectory !== undefined) {
+    settings.debugScreenshotDirectory = debugScreenshotDirectory;
+  }
+  return normalizePrivacySettingsForReturn(settings);
+}
+
 function normalizeThemeForReturn(theme) {
   return deepFreeze({
     id: theme.id,
@@ -1430,6 +1463,25 @@ LIMIT 1;`,
     });
   }
 
+  function getPrivacySettings() {
+    const row = get(
+      database,
+      `SELECT
+  save_recent_ocr_text AS saveRecentOcrText,
+  recent_ocr_limit AS recentOcrLimit,
+  save_recent_translations AS saveRecentTranslations,
+  recent_translation_limit AS recentTranslationLimit,
+  save_debug_screenshots AS saveDebugScreenshots,
+  debug_screenshot_directory AS debugScreenshotDirectory,
+  debug_retention_days AS debugRetentionDays
+FROM privacy_settings
+WHERE id = 1
+LIMIT 1;`,
+      {},
+    );
+    return privacySettingsFromRow(row);
+  }
+
   function savePrivacySettings(settings) {
     assertPrivacySettings(settings);
     const normalized = normalizePrivacySettingsForReturn(settings);
@@ -1497,6 +1549,7 @@ ON CONFLICT(id) DO UPDATE SET
     deleteTheme,
     exportGlossary,
     importGlossary,
+    getPrivacySettings,
     savePrivacySettings,
   });
 }

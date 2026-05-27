@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-007
-- current_slice_id: T-007-005
-- current_slice_goal: Privacy settings and write-only key API
+- current_slice_id: T-007-006
+- current_slice_goal: Configuration API smoke runbook and parent closeout
 - current_slice_status: doing
-- completed_slices: 4
+- completed_slices: 5
 - total_slices: 6
-- progress_pct: 67
-- next_slice_id: T-007-006
-- next_slice_goal: Configuration API smoke runbook and parent closeout
-- last_checkpoint: 2026-05-27T20:40:49.290Z
+- progress_pct: 83
+- next_slice_id:
+- next_slice_goal:
+- last_checkpoint: 2026-05-27T21:03:59.614Z
 ## Session Flow
 - current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: none
 - checkpoint_reason: T-007 parent still in progress; no human checkpoint required until parent closeout.
-- last_completed_slice: T-007-004
-- handoff_summary: T-007-004 complete: theme/glossary API contracts landed. Added OverlayTheme create/update request validators, theme cssJson validation, SQLite theme list/get/create/update/delete with built-in/in-use guards, glossary JSON/CSV export/import with all-or-nothing validation, CSV BOM and malformed-row diagnostics, localhost API routes, and spec/decision/migration updates. Local and Docker npm test/build/lint pass with 217 tests; git diff --check passes; Claude sidecar T-007-004-r2 clean with must_fix=0 and unresolved P1/P2=0.
-- next_action: start T-007-005 privacy settings and write-only key API
-- updated_at: 2026-05-27T20:40:49.287Z
+- last_completed_slice: T-007-005
+- handoff_summary: T-007-005 complete: privacy settings GET/PUT and write-only provider key PUT/DELETE contracts landed. Added SQLite getPrivacySettings fallback, secure-store provider key write/delete boundary with no read/list method, local API privacy/key routes with redacted KEYCHAIN_UNAVAILABLE handling, malformed JSON guards, and spec/decision/migration/changelog updates. Local and Docker npm test/build/lint pass with 229 tests; git diff --check passes; Claude sidecar T-007-005-r2 clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: start T-007-006 configuration API smoke runbook and T-007 parent closeout
+- updated_at: 2026-05-27T21:03:59.611Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

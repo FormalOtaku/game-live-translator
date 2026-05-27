@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T20:40:20.103Z",
+  "migrated_at": "2026-05-27T21:03:48.693Z",
   "source_path": "TASKS.md",
-  "source_sha256": "577eb2d0d297d466ae6ebe389c00060f701c3533794cc5ee383b03836843a87b",
+  "source_sha256": "2eb158afc8da13d067c2cf9b8cc450e827ce12832fcfee9be3e70cc66e0740b1",
   "task_count": 23,
   "counts": {
-    "todo": 2,
+    "todo": 1,
     "doing": 1,
     "blocked": 0,
-    "done": 20
+    "done": 21
   },
   "tasks": [
     {
@@ -162,14 +162,14 @@
     {
       "id": "T-007-005",
       "title": "Privacy settings and write-only key API",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
     },
     {
       "id": "T-007-006",
       "title": "Configuration API smoke runbook and parent closeout",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
     }

@@ -200,3 +200,16 @@
 - Regression tests added first: focused contract, repository, and local API tests cover theme validation, built-in guards, theme-in-use checks, glossary JSON/CSV parsing, duplicate rejection before writes, frozen return shapes, route status/error mapping, and redaction.
 - Migration needed: None. Existing schema version 1 and profile export schema version 1 are unchanged.
 - Rollback plan: Revert the theme/glossary validators, repository/API methods, focused tests, and spec/decision entries. No persisted schema migration is required.
+
+### CHG-20260528-016
+- Date: 2026-05-28
+- Summary: Added privacy settings read/update and write-only provider key API contracts for T-007-005.
+- Reason: First-run, Privacy Settings, and Translation Settings need durable privacy controls and provider key save/delete routes without weakening the no-plaintext-key invariant.
+- Impact scope (DB/API/UI):
+  - DB: Reuses schema version 1 `privacy_settings`. Adds no SQLite provider-key storage, no cache persistence change, and no profile export schema bump.
+  - API: Adds `getPrivacySettings`, `/api/settings/privacy` GET/PUT, `createProviderKeyStore({ adapter })`, and `/api/keys/{provider}` PUT/DELETE. Provider key success responses remain `{ ok: true }`, and key store adapter failures map to redacted `KEYCHAIN_UNAVAILABLE`.
+  - UI: Privacy Settings and provider-key entry/delete flows can rely on canonical validation errors, stable read/update privacy responses, and write-only key semantics.
+- Risk: The concrete Windows secure-storage integration remains an adapter implementation task; this slice locks the contract and regression harness without native dependencies.
+- Regression tests added first: storage tests cover privacy row read/fallback and validation-before-write; provider-key-store tests cover write/delete, provider validation, key redaction, adapter failure mapping, and absence of read/list methods; local API tests cover privacy/key routes, method errors, DB/keychain unavailable, and no key echo.
+- Migration needed: None. Provider keys remain outside SQLite, profile exports, diagnostics, and logs.
+- Rollback plan: Disable `/api/settings/privacy` and `/api/keys/{provider}` routes while preserving existing profile/theme/glossary APIs; no SQLite data migration rollback is required.

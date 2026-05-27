@@ -284,12 +284,27 @@ function profileRepositoryUnavailable() {
   );
 }
 
+function providerKeyStoreUnavailable() {
+  return new ContractError(
+    'KEYCHAIN_UNAVAILABLE',
+    'Provider key store is not available',
+  );
+}
+
 function getProfileRepository(repository, methods) {
   if (!isObject(repository)) throw profileRepositoryUnavailable();
   for (const method of methods) {
     if (typeof repository[method] !== 'function') throw profileRepositoryUnavailable();
   }
   return repository;
+}
+
+function getProviderKeyStore(store, methods) {
+  if (!isObject(store)) throw providerKeyStoreUnavailable();
+  for (const method of methods) {
+    if (typeof store[method] !== 'function') throw providerKeyStoreUnavailable();
+  }
+  return store;
 }
 
 function decodePathSegment(segment) {
@@ -354,6 +369,7 @@ function statusCodeForContractError(error) {
   const code = error && error.code;
   if (code === 'PROFILE_NOT_FOUND') return 404;
   if (code === 'THEME_NOT_FOUND') return 404;
+  if (code === 'PROVIDER_UNKNOWN') return 400;
   if (code === 'CANNOT_DELETE_ACTIVE_PROFILE') return 409;
   if (
     code === 'CANNOT_UPDATE_BUILT_IN_THEME' ||
@@ -372,6 +388,7 @@ function statusCodeForContractError(error) {
     return 400;
   }
   if (code === 'DB_UNAVAILABLE') return 503;
+  if (code === 'KEYCHAIN_UNAVAILABLE') return 503;
   if (code === 'DB_READ_FAILED') return 500;
   return 500;
 }
@@ -451,6 +468,7 @@ function createLocalApiServer(options = {}) {
     : Object.freeze([]);
   const allowSamePortLocalhostOrigin = options.allowSamePortLocalhostOrigin !== false;
   const profileRepository = options.profileRepository;
+  const providerKeyStore = options.providerKeyStore;
   let selectedPort = null;
   let upgradeAttached = false;
 
@@ -743,6 +761,63 @@ function createLocalApiServer(options = {}) {
     return false;
   }
 
+  async function handleSettingsRoute(pathname, req, res) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'api' || segments[1] !== 'settings') return false;
+
+    try {
+      if (segments.length === 3 && segments[2] === 'privacy') {
+        if (req.method === 'GET') {
+          const repository = getProfileRepository(profileRepository, ['getPrivacySettings']);
+          writeJson(res, 200, repository.getPrivacySettings());
+          return true;
+        }
+        if (req.method === 'PUT') {
+          const repository = getProfileRepository(profileRepository, ['savePrivacySettings']);
+          const payload = await readJsonBody(req);
+          writeJson(res, 200, repository.savePrivacySettings(payload));
+          return true;
+        }
+        writeMethodNotAllowed(res, ['GET', 'PUT']);
+        return true;
+      }
+    } catch (error) {
+      writeContractError(res, error);
+      return true;
+    }
+
+    return false;
+  }
+
+  async function handleProviderKeyRoute(pathname, req, res) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'api' || segments[1] !== 'keys') return false;
+
+    try {
+      if (segments.length === 3) {
+        const provider = decodePathSegment(segments[2]);
+        if (req.method === 'PUT') {
+          const store = getProviderKeyStore(providerKeyStore, ['saveProviderKey']);
+          const payload = await readJsonBody(req);
+          writeJson(res, 200, await store.saveProviderKey(provider, payload));
+          return true;
+        }
+        if (req.method === 'DELETE') {
+          const store = getProviderKeyStore(providerKeyStore, ['deleteProviderKey']);
+          writeJson(res, 200, await store.deleteProviderKey(provider));
+          return true;
+        }
+        writeMethodNotAllowed(res, ['PUT', 'DELETE']);
+        return true;
+      }
+    } catch (error) {
+      writeContractError(res, error);
+      return true;
+    }
+
+    return false;
+  }
+
   async function handleRequest(req, res) {
     const hasOrigin = typeof req.headers.origin === 'string' && req.headers.origin.trim() !== '';
     const origin = resolveCorsOrigin(req.headers.origin, {
@@ -826,6 +901,8 @@ function createLocalApiServer(options = {}) {
 
     if (await handleProfileRoute(pathname, req, res)) return;
     if (await handleThemeRoute(pathname, req, res)) return;
+    if (await handleSettingsRoute(pathname, req, res)) return;
+    if (await handleProviderKeyRoute(pathname, req, res)) return;
 
     writeApiError(res, 404, 'NOT_FOUND', 'Resource not found');
   }

@@ -133,3 +133,11 @@
 - Decision: Implement theme CRUD and glossary import/export in the shared dependency-free repository/API contract. Built-in themes are read-only at the repository boundary, custom theme deletion checks `profile_settings` before deleting, and glossary import supports JSON plus headered CSV but is all-or-nothing: any parse, validation, duplicate-id, or duplicate-normalized-source error aborts before writes and returns canonical error details.
 - Consequences: The future Electron UI can safely offer duplicate/edit/delete flows without relying on client-only guards. Glossary import is less permissive than a partial-import workflow, but it preserves streamer setups by preventing invalid rows from overwriting the current glossary. The API keeps `rejected: []` on success for forward compatibility with a future explicitly-lenient import mode.
 - Follow-up: If user testing shows partial CSV import is important, add a new explicit `mode: "lenient"` contract and tests instead of changing the v1 all-or-nothing default.
+
+### DEC-016
+- Date: 2026-05-28
+- Context: T-007-005 must expose provider key save/delete routes while preserving the v1 invariant that keys are never stored in SQLite, exported, logged, diagnosed, or read back through API.
+- Options: add provider key columns/tables to SQLite; let route handlers call platform keychain APIs directly; add a dependency-free secure-store adapter boundary with write/delete only.
+- Decision: Add `createProviderKeyStore({ adapter })` as the only provider-key persistence boundary. It validates provider ids and key write bodies, calls injected secure-store write/delete primitives, maps adapter failures to `KEYCHAIN_UNAVAILABLE`, returns only `{ ok: true }`, and intentionally exposes no read/list method.
+- Consequences: The localhost API harness can test write/delete semantics without adding native keychain dependencies or plaintext files. Future Electron/Windows integration must plug the adapter into OS secure storage while preserving the same write-only contract and redacted errors.
+- Follow-up: Add a Windows integration smoke once the concrete keychain adapter is selected, but keep the dependency-free adapter contract as the regression fixture.

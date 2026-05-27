@@ -134,6 +134,19 @@ function storedThemeRow(overrides = {}) {
   };
 }
 
+function storedPrivacyRow(overrides = {}) {
+  return {
+    saveRecentOcrText: 1,
+    recentOcrLimit: 12,
+    saveRecentTranslations: 1,
+    recentTranslationLimit: 8,
+    saveDebugScreenshots: 1,
+    debugScreenshotDirectory: 'C:\\glt-debug',
+    debugRetentionDays: 3,
+    ...overrides,
+  };
+}
+
 function makeProfileCreateRequest(overrides = {}) {
   return {
     name: 'Test Profile',
@@ -1211,6 +1224,40 @@ test('sqlite config repository: savePrivacySettings validates before writing', (
       return true;
     },
   );
+  assert.deepEqual(database.runs, []);
+});
+
+test('sqlite config repository: getPrivacySettings returns the stored singleton row', () => {
+  const database = new QueuedDatabase({ gets: [storedPrivacyRow()] });
+  const repository = fixedRepository(database).repository;
+
+  const settings = repository.getPrivacySettings();
+
+  assert.equal(Object.isFrozen(settings), true);
+  assert.deepEqual(settings, {
+    saveRecentOcrText: true,
+    recentOcrLimit: 12,
+    saveRecentTranslations: true,
+    recentTranslationLimit: 8,
+    saveDebugScreenshots: true,
+    debugScreenshotDirectory: 'C:\\glt-debug',
+    debugRetentionDays: 3,
+  });
+  assert.equal(database.getCalls.length, 1);
+  assert.match(database.getCalls[0].sql, /FROM privacy_settings/);
+  assert.match(database.getCalls[0].sql, /WHERE id = 1/);
+  assert.deepEqual(database.runs, []);
+});
+
+test('sqlite config repository: getPrivacySettings falls back to privacy defaults when absent', () => {
+  const database = new QueuedDatabase({ gets: [null] });
+  const repository = fixedRepository(database).repository;
+
+  const settings = repository.getPrivacySettings();
+
+  assert.deepEqual(settings, DEFAULT_PRIVACY_SETTINGS);
+  assert.equal(Object.isFrozen(settings), true);
+  assert.equal(database.getCalls.length, 1);
   assert.deepEqual(database.runs, []);
 });
 

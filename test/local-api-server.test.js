@@ -14,7 +14,7 @@ const {
   providerErrorToRuntimeStatus,
   resolveCorsOrigin,
 } = require('../src/server/local-api-server');
-const { ContractError } = require('../src/contracts/security');
+const { ContractError, DEFAULT_PRIVACY_SETTINGS } = require('../src/contracts/security');
 const { createSubtitleFrame, OverlayState } = require('../src/core/subtitle-state');
 
 const FIXED_TIME = '2026-05-28T10:00:00.000Z';
@@ -129,6 +129,13 @@ function makeApiTheme(overrides = {}) {
     },
     createdAt: FIXED_TIME,
     updatedAt: FIXED_TIME,
+    ...overrides,
+  };
+}
+
+function makeApiPrivacySettings(overrides = {}) {
+  return {
+    ...DEFAULT_PRIVACY_SETTINGS,
     ...overrides,
   };
 }
@@ -885,6 +892,270 @@ test('theme and glossary APIs report DB_UNAVAILABLE when repository methods are 
     });
     assert.equal(glossary.statusCode, 503);
     assert.equal(glossary.parsed.error.code, 'DB_UNAVAILABLE');
+  } finally {
+    await api.stop();
+  }
+});
+
+test('privacy settings API gets and updates through the injected repository', async () => {
+  const calls = [];
+  const storedSettings = makeApiPrivacySettings({
+    saveRecentTranslations: true,
+    recentTranslationLimit: 10,
+  });
+  const updatedSettings = makeApiPrivacySettings({
+    saveRecentOcrText: true,
+    recentOcrLimit: 6,
+    saveRecentTranslations: true,
+    recentTranslationLimit: 4,
+  });
+  const repository = {
+    getPrivacySettings() {
+      calls.push(['getPrivacySettings']);
+      return storedSettings;
+    },
+    savePrivacySettings(payload) {
+      calls.push(['savePrivacySettings', payload]);
+      return updatedSettings;
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+  });
+  const started = await api.start();
+
+  try {
+    const get = await requestJson({
+      port: started.port,
+      path: '/api/settings/privacy',
+    });
+    assert.equal(get.statusCode, 200);
+    assert.deepEqual(get.parsed, storedSettings);
+
+    const putPayload = makeApiPrivacySettings({
+      saveRecentOcrText: true,
+      recentOcrLimit: 6,
+    });
+    const put = await requestJson({
+      port: started.port,
+      path: '/api/settings/privacy',
+      method: 'PUT',
+      body: putPayload,
+    });
+    assert.equal(put.statusCode, 200);
+    assert.deepEqual(put.parsed, updatedSettings);
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/settings/privacy',
+      method: 'POST',
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'GET, PUT');
+
+    assert.deepEqual(calls, [
+      ['getPrivacySettings'],
+      ['savePrivacySettings', putPayload],
+    ]);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('privacy settings API rejects malformed JSON before repository calls', async () => {
+  const calls = [];
+  const repository = {
+    savePrivacySettings(payload) {
+      calls.push(['savePrivacySettings', payload]);
+      return makeApiPrivacySettings();
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/settings/privacy',
+      method: 'PUT',
+      body: '{"saveRecentOcrText":',
+    });
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.parsed.error.code, 'BAD_REQUEST');
+    assert.equal(response.parsed.error.details.fieldErrors[0].code, 'JSON_INVALID');
+    assert.deepEqual(calls, []);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('provider key API writes and deletes through the injected write-only store', async () => {
+  const calls = [];
+  const providerKeyStore = {
+    async saveProviderKey(provider, payload) {
+      calls.push(['saveProviderKey', provider, payload]);
+      return { ok: true };
+    },
+    async deleteProviderKey(provider) {
+      calls.push(['deleteProviderKey', provider]);
+      return { ok: true };
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    providerKeyStore,
+  });
+  const started = await api.start();
+
+  try {
+    const payload = { provider: 'deepl', apiKey: 'secret-token-value' };
+    const saved = await requestJson({
+      port: started.port,
+      path: '/api/keys/deepl',
+      method: 'PUT',
+      body: payload,
+    });
+    assert.equal(saved.statusCode, 200);
+    assert.deepEqual(saved.parsed, { ok: true });
+
+    const deleted = await requestJson({
+      port: started.port,
+      path: '/api/keys/deepl',
+      method: 'DELETE',
+    });
+    assert.equal(deleted.statusCode, 200);
+    assert.deepEqual(deleted.parsed, { ok: true });
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/keys/deepl',
+      method: 'GET',
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'PUT, DELETE');
+
+    assert.deepEqual(calls, [
+      ['saveProviderKey', 'deepl', payload],
+      ['deleteProviderKey', 'deepl'],
+    ]);
+    assert.equal(JSON.stringify([saved.parsed, deleted.parsed]).includes('secret-token-value'), false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('privacy and key APIs map unavailable stores and keychain errors', async () => {
+  const unavailableApi = createLocalApiServer({ preferredPort: 0 });
+  const unavailableStarted = await unavailableApi.start();
+
+  try {
+    const privacy = await requestJson({
+      port: unavailableStarted.port,
+      path: '/api/settings/privacy',
+    });
+    assert.equal(privacy.statusCode, 503);
+    assert.equal(privacy.parsed.error.code, 'DB_UNAVAILABLE');
+
+    const key = await requestJson({
+      port: unavailableStarted.port,
+      path: '/api/keys/deepl',
+      method: 'PUT',
+      body: { apiKey: 'secret-token-value' },
+    });
+    assert.equal(key.statusCode, 503);
+    assert.equal(key.parsed.error.code, 'KEYCHAIN_UNAVAILABLE');
+  } finally {
+    await unavailableApi.stop();
+  }
+
+  const leakedKey = 'sk-ABCDEFGHIJKLMNOP1234';
+  const redactingStore = {
+    async saveProviderKey(provider, payload) {
+      if (provider === 'unknown') {
+        throw new ContractError('PROVIDER_UNKNOWN', 'provider is not supported', {
+          provider,
+        });
+      }
+      throw new ContractError(
+        'KEYCHAIN_UNAVAILABLE',
+        `cannot store ${payload.apiKey}`,
+        { provider, raw: payload.apiKey, bearer: `Bearer ${leakedKey}` },
+      );
+    },
+    async deleteProviderKey() {
+      throw new ContractError('KEYCHAIN_UNAVAILABLE', 'delete failed');
+    },
+  };
+  const redactingApi = createLocalApiServer({
+    preferredPort: 0,
+    providerKeyStore: redactingStore,
+  });
+  const redactingStarted = await redactingApi.start();
+
+  try {
+    const unknown = await requestJson({
+      port: redactingStarted.port,
+      path: '/api/keys/unknown',
+      method: 'PUT',
+      body: { apiKey: leakedKey },
+    });
+    assert.equal(unknown.statusCode, 400);
+    assert.equal(unknown.parsed.error.code, 'PROVIDER_UNKNOWN');
+
+    const keychain = await requestJson({
+      port: redactingStarted.port,
+      path: '/api/keys/deepl',
+      method: 'PUT',
+      body: { apiKey: leakedKey },
+    });
+    assert.equal(keychain.statusCode, 503);
+    assert.equal(keychain.parsed.error.code, 'KEYCHAIN_UNAVAILABLE');
+
+    const deleted = await requestJson({
+      port: redactingStarted.port,
+      path: '/api/keys/deepl',
+      method: 'DELETE',
+    });
+    assert.equal(deleted.statusCode, 503);
+    assert.equal(deleted.parsed.error.code, 'KEYCHAIN_UNAVAILABLE');
+
+    const serialized = JSON.stringify([unknown.parsed, keychain.parsed, deleted.parsed]);
+    assert.equal(serialized.includes(leakedKey), false);
+    assert.equal(serialized.includes('[REDACTED]'), true);
+  } finally {
+    await redactingApi.stop();
+  }
+});
+
+test('provider key API rejects malformed JSON before store calls', async () => {
+  const calls = [];
+  const providerKeyStore = {
+    async saveProviderKey(provider, payload) {
+      calls.push(['saveProviderKey', provider, payload]);
+      return { ok: true };
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    providerKeyStore,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/keys/deepl',
+      method: 'PUT',
+      body: '{"apiKey":',
+    });
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.parsed.error.code, 'BAD_REQUEST');
+    assert.equal(response.parsed.error.details.fieldErrors[0].code, 'JSON_INVALID');
+    assert.deepEqual(calls, []);
   } finally {
     await api.stop();
   }
