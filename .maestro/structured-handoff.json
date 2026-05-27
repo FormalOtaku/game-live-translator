@@ -1,9 +1,9 @@
 {
   "completed_items": [
-    "T-005-003"
+    "T-005-004"
   ],
   "blockers": [],
   "decisions_made": [],
   "open_questions": [],
-  "summary": "T-005-003 complete: deterministic echo and injected DeepL provider adapters landed with controlled provider error mapping and 19 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-003-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0."
+  "summary": "T-005-004 complete: deterministic subtitle frame construction and in-memory overlay state primitives landed with escapedText, debug sourceText privacy defaults, expiry/reconnect snapshots, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-004-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0."
 }

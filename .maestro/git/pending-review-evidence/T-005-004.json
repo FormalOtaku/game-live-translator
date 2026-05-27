@@ -1,0 +1,31 @@
+{
+  "schema_version": "maestro.pending-review-evidence.v1",
+  "task_id": "T-005-004",
+  "evidence": [
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-005-004/claude/review/review.json; receive=.maestro/agent-pass/T-005-004/claude/review/receive-report.json",
+    "review.json; reviewed_files=9; findings=5; must_fix=0",
+    "unresolved P1/P2=0",
+    "agent-pass review limitation: Could not execute `node --test test/subtitle-state.test.js` in the sidecar worktree because the worktree is still at base_sha cc74d59 and does not contain src/core/subtitle-state.js or test/subtitle-state.test.js; the brief instructs treating the Captured Diff as authoritative, so tests were reviewed statically against the patch.",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-005-004-r2/claude/review/review.json; receive=.maestro/agent-pass/T-005-004-r2/claude/review/receive-report.json",
+    "review.json; reviewed_files=9; findings=0; must_fix=0"
+  ],
+  "sources": [
+    {
+      "slice_id": "T-005-004",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-005-004/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-005-004/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T14:59:14.250Z"
+    },
+    {
+      "slice_id": "T-005-004-r2",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-005-004-r2/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-005-004-r2/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T15:03:58.360Z"
+    }
+  ],
+  "updated_at": "2026-05-27T15:03:58.360Z"
+}

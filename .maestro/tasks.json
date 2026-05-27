@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T14:42:34.661Z",
+  "migrated_at": "2026-05-27T15:04:37.370Z",
   "source_path": "TASKS.md",
-  "source_sha256": "b3100734f6aa1fbb113cf8b977e27437f6d05080a4a2affb9220ab58ddaa4f31",
+  "source_sha256": "4d5658a744833b612b8b35a05a0ff1a443fd8161bf1b4ce02e6808adad895d88",
   "task_count": 10,
   "counts": {
-    "todo": 3,
+    "todo": 2,
     "doing": 0,
     "blocked": 0,
-    "done": 7
+    "done": 8
   },
   "tasks": [
     {
@@ -45,7 +45,7 @@
       "title": "Implement deterministic core runtime pipeline",
       "status": "todo",
       "owner": "codex",
-      "notes": "Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 through T-005-003 complete, next T-005-004"
+      "notes": "Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 through T-005-004 complete, next T-005-005"
     },
     {
       "id": "T-005-001",
@@ -71,9 +71,9 @@
     {
       "id": "T-005-004",
       "title": "Subtitle frame and overlay state primitives",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "Production-grade core pipeline slices for v1 Japanese-to-English OBS flow"
+      "notes": "Added deterministic subtitle frame and in-memory overlay state primitives with escapedText, privacy-safe sourceText omission, expiry/reconnect snapshots, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0"
     },
     {
       "id": "T-005-005",

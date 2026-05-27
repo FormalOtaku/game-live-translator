@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-005
-- current_slice_id: T-005-004
-- current_slice_goal: Subtitle frame and overlay state primitives
+- current_slice_id: T-005-005
+- current_slice_goal: Deterministic OCR-to-overlay integration fixture
 - current_slice_status: todo
-- completed_slices: 3
+- completed_slices: 4
 - total_slices: 5
-- progress_pct: 60
-- next_slice_id: T-005-004
-- next_slice_goal: Subtitle frame and overlay state primitives
-- last_checkpoint: 2026-05-27T14:44:25.918Z
+- progress_pct: 80
+- next_slice_id: T-005-005
+- next_slice_goal: Deterministic OCR-to-overlay integration fixture
+- last_checkpoint: 2026-05-27T15:05:51.214Z
 ## Session Flow
-- current_session_role: execution
+- current_session_role: supervisor
 - recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-005-003 verification and Claude sidecar review evidence are complete.
-- last_completed_slice: T-005-003
-- handoff_summary: T-005-003 complete: deterministic echo and injected DeepL provider adapters landed with controlled provider error mapping and 19 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-003-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0.
-- next_action: Start T-005-004 subtitle frame and overlay state primitives slice.
-- updated_at: 2026-05-27T14:44:25.915Z
+- checkpoint_reason: T-005-004 complete: local and devcontainer npm test/build/lint pass; Claude sidecar T-005-004-r2 clean with findings=0, must_fix=0, unresolved P1/P2=0.
+- last_completed_slice: T-005-004
+- handoff_summary: T-005-004 complete: deterministic subtitle frame construction and in-memory overlay state primitives landed with escapedText, debug sourceText privacy defaults, expiry/reconnect snapshots, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-004-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0.
+- next_action: start_execution_session
+- updated_at: 2026-05-27T15:05:51.211Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

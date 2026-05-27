@@ -57,3 +57,16 @@
 - Regression tests added first: `test/translation-providers.test.js` covers 19 cases for the provider error code enum, the retryable subset, echo determinism, target-language gating, DeepL adapter construction validation, success path with injected fetch, endpoint override handling, and every documented failure-to-code mapping including API-key-leak prevention in error payloads and request URLs.
 - Migration needed: None.
 - Rollback plan: Revert the new core module, tests, and spec/decision entries; remove `assertTargetLang`/`assertProvider` helpers from `src/contracts/validation.js`. No persisted data or runtime surface is introduced.
+
+### CHG-20260527-005
+- Date: 2026-05-27
+- Summary: Added deterministic subtitle frame construction and in-memory overlay state primitives for T-005-004.
+- Reason: The OBS Browser Source WebSocket needs a reconnect-safe latest-frame contract before the end-to-end OCR-to-overlay fixture lands. The frame contract also needs to lock overlay escaping and source-text privacy defaults.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. Subtitle frames and overlay state are in-memory only and must not persist OCR/source/translation text by default.
+  - API: `SubtitleFrame` now includes `escapedText`, explicit frame validation, default `displayMs=7000`, optional debug-only `sourceText`, and an `OverlayState` snapshot contract for overlay client counts and latest-frame replay.
+  - UI: Overlay rendering and Home/Status can consume escaped frame text, overlay client counts, and latest-frame snapshots without inventing local state semantics.
+- Risk: Future overlay renderer code could mistakenly render `translatedText` instead of `escapedText`. This is mitigated by focused tests now and must be reinforced in T-005-005 overlay integration tests.
+- Regression tests added first: `test/subtitle-state.test.js` covers frame shape, deterministic ids/timestamps, source-text omission by default, explicit debug source text, malicious HTML escaping, validation failures, latest-frame replay, expiry, clear behavior, and overlay client counters.
+- Migration needed: None.
+- Rollback plan: Revert the new core module, tests, and spec/decision entries; no persisted data is introduced.

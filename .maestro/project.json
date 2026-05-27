@@ -28,14 +28,14 @@
     "slices_per_checkpoint": 3
   },
   "session_flow": {
-    "current_session_role": "execution",
+    "current_session_role": "supervisor",
     "recommended_next_session_role": "execution",
     "checkpoint_status": "satisfied",
-    "checkpoint_reason": "T-005-003 verification and Claude sidecar review evidence are complete.",
-    "last_completed_slice": "T-005-003",
-    "handoff_summary": "T-005-003 complete: deterministic echo and injected DeepL provider adapters landed with controlled provider error mapping and 19 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-003-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0.",
-    "next_action": "Start T-005-004 subtitle frame and overlay state primitives slice.",
-    "updated_at": "2026-05-27T14:44:25.915Z"
+    "checkpoint_reason": "T-005-004 complete: local and devcontainer npm test/build/lint pass; Claude sidecar T-005-004-r2 clean with findings=0, must_fix=0, unresolved P1/P2=0.",
+    "last_completed_slice": "T-005-004",
+    "handoff_summary": "T-005-004 complete: deterministic subtitle frame construction and in-memory overlay state primitives landed with escapedText, debug sourceText privacy defaults, expiry/reconnect snapshots, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-004-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0.",
+    "next_action": "start_execution_session",
+    "updated_at": "2026-05-27T15:05:51.211Z"
   },
   "ui_design_policy": {
     "surface_priority": [

@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T14:44:25.918Z",
+  "migrated_at": "2026-05-27T15:05:51.215Z",
   "source_path": "STATE.md",
-  "source_sha256": "39806073e42190dd9449a3d988c782be1780babecb9be7b73afdbfbb1167982d",
+  "source_sha256": "0faf0abecaf7d9319a73018ac1e9131c018e9606897cfca8f0c62d23ec6609d8",
   "current_focus": {
     "milestone": null,
     "active_task_ids": [
@@ -12,23 +12,23 @@
   },
   "slice_progress": {
     "current_slice_prefix": "T-005",
-    "current_slice_id": "T-005-004",
-    "current_slice_goal": "Subtitle frame and overlay state primitives",
+    "current_slice_id": "T-005-005",
+    "current_slice_goal": "Deterministic OCR-to-overlay integration fixture",
     "current_slice_status": "todo",
-    "completed_slices": 3,
+    "completed_slices": 4,
     "total_slices": 5,
-    "progress_pct": 60,
-    "next_slice_id": "T-005-004",
-    "next_slice_goal": "Subtitle frame and overlay state primitives",
-    "last_checkpoint": "2026-05-27T14:44:25.918Z",
+    "progress_pct": 80,
+    "next_slice_id": "T-005-005",
+    "next_slice_goal": "Deterministic OCR-to-overlay integration fixture",
+    "last_checkpoint": "2026-05-27T15:05:51.214Z",
     "done": [
       "T-005-001",
       "T-005-002",
-      "T-005-003"
+      "T-005-003",
+      "T-005-004"
     ],
     "doing": [],
     "todo": [
-      "T-005-004",
       "T-005-005"
     ]
   }
