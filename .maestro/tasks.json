@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T17:15:49.967Z",
+  "migrated_at": "2026-05-27T18:00:30.213Z",
   "source_path": "TASKS.md",
-  "source_sha256": "8d121638a47b41fa22d65054487b9aa3cd24b3f1a433334ad92d7954ff65b454",
+  "source_sha256": "23b8b8fc9f439600f38c43c9a08ead590f01cf8cd1f0b5d8007fff14d743da8f",
   "task_count": 16,
   "counts": {
-    "todo": 3,
+    "todo": 2,
     "doing": 0,
     "blocked": 0,
-    "done": 13
+    "done": 14
   },
   "tasks": [
     {
@@ -113,9 +113,9 @@
     {
       "id": "T-006-004",
       "title": "App status stream and runtime error mapping",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification."
+      "notes": "Added dependency-free /ws/app AppStatus stream with shared upgrade dispatcher, sanitized status snapshots, runtime/overlay broadcasts, provider retryability mapping, /api/status fallback, and 129 passing local/Docker tests; Claude T-006-004-r3 clean with must_fix=0 and unresolved P1/P2=0"
     },
     {
       "id": "T-006-005",

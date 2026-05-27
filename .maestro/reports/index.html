@@ -29,24 +29,24 @@
 <body>
   <main>
     <header>
-      <p class="meta">Generated from structured Maestro state at 2026-05-27T17:15:49.968Z</p>
+      <p class="meta">Generated from structured Maestro state at 2026-05-27T18:00:30.214Z</p>
       <h1>Maestro<br>Project Report</h1>
       <p class="meta">/home/murasaki01/Projects/Game_Live_Translator</p>
     </header>
     <section class="grid">
       <div class="card"><span class="metric">16</span><span class="muted">tasks</span></div>
       <div class="card"><span class="metric">0</span><span class="muted">doing</span></div>
-      <div class="card"><span class="metric">3</span><span class="muted">todo</span></div>
-      <div class="card"><span class="metric">13</span><span class="muted">done</span></div>
+      <div class="card"><span class="metric">2</span><span class="muted">todo</span></div>
+      <div class="card"><span class="metric">14</span><span class="muted">done</span></div>
       <div class="card"><span class="metric">0</span><span class="muted">decisions</span></div>
     </section>
     <section>
       <h2>Current Focus</h2>
       <div class="card">
         <p><strong>Milestone:</strong> (none)</p>
-        <p><strong>Current slice:</strong> T-006-004</p>
-        <p><strong>Goal:</strong> App status stream and runtime error mapping</p>
-        <p><strong>Progress:</strong> 60%</p>
+        <p><strong>Current slice:</strong> T-006-005</p>
+        <p><strong>Goal:</strong> Server smoke runbook and parent closeout</p>
+        <p><strong>Progress:</strong> 80%</p>
       </div>
     </section>
     <section>
@@ -67,7 +67,7 @@
 <tr><td>T-006-001</td><td>Localhost HTTP bind health and status core</td><td><span class="pill done">done</span></td><td>codex</td><td>Added localhost HTTP server core with bind enforcement, port fallback, health/status JSON, redacted ApiError, no-wildcard CORS, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar T-006-001-r2 clean with unresolved P1/P2=0</td></tr>
 <tr><td>T-006-002</td><td>OBS overlay HTML renderer and safety fixtures</td><td><span class="pill done">done</span></td><td>codex</td><td>Added OBS overlay renderer and /overlay route with transparent self-contained HTML, escapedText-only rendering, no raw/debug text, no remote assets, CSP/no-store/nosniff headers, and 21 overlay/server focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar T-006-002-r2 clean with findings=0 and unresolved P1/P2=0</td></tr>
 <tr><td>T-006-003</td><td>Overlay WebSocket replay and broadcast core</td><td><span class="pill done">done</span></td><td>codex</td><td>Added dependency-free /ws/overlay WebSocket core with local/configured Origin gating, latest sanitized subtitle replay, live publishFrame broadcast, clearFrame events, ping/close/protocol rejection, overlay client counters, and 8 WebSocket/subscriber tests; local and devcontainer npm test/build/lint pass with 115 tests; Claude sidecar T-006-003-r3 clean with must_fix=0 and unresolved P1/P2=0</td></tr>
-<tr><td>T-006-004</td><td>App status stream and runtime error mapping</td><td><span class="pill todo">todo</span></td><td>codex</td><td>T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification.</td></tr>
+<tr><td>T-006-004</td><td>App status stream and runtime error mapping</td><td><span class="pill done">done</span></td><td>codex</td><td>Added dependency-free /ws/app AppStatus stream with shared upgrade dispatcher, sanitized status snapshots, runtime/overlay broadcasts, provider retryability mapping, /api/status fallback, and 129 passing local/Docker tests; Claude T-006-004-r3 clean with must_fix=0 and unresolved P1/P2=0</td></tr>
 <tr><td>T-006-005</td><td>Server smoke runbook and parent closeout</td><td><span class="pill todo">todo</span></td><td>codex</td><td>T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification.</td></tr></tbody>
       </table>
     </section>

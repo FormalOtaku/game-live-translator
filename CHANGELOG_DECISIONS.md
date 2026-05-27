@@ -122,3 +122,16 @@
 - Regression tests added first: focused local server and raw-socket WebSocket tests cover handshake rejection, origin rejection, replay on connect, live broadcast, clear events, client counters, ping responses, control-frame size rejection, and source-text omission.
 - Migration needed: None.
 - Rollback plan: Revert the overlay WebSocket helper, server upgrade wiring, tests, and spec/decision entries; no persisted data is introduced.
+
+### CHG-20260528-010
+- Date: 2026-05-28
+- Summary: Added the dependency-free `/ws/app` app status stream and provider-error-to-runtime-status mapping helpers for T-006-004.
+- Reason: Home/Status needs a real local stream of sanitized `AppStatus` snapshots reflecting runtime status and overlay state changes, and the API/UI layers need a deterministic way to map provider `ContractError` codes to `RuntimeStatus.state/code/message/retryable` and `ApiError.retryable` without parsing message text.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. `/ws/app` clients, snapshot fan-out, and runtime-status state remain in-memory runtime state only.
+  - API: `WS UPGRADE /ws/app` accepts valid local WebSocket clients on a separate path from `/ws/overlay`, applies the same configured/same-port localhost Origin policy and bounded client-frame rules, sends a sanitized `AppStatus` snapshot on connect, and broadcasts a fresh sanitized snapshot when runtime status or overlay state changes. Non-upgrade `GET /ws/app` returns the canonical retryable `WS_REJECTED` `ApiError`. `createLocalApiServer` now exposes `appWsPath` configuration and a `publishStatus()` method for runtime-status republish. `src/core/translation-providers.js` exports `providerErrorToRuntimeStatus` and `providerErrorRetryable`; `src/server/local-api-server.js` exports `buildApiErrorFromContractError` for canonical `ApiError` envelopes.
+  - UI: Home/Status can subscribe to `/ws/app` for push-driven status updates instead of polling, and trust `RuntimeStatus.retryable`/`code` from `/ws/app` for retry copy without parsing message text. `lastSubtitle`, capture/OCR/translation status, and overlay client count are guaranteed to be the same sanitized shapes already served by `GET /api/status`.
+- Risk: `/ws/app` and `/ws/overlay` now share a single upgrade dispatcher in `createLocalApiServer`. Future endpoints must register through the same dispatcher rather than attaching their own `upgrade` listeners to avoid the cross-handler "write after end" pattern that motivated this refactor.
+- Regression tests added first: focused local server tests cover `/ws/app` non-upgrade `WS_REJECTED`, on-connect snapshot redaction (no `sourceText`/provider key/raw OCR leakage), runtime-status republish broadcast, publish/clear overlay state broadcast, multi-client fan-out, overlay client-count broadcast on overlay connect/disconnect, origin rejection with 403 `WS_REJECTED`, text/control ping handling, oversized text/control frame rejection, retryable/non-retryable `providerErrorToRuntimeStatus` mapping with redacted messages, `/api/status` runtime-status source failure fallback, and `buildApiErrorFromContractError` retryability without message parsing.
+- Migration needed: None.
+- Rollback plan: Revert the `/ws/app` endpoint, runtime error mapping helpers, focused tests, and spec/decision entries; no persisted data is introduced.

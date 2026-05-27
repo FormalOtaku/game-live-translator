@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-006
-- current_slice_id: T-006-004
-- current_slice_goal: App status stream and runtime error mapping
+- current_slice_id: T-006-005
+- current_slice_goal: Server smoke runbook and parent closeout
 - current_slice_status: todo
-- completed_slices: 3
+- completed_slices: 4
 - total_slices: 5
-- progress_pct: 60
-- next_slice_id: T-006-004
-- next_slice_goal: App status stream and runtime error mapping
-- last_checkpoint: 2026-05-27T17:14:38.159Z
+- progress_pct: 80
+- next_slice_id: T-006-005
+- next_slice_goal: Server smoke runbook and parent closeout
+- last_checkpoint: 2026-05-27T18:00:05.067Z
 ## Session Flow
 - current_session_role: supervisor
 - recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-006-003 review recheck satisfied: Claude sidecar T-006-003-r3 imported clean with findings informational only, must_fix=0, unresolved P1/P2=0; local and devcontainer npm test/build/lint pass with 115 tests.
-- last_completed_slice: T-006-003
-- handoff_summary: T-006-003 complete: dependency-free localhost /ws/overlay WebSocket core added with version-13 upgrade handling, local/configured Origin gating, sanitized latest-frame replay, live publishFrame broadcast, clearFrame broadcast, text/control ping handling, protocol rejection for binary/fragmented/unmasked/oversized frames, and overlay client counter lifecycle. Local and devcontainer npm test/build/lint pass with 115 tests. Claude sidecar T-006-003-r3 review imported clean with must_fix=0 and unresolved P1/P2=0. Next slice is T-006-004 App status stream and runtime error mapping.
+- checkpoint_reason: T-006-004 deterministic verification and Claude review gate satisfied.
+- last_completed_slice: T-006-004
+- handoff_summary: T-006-004 complete: dependency-free /ws/app AppStatus WebSocket stream added with shared single upgrade dispatcher, same localhost/configured Origin policy as HTTP and /ws/overlay, sanitized status snapshot on connect, publishStatus runtime republish, OverlayState publish/clear/client-count broadcasts, app/overlay WS path conflict validation, ping/close and oversized-frame handling, /api/status safe runtime-status-source fallback, and provider ContractError to RuntimeStatus/ApiError retryability mapping. Specs/changelog/decision/migration notes updated. Verification: local npm test/build/lint pass with 129 tests; Docker devcontainer-equivalent npm test/build/lint pass with 129 tests; git diff --check pass. Claude sidecar review T-006-004-r3 imported clean with must_fix=0 and unresolved P1/P2=0. Next slice is T-006-005 parent closeout and smoke documentation.
 - next_action: start_execution_session
-- updated_at: 2026-05-27T17:14:38.157Z
+- updated_at: 2026-05-27T17:59:21.821Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

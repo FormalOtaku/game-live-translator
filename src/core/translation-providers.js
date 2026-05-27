@@ -1,6 +1,6 @@
 'use strict';
 
-const { ContractError } = require('../contracts/security');
+const { ContractError, redactSecrets } = require('../contracts/security');
 const {
   assertProvider,
   assertTargetLang,
@@ -27,6 +27,67 @@ const DEEPL_FREE_ENDPOINT = 'https://api-free.deepl.com/v2/translate';
 
 function isRetryableProviderError(code) {
   return RETRYABLE_PROVIDER_ERROR_CODES.includes(code);
+}
+
+function isProviderErrorCode(code) {
+  if (typeof code !== 'string' || code.length === 0) return false;
+  return Object.values(PROVIDER_ERROR_CODES).includes(code);
+}
+
+function providerErrorRetryable(error) {
+  if (typeof error === 'string') {
+    return isRetryableProviderError(error);
+  }
+  if (error == null || typeof error !== 'object') return false;
+  return isRetryableProviderError(error.code);
+}
+
+function nowIsoString(clock) {
+  if (typeof clock === 'function') {
+    try {
+      const value = clock();
+      if (value instanceof Date && Number.isFinite(value.getTime())) {
+        return value.toISOString();
+      }
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        return new Date(value).toISOString();
+      }
+      if (typeof value === 'string' && Number.isFinite(Date.parse(value))) {
+        return new Date(value).toISOString();
+      }
+    } catch (_) {
+      // Fall back to wall clock below.
+    }
+  }
+  return new Date().toISOString();
+}
+
+function providerErrorToRuntimeStatus(error, options = {}) {
+  const updatedAt = nowIsoString(options.clock);
+  if (error == null || typeof error !== 'object') {
+    return Object.freeze({
+      state: 'error',
+      code: PROVIDER_ERROR_CODES.PROVIDER_UNKNOWN,
+      retryable: false,
+      updatedAt,
+    });
+  }
+  const rawCode = typeof error.code === 'string' && error.code.length > 0
+    ? error.code
+    : PROVIDER_ERROR_CODES.PROVIDER_UNKNOWN;
+  const code = isProviderErrorCode(rawCode)
+    ? rawCode
+    : PROVIDER_ERROR_CODES.PROVIDER_UNKNOWN;
+  const status = {
+    state: 'error',
+    code,
+    retryable: isRetryableProviderError(code),
+    updatedAt,
+  };
+  if (typeof error.message === 'string' && error.message.trim().length > 0) {
+    status.message = redactSecrets(error.message);
+  }
+  return Object.freeze(status);
 }
 
 function nowMs(clock) {
@@ -291,6 +352,9 @@ module.exports = {
   RETRYABLE_PROVIDER_ERROR_CODES,
   DEEPL_FREE_ENDPOINT,
   isRetryableProviderError,
+  isProviderErrorCode,
+  providerErrorRetryable,
+  providerErrorToRuntimeStatus,
   buildTranslationResult,
   createEchoProvider,
   createDeepLProvider,

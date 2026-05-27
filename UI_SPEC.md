@@ -57,6 +57,7 @@
 - Outputs: backend status, bound port, overlay URL, overlay client count, capture state, last OCR status, last translation status, provider, profile, and version.
 - Runtime source: Home/Status consumes the core OCR-to-overlay pipeline snapshot for last OCR status, last translation status, privacy-safe cache key, and overlay client count; it must not invent alternate rejection or provider status codes.
 - Backend source: Home/Status reads `/api/status` from the selected `127.0.0.1` port; the displayed overlay URL must match the backend-reported `overlayUrl` and must never be constructed from a LAN, wildcard, or user-supplied host.
+- Streaming source: Home/Status subscribes to `/ws/app` (default path) on the same `127.0.0.1` port to receive `{ type: "status", status: AppStatus }` snapshots on connect and on runtime/overlay state changes. UI must trust the sanitized snapshot fields and must not parse `RuntimeStatus.message` text for retryability — `RuntimeStatus.retryable` (mapped from provider `ContractError` codes by the backend) drives retry-affordance copy. `sourceText`, raw OCR text, provider keys, stack traces, and debug payloads must never appear in the UI from `/ws/app`.
 - Loading: initial status fetch.
 - Empty: no active profile.
 - Error: backend down, port unavailable, overlay disconnected, provider unavailable.

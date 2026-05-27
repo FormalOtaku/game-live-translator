@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T17:14:38.160Z",
+  "migrated_at": "2026-05-27T18:00:05.068Z",
   "source_path": "STATE.md",
-  "source_sha256": "76117972ce87a3d1ba84fa1807efcd9509c90c811c4c55161dd1e54458468ce8",
+  "source_sha256": "8003f06669a6cb154d7dc30e6b775586484ad77ffcf58301a1bc939a8aba5a58",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
     "current_slice_prefix": "T-006",
-    "current_slice_id": "T-006-004",
-    "current_slice_goal": "App status stream and runtime error mapping",
+    "current_slice_id": "T-006-005",
+    "current_slice_goal": "Server smoke runbook and parent closeout",
     "current_slice_status": "todo",
-    "completed_slices": 3,
+    "completed_slices": 4,
     "total_slices": 5,
-    "progress_pct": 60,
-    "next_slice_id": "T-006-004",
-    "next_slice_goal": "App status stream and runtime error mapping",
-    "last_checkpoint": "2026-05-27T17:14:38.159Z",
+    "progress_pct": 80,
+    "next_slice_id": "T-006-005",
+    "next_slice_goal": "Server smoke runbook and parent closeout",
+    "last_checkpoint": "2026-05-27T18:00:05.067Z",
     "done": [],
     "doing": [],
     "todo": []

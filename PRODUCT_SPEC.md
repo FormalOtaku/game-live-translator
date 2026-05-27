@@ -116,6 +116,7 @@
 - Error responses use a canonical envelope and retryability classification.
 - T-006 implements the executable localhost HTTP contract core first: `/health` and `/api/status` must prove the selected `127.0.0.1` bind, selected port, sanitized overlay URL, overlay client count, and canonical error shape before broader profile/capture endpoints are added.
 - T-006-003 adds the executable `/ws/overlay` contract: OBS Browser Source clients can reconnect, receive the latest non-expired sanitized subtitle frame, receive live subtitle broadcasts, and update overlay client counts without exposing source text or remote network surfaces.
+- T-006-004 adds the executable `/ws/app` app status stream: Electron Home/Status clients receive a sanitized `AppStatus` snapshot on connect and a fresh sanitized snapshot whenever runtime status (capture/OCR/translation) or overlay state (latest subtitle, overlay client count) changes, without exposing provider keys, raw OCR/source text, stack traces, or other debug payloads. Provider `ContractError` codes are mapped into `RuntimeStatus.state/code/message/retryable` and `ApiError.retryable` without parsing message text.
 
 ## UI Impact
 - v1 introduces desktop screens documented in `UI_SPEC.md`: First-Run Wizard, Home/Status, Capture Setup, OCR Preview, Translation Settings, Glossary, Overlay Theme Editor, OBS Setup Guide, Profiles, Privacy Settings, Logs/Diagnostics, and About/Support.

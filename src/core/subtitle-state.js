@@ -255,7 +255,9 @@ class OverlayState {
     this._overlayClients += 1;
     this._connectionsOpened += 1;
     this._touch();
-    return this.snapshot();
+    const snapshot = this.snapshot();
+    this._emit('clients', snapshot);
+    return snapshot;
   }
 
   disconnectClient() {
@@ -264,7 +266,9 @@ class OverlayState {
       this._connectionsClosed += 1;
     }
     this._touch();
-    return this.snapshot();
+    const snapshot = this.snapshot();
+    this._emit('clients', snapshot);
+    return snapshot;
   }
 
   snapshot() {

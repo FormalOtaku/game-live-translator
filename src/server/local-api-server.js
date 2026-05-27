@@ -10,10 +10,16 @@ const {
 const { sanitizeSubtitleForOverlay } = require('../core/subtitle-state');
 const { OVERLAY_CSP, renderOverlayHtml } = require('./overlay-renderer');
 const {
+  DEFAULT_APP_WS_PATH,
+  createAppStatusWebSocketEndpoint,
   createOverlayWebSocketEndpoint,
   normalizeOverlayState,
   normalizeWebSocketPath,
 } = require('./overlay-websocket');
+const {
+  providerErrorToRuntimeStatus,
+  providerErrorRetryable,
+} = require('../core/translation-providers');
 
 const DEFAULT_PREFERRED_PORT = 39600;
 const DEFAULT_MAX_PORT_ATTEMPTS = 8;
@@ -32,6 +38,13 @@ const BACKEND_STATES = Object.freeze([
   'ready',
   'degraded',
   'error',
+]);
+
+const RETRYABLE_API_ERROR_CODES = Object.freeze([
+  'BACKEND_NOT_READY',
+  'CAPTURE_SOURCE_TEMPORARILY_UNAVAILABLE',
+  'PORT_UNAVAILABLE',
+  'WS_REJECTED',
 ]);
 
 function isObject(value) {
@@ -186,6 +199,9 @@ function normalizeRuntimeStatus(value, fallbackState, clock) {
   if (typeof input.code === 'string' && input.code.trim().length > 0) {
     status.code = input.code.trim();
   }
+  if (typeof input.retryable === 'boolean') {
+    status.retryable = input.retryable;
+  }
   return Object.freeze(status);
 }
 
@@ -301,6 +317,12 @@ function createLocalApiServer(options = {}) {
   const maxPortAttempts = normalizeMaxPortAttempts(options.maxPortAttempts);
   const overlayState = normalizeOverlayState(options.overlayState, { clock: options.clock });
   const overlayWsPath = normalizeWebSocketPath(valueFromOption(options.overlayWsPath));
+  const appWsPath = normalizeWebSocketPath(valueFromOption(options.appWsPath), DEFAULT_APP_WS_PATH);
+  if (appWsPath === overlayWsPath) {
+    throw validationError([
+      fieldError('appWsPath', 'WS_PATH_CONFLICT', 'appWsPath must differ from overlayWsPath'),
+    ]);
+  }
   const version = typeof options.version === 'string' && options.version.trim().length > 0
     ? options.version.trim()
     : DEFAULT_VERSION;
@@ -309,6 +331,7 @@ function createLocalApiServer(options = {}) {
     : Object.freeze([]);
   const allowSamePortLocalhostOrigin = options.allowSamePortLocalhostOrigin !== false;
   let selectedPort = null;
+  let upgradeAttached = false;
 
   const server = http.createServer((req, res) => {
     try {
@@ -321,17 +344,134 @@ function createLocalApiServer(options = {}) {
       writeApiError(res, 500, 'INTERNAL_ERROR', error && error.message ? error.message : 'Internal error');
     }
   });
+  const isOriginAllowedForWs = (origin) => resolveCorsOrigin(origin, {
+    allowedOrigins,
+    allowSamePortLocalhostOrigin,
+    port: selectedPort,
+  }) !== null;
+
   const overlayWebSocket = createOverlayWebSocketEndpoint({
     path: overlayWsPath,
     overlayState,
     clock: options.clock,
-    isOriginAllowed: (origin) => resolveCorsOrigin(origin, {
-      allowedOrigins,
-      allowSamePortLocalhostOrigin,
-      port: selectedPort,
-    }) !== null,
+    isOriginAllowed: isOriginAllowedForWs,
   });
-  overlayWebSocket.attach(server);
+
+  function runtimeStatusSourceFailure(error) {
+    const updatedAt = toIsoTimestamp(undefined, options.clock);
+    const message = error && typeof error.message === 'string'
+      ? error.message
+      : 'Runtime status unavailable';
+    return Object.freeze({
+      capture: Object.freeze({ state: 'idle', updatedAt }),
+      ocr: Object.freeze({ state: 'idle', updatedAt }),
+      translation: Object.freeze({
+        state: 'error',
+        code: 'RUNTIME_STATUS_SOURCE_FAILED',
+        message: redactSecrets(message),
+        retryable: false,
+        updatedAt,
+      }),
+    });
+  }
+
+  function currentAppStatusSafe() {
+    let runtimeStatus = options.runtimeStatus;
+    let backendState = options.backendState;
+    let activeProfileId = options.activeProfileId;
+    try {
+      runtimeStatus = valueFromOption(options.runtimeStatus);
+    } catch (error) {
+      runtimeStatus = runtimeStatusSourceFailure(error);
+      backendState = 'error';
+      activeProfileId = null;
+    }
+    try {
+      return buildAppStatus({
+        port: selectedPort,
+        bindAddress,
+        overlayState,
+        runtimeStatus,
+        backendState,
+        activeProfileId,
+        clock: options.clock,
+      });
+    } catch (error) {
+      try {
+        return buildAppStatus({
+          port: selectedPort,
+          bindAddress,
+          overlayState,
+          runtimeStatus: runtimeStatusSourceFailure(error),
+          backendState: 'error',
+          activeProfileId: null,
+          clock: options.clock,
+        });
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
+  const appStatusWebSocket = createAppStatusWebSocketEndpoint({
+    path: appWsPath,
+    overlayState,
+    isOriginAllowed: isOriginAllowedForWs,
+    buildSnapshot: currentAppStatusSafe,
+  });
+
+  function rejectUpgrade(socket, statusCode, statusName, code, message) {
+    const body = JSON.stringify({
+      error: { code, message, retryable: code === 'WS_REJECTED' },
+    });
+    try {
+      socket.end([
+        `HTTP/1.1 ${statusCode} ${statusName}`,
+        'Content-Type: application/json; charset=utf-8',
+        `Content-Length: ${Buffer.byteLength(body)}`,
+        'Connection: close',
+        '',
+        body,
+      ].join('\r\n'));
+    } catch (_) {
+      socket.destroy();
+    }
+  }
+
+  function dispatchUpgrade(req, socket, head) {
+    let pathname;
+    try {
+      pathname = new URL(req.url ?? '/', `http://${bindAddress}:${selectedPort ?? preferredPort}`).pathname;
+    } catch (_) {
+      rejectUpgrade(socket, 400, 'Bad Request', 'WS_REJECTED', 'Invalid WebSocket request URL');
+      return;
+    }
+    if (pathname === overlayWsPath) {
+      overlayWebSocket.handleUpgrade(req, socket, head);
+      return;
+    }
+    if (pathname === appWsPath) {
+      appStatusWebSocket.handleUpgrade(req, socket, head);
+      return;
+    }
+    rejectUpgrade(socket, 404, 'Not Found', 'NOT_FOUND', 'Resource not found');
+  }
+
+  function attachUpgradeDispatcher() {
+    if (upgradeAttached) return;
+    server.on('upgrade', dispatchUpgrade);
+    upgradeAttached = true;
+  }
+
+  function detachUpgradeDispatcher() {
+    if (!upgradeAttached) return;
+    server.off('upgrade', dispatchUpgrade);
+    upgradeAttached = false;
+  }
+
+  attachUpgradeDispatcher();
+  overlayWebSocket.start();
+  appStatusWebSocket.start();
 
   function handleRequest(req, res) {
     const hasOrigin = typeof req.headers.origin === 'string' && req.headers.origin.trim() !== '';
@@ -395,7 +535,7 @@ function createLocalApiServer(options = {}) {
       return;
     }
 
-    if (pathname === overlayWsPath) {
+    if (pathname === overlayWsPath || pathname === appWsPath) {
       writeApiError(res, 426, 'WS_REJECTED', 'WebSocket upgrade required', { retryable: true });
       return;
     }
@@ -405,15 +545,12 @@ function createLocalApiServer(options = {}) {
         writeMethodNotAllowed(res);
         return;
       }
-      writeJson(res, 200, buildAppStatus({
-        port: selectedPort,
-        bindAddress,
-        overlayState,
-        runtimeStatus: options.runtimeStatus,
-        backendState: options.backendState,
-        activeProfileId: options.activeProfileId,
-        clock: options.clock,
-      }));
+      const status = currentAppStatusSafe();
+      if (status === null) {
+        writeApiError(res, 500, 'INTERNAL_ERROR', 'Status unavailable');
+        return;
+      }
+      writeJson(res, 200, status);
       return;
     }
 
@@ -421,6 +558,7 @@ function createLocalApiServer(options = {}) {
   }
 
   async function start() {
+    attachUpgradeDispatcher();
     selectedPort = await listenWithFallback(server, {
       bindAddress,
       preferredPort,
@@ -435,11 +573,18 @@ function createLocalApiServer(options = {}) {
   }
 
   async function stop() {
+    appStatusWebSocket.close();
     overlayWebSocket.close();
+    detachUpgradeDispatcher();
     if (!server.listening) return;
     await new Promise((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));
     });
+  }
+
+  function publishStatus() {
+    if (selectedPort === null) return;
+    appStatusWebSocket.publish();
   }
 
   return Object.freeze({
@@ -447,26 +592,55 @@ function createLocalApiServer(options = {}) {
     stop,
     server,
     overlayState,
+    publishStatus,
     get port() {
       return selectedPort;
     },
     get bindAddress() {
       return bindAddress;
     },
+    get appWsPath() {
+      return appWsPath;
+    },
+    get overlayWsPath() {
+      return overlayWsPath;
+    },
+    get appStatusClientCount() {
+      return appStatusWebSocket.clientCount;
+    },
+  });
+}
+
+function buildApiErrorFromContractError(error, options = {}) {
+  if (!error || typeof error !== 'object') {
+    return buildApiError('INTERNAL_ERROR', 'Internal error', { retryable: false });
+  }
+  const code = typeof error.code === 'string' && error.code.trim().length > 0
+    ? error.code
+    : 'INTERNAL_ERROR';
+  const retryable = typeof options.retryable === 'boolean'
+    ? options.retryable
+    : providerErrorRetryable(code) || RETRYABLE_API_ERROR_CODES.includes(code);
+  return buildApiError(code, typeof error.message === 'string' ? error.message : code, {
+    retryable,
   });
 }
 
 module.exports = {
+  DEFAULT_APP_WS_PATH,
   DEFAULT_MAX_PORT_ATTEMPTS,
   DEFAULT_PREFERRED_PORT,
   DEFAULT_VERSION,
   RUNTIME_STATUS_STATES,
   BACKEND_STATES,
   buildApiError,
+  buildApiErrorFromContractError,
   buildAppStatus,
   createLocalApiServer,
   freezeRedactedDetails,
   normalizeRuntimeStatus,
+  providerErrorToRuntimeStatus,
+  providerErrorRetryable,
   resolveCorsOrigin,
   writeHtml,
   writeMethodNotAllowed,

@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const { OverlayState, sanitizeSubtitleForOverlay } = require('../core/subtitle-state');
 
 const DEFAULT_OVERLAY_WS_PATH = '/ws/overlay';
+const DEFAULT_APP_WS_PATH = '/ws/app';
 const MAX_CLIENT_MESSAGE_BYTES = 16 * 1024;
 const WS_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
@@ -11,10 +12,10 @@ function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function normalizeWebSocketPath(value) {
-  if (typeof value !== 'string') return DEFAULT_OVERLAY_WS_PATH;
+function normalizeWebSocketPath(value, fallback = DEFAULT_OVERLAY_WS_PATH) {
+  if (typeof value !== 'string') return fallback;
   const trimmed = value.trim();
-  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) return DEFAULT_OVERLAY_WS_PATH;
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) return fallback;
   return trimmed;
 }
 
@@ -206,15 +207,15 @@ function parseClientFrames(buffer) {
   };
 }
 
-function createOverlayWebSocketEndpoint(options = {}) {
+function createWebSocketClientHub(options = {}) {
   const path = normalizeWebSocketPath(options.path);
-  const overlayState = normalizeOverlayState(options.overlayState, { clock: options.clock });
   const isOriginAllowed = typeof options.isOriginAllowed === 'function'
     ? options.isOriginAllowed
     : () => true;
+  const onAccept = typeof options.onAccept === 'function' ? options.onAccept : null;
+  const onText = typeof options.onText === 'function' ? options.onText : null;
+  const onClose = typeof options.onClose === 'function' ? options.onClose : null;
   const clients = new Set();
-  let attachedServer = null;
-  let unsubscribe = null;
 
   function sendFrame(client, frame) {
     if (client.closed || client.socket.destroyed) return false;
@@ -249,30 +250,19 @@ function createOverlayWebSocketEndpoint(options = {}) {
     if (client.removed) return;
     client.removed = true;
     clients.delete(client);
-    overlayState.disconnectClient();
-  }
-
-  function replayLatest(client) {
-    const snapshot = overlayState.snapshot();
-    if (isObject(snapshot.lastSubtitle)) {
-      sendJson(client, buildSubtitleMessage(snapshot.lastSubtitle, { replay: true }));
+    if (onClose !== null) {
+      try {
+        onClose(client);
+      } catch (_) {
+        // Subscriber failures must not cascade.
+      }
     }
   }
 
   function broadcast(payload) {
+    const frame = encodeJsonFrame(payload);
     for (const client of [...clients]) {
-      sendJson(client, payload);
-    }
-  }
-
-  function handleOverlayEvent(event) {
-    if (!isObject(event)) return;
-    if (event.type === 'frame' && isObject(event.snapshot) && isObject(event.snapshot.lastSubtitle)) {
-      broadcast(buildSubtitleMessage(event.snapshot.lastSubtitle, { replay: false }));
-      return;
-    }
-    if (event.type === 'clear') {
-      broadcast(buildClearMessage());
+      sendFrame(client, frame);
     }
   }
 
@@ -282,16 +272,18 @@ function createOverlayWebSocketEndpoint(options = {}) {
       sendJson(client, Object.freeze({ type: 'pong' }));
       return;
     }
-
     let parsed;
     try {
       parsed = JSON.parse(message);
     } catch (_) {
+      if (onText !== null) onText(client, message, null);
       return;
     }
     if (isObject(parsed) && parsed.type === 'ping') {
       sendJson(client, Object.freeze({ type: 'pong' }));
+      return;
     }
+    if (onText !== null) onText(client, message, parsed);
   }
 
   function handleClientFrame(client, frame) {
@@ -344,9 +336,14 @@ function createOverlayWebSocketEndpoint(options = {}) {
       buffer: Buffer.alloc(0),
       closed: false,
       removed: false,
+      send(payload) {
+        return sendJson(client, payload);
+      },
+      close(code = 1000) {
+        closeClient(client, code);
+      },
     };
     clients.add(client);
-    overlayState.connectClient();
 
     socket.on('data', (chunk) => handleClientData(client, chunk));
     socket.on('close', () => removeClient(client));
@@ -356,7 +353,13 @@ function createOverlayWebSocketEndpoint(options = {}) {
     if (Buffer.isBuffer(head) && head.length > 0) {
       handleClientData(client, head);
     }
-    if (!client.closed) replayLatest(client);
+    if (onAccept !== null && !client.closed) {
+      try {
+        onAccept(client);
+      } catch (_) {
+        closeClient(client, 1011);
+      }
+    }
   }
 
   function handleUpgrade(req, socket, head) {
@@ -367,7 +370,6 @@ function createOverlayWebSocketEndpoint(options = {}) {
       rejectUpgrade(socket, 400, 'WS_REJECTED', 'Invalid WebSocket request URL');
       return;
     }
-
     if (pathname !== path) {
       rejectUpgrade(socket, 404, 'NOT_FOUND', 'Resource not found');
       return;
@@ -383,12 +385,64 @@ function createOverlayWebSocketEndpoint(options = {}) {
     acceptClient(req, socket, head);
   }
 
-  function attach(server) {
-    attachedServer = server;
-    attachedServer.on('upgrade', handleUpgrade);
-    if (typeof overlayState.subscribe === 'function') {
+  function close() {
+    for (const client of [...clients]) {
+      closeClient(client, 1001);
+    }
+  }
+
+  return Object.freeze({
+    close,
+    handleUpgrade,
+    broadcast,
+    path,
+    get clientCount() {
+      return clients.size;
+    },
+  });
+}
+
+function createOverlayWebSocketEndpoint(options = {}) {
+  const overlayState = normalizeOverlayState(options.overlayState, { clock: options.clock });
+  let attachedServer = null;
+  let unsubscribe = null;
+
+  const hub = createWebSocketClientHub({
+    path: normalizeWebSocketPath(options.path, DEFAULT_OVERLAY_WS_PATH),
+    isOriginAllowed: options.isOriginAllowed,
+    onAccept(client) {
+      overlayState.connectClient();
+      const snapshot = overlayState.snapshot();
+      if (isObject(snapshot.lastSubtitle)) {
+        client.send(buildSubtitleMessage(snapshot.lastSubtitle, { replay: true }));
+      }
+    },
+    onClose() {
+      overlayState.disconnectClient();
+    },
+  });
+
+  function handleOverlayEvent(event) {
+    if (!isObject(event)) return;
+    if (event.type === 'frame' && isObject(event.snapshot) && isObject(event.snapshot.lastSubtitle)) {
+      hub.broadcast(buildSubtitleMessage(event.snapshot.lastSubtitle, { replay: false }));
+      return;
+    }
+    if (event.type === 'clear') {
+      hub.broadcast(buildClearMessage());
+    }
+  }
+
+  function start() {
+    if (unsubscribe === null && typeof overlayState.subscribe === 'function') {
       unsubscribe = overlayState.subscribe(handleOverlayEvent);
     }
+  }
+
+  function attach(server) {
+    attachedServer = server;
+    attachedServer.on('upgrade', hub.handleUpgrade);
+    start();
   }
 
   function close() {
@@ -397,32 +451,99 @@ function createOverlayWebSocketEndpoint(options = {}) {
       unsubscribe = null;
     }
     if (attachedServer !== null) {
-      attachedServer.off('upgrade', handleUpgrade);
+      attachedServer.off('upgrade', hub.handleUpgrade);
       attachedServer = null;
     }
-    for (const client of [...clients]) {
-      closeClient(client, 1001);
-    }
+    hub.close();
   }
 
   return Object.freeze({
     attach,
+    start,
     close,
-    handleUpgrade,
-    path,
+    handleUpgrade: hub.handleUpgrade,
+    path: hub.path,
     overlayState,
     get clientCount() {
-      return clients.size;
+      return hub.clientCount;
+    },
+  });
+}
+
+function createAppStatusWebSocketEndpoint(options = {}) {
+  const buildSnapshot = typeof options.buildSnapshot === 'function'
+    ? options.buildSnapshot
+    : () => null;
+  const overlayState = isOverlayState(options.overlayState) ? options.overlayState : null;
+  let attachedServer = null;
+  let unsubscribe = null;
+
+  function makeMessage() {
+    const status = buildSnapshot();
+    return Object.freeze({
+      type: 'status',
+      status: status === undefined ? null : status,
+    });
+  }
+
+  const hub = createWebSocketClientHub({
+    path: normalizeWebSocketPath(options.path, DEFAULT_APP_WS_PATH),
+    isOriginAllowed: options.isOriginAllowed,
+    onAccept(client) {
+      client.send(makeMessage());
+    },
+  });
+
+  function publish() {
+    hub.broadcast(makeMessage());
+  }
+
+  function start() {
+    if (unsubscribe === null && overlayState !== null && typeof overlayState.subscribe === 'function') {
+      unsubscribe = overlayState.subscribe(() => publish());
+    }
+  }
+
+  function attach(server) {
+    attachedServer = server;
+    attachedServer.on('upgrade', hub.handleUpgrade);
+    start();
+  }
+
+  function close() {
+    if (unsubscribe !== null) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+    if (attachedServer !== null) {
+      attachedServer.off('upgrade', hub.handleUpgrade);
+      attachedServer = null;
+    }
+    hub.close();
+  }
+
+  return Object.freeze({
+    attach,
+    start,
+    close,
+    handleUpgrade: hub.handleUpgrade,
+    path: hub.path,
+    publish,
+    get clientCount() {
+      return hub.clientCount;
     },
   });
 }
 
 module.exports = {
+  DEFAULT_APP_WS_PATH,
   DEFAULT_OVERLAY_WS_PATH,
   MAX_CLIENT_MESSAGE_BYTES,
   buildClearMessage,
   buildSubtitleMessage,
+  createAppStatusWebSocketEndpoint,
   createOverlayWebSocketEndpoint,
+  createWebSocketClientHub,
   encodeJsonFrame,
   encodeWebSocketFrame,
   normalizeOverlayState,

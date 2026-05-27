@@ -1,11 +1,12 @@
 {
   "completed_items": [
-    "T-005"
+    "T-006-004"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-006"
+    "DEC-010 app status stream remains separate from overlay stream",
+    "retryability is code-driven"
   ],
   "open_questions": [],
-  "summary": "T-005 complete: deterministic core runtime pipeline landed across OCR normalization/filtering/duplicate suppression, glossary application and privacy-safe cache keys, echo/DeepL provider adapters, subtitle/overlay state, and OCR-to-overlay runtime integration with 86 passing tests; local and devcontainer npm test/build/lint pass; T-005-005 module re-review clean and T-005 full-diff re-review clean with unresolved P1/P2=0."
+  "summary": "T-006-004 complete: dependency-free /ws/app AppStatus WebSocket stream added with shared single upgrade dispatcher, same localhost/configured Origin policy as HTTP and /ws/overlay, sanitized status snapshot on connect, publishStatus runtime republish, OverlayState publish/clear/client-count broadcasts, app/overlay WS path conflict validation, ping/close and oversized-frame handling, /api/status safe runtime-status-source fallback, and provider ContractError to RuntimeStatus/ApiError retryability mapping. Specs/changelog/decision/migration notes updated. Verification: local npm test/build/lint pass with 129 tests; Docker devcontainer-equivalent npm test/build/lint pass with 129 tests; git diff --check pass. Claude sidecar review T-006-004-r3 imported clean with must_fix=0 and unresolved P1/P2=0. Next slice is T-006-005 parent closeout and smoke documentation."
 }
