@@ -3,13 +3,13 @@
   "source_of_truth": "structured",
   "migrated_at": "2026-05-27T11:43:37.252Z",
   "source_path": "TASKS.md",
-  "source_sha256": "2df0aeabafcc920c797b9bc9d374c075735686ef13ba21f6bc5c1bd168585582",
+  "source_sha256": "39391121dcce14e9b14fcc3337e46a0b4f66fbd759778cda47f506d7a5ea2dbb",
   "task_count": 4,
   "counts": {
-    "todo": 1,
+    "todo": 0,
     "doing": 0,
     "blocked": 0,
-    "done": 3
+    "done": 4
   },
   "tasks": [
     {
@@ -36,9 +36,9 @@
     {
       "id": "T-004",
       "title": "Stabilize build/test in devcontainer",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": ""
+      "notes": "Replaced placeholder build/lint with cross-platform scripts/check-syntax.js and added test:contracts; local and devcontainer npm test/build/lint pass; Claude sidecar review clean with unresolved P1/P2=0 and must_fix=0"
     }
   ]
 }

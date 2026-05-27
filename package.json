@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "test": "node --test",
-    "build": "echo build:ok",
-    "lint": "echo lint:ok"
+    "test:contracts": "node --test test/contracts.test.js",
+    "check:syntax": "node scripts/check-syntax.js",
+    "build": "npm run check:syntax",
+    "lint": "npm run check:syntax"
   }
 }

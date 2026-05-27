@@ -1,32 +1,31 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T11:43:53.689Z",
+  "migrated_at": "2026-05-27T13:08:50.251Z",
   "source_path": "STATE.md",
-  "source_sha256": "8a6804bfcc0d1686d8f17ed487c4ad479eb87281491425fad335c17de3800e5f",
+  "source_sha256": "78c8c4ae2bbe60239a31b2c010897205ea8806dc46535573048262fb7b4f46d9",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
-    "current_slice_prefix": "T-003",
-    "current_slice_id": "T-003",
-    "current_slice_goal": "Add/maintain regression tests first",
+    "current_slice_prefix": "T-004",
+    "current_slice_id": "T-004",
+    "current_slice_goal": "Stabilize build/test in devcontainer",
     "current_slice_status": "done",
-    "completed_slices": 3,
+    "completed_slices": 4,
     "total_slices": 4,
-    "progress_pct": 75,
-    "next_slice_id": "T-004",
-    "next_slice_goal": "Stabilize build/test in devcontainer",
-    "last_checkpoint": "2026-05-27T12:49:01+09:00",
+    "progress_pct": 100,
+    "next_slice_id": null,
+    "next_slice_goal": "decompose next implementation parent task",
+    "last_checkpoint": "2026-05-27T22:08:50+09:00",
     "done": [
       "T-001",
       "T-002",
-      "T-003"
+      "T-003",
+      "T-004"
     ],
     "doing": [],
-    "todo": [
-      "T-004"
-    ]
+    "todo": []
   }
 }

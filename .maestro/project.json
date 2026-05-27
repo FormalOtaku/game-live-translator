@@ -28,14 +28,14 @@
     "slices_per_checkpoint": 3
   },
   "session_flow": {
-    "current_session_role": null,
+    "current_session_role": "execution",
     "recommended_next_session_role": "spec",
-    "checkpoint_status": "none",
-    "checkpoint_reason": null,
-    "last_completed_slice": null,
-    "handoff_summary": null,
-    "next_action": "start_spec_session",
-    "updated_at": "2026-05-27T11:43:37.247Z"
+    "checkpoint_status": "satisfied",
+    "checkpoint_reason": "T-004 deterministic verification and Maestro Claude sidecar review are complete.",
+    "last_completed_slice": "T-004",
+    "handoff_summary": "T-004 completed: placeholder build/lint scripts now use cross-platform scripts/check-syntax.js, test:contracts was added, local and devcontainer npm test/build/lint pass, and Claude sidecar review evidence is imported with must_fix=0 and unresolved P1/P2=0.",
+    "next_action": "Define the next parent task and decompose it into PR-sized implementation slices for the v1 core product.",
+    "updated_at": "2026-05-27T13:08:50.249Z"
   },
   "ui_design_policy": {
     "surface_priority": [
