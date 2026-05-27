@@ -11,8 +11,7 @@
 ## Backlog
 | ID | Title | Status | Owner | Notes |
 |---|---|---|---|---|
-| T-005 | Implement deterministic core runtime pipeline | todo | codex | Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 complete, next T-005-002 |
-| T-005-002 | Glossary application and translation cache keys | todo | codex | Production-grade core pipeline slices for v1 Japanese-to-English OBS flow |
+| T-005 | Implement deterministic core runtime pipeline | todo | codex | Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 and T-005-002 complete, next T-005-003 |
 | T-005-003 | Translation provider adapters and provider error mapping | todo | codex | Production-grade core pipeline slices for v1 Japanese-to-English OBS flow |
 | T-005-004 | Subtitle frame and overlay state primitives | todo | codex | Production-grade core pipeline slices for v1 Japanese-to-English OBS flow |
 | T-005-005 | Deterministic OCR-to-overlay integration fixture | todo | codex | Production-grade core pipeline slices for v1 Japanese-to-English OBS flow |
@@ -25,3 +24,4 @@
 | T-003 | Add/maintain regression tests first |  | Added foundational contract helpers and 23 regression tests; Claude sidecar review clean with unresolved P1/P2=0 and must_fix=0; npm test/build/lint passed |
 | T-004 | Stabilize build/test in devcontainer |  | Replaced placeholder build/lint with cross-platform scripts/check-syntax.js and added test:contracts; local and devcontainer npm test/build/lint pass; Claude sidecar review clean with unresolved P1/P2=0 and must_fix=0 |
 | T-005-001 | OCR normalization filtering duplicate suppression |  | Added OCR normalization/filtering and hash-only duplicate suppression core with 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0 |
+| T-005-002 | Glossary application and translation cache keys |  | Added deterministic glossary application and privacy-safe translation cache key core with 10 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0 |

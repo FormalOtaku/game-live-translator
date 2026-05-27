@@ -29,3 +29,11 @@
 - Decision: Store only SHA-256 hashes of normalized OCR text plus `firstSeenAt` timestamps in `DuplicateSuppressor`.
 - Consequences: Duplicate detection remains deterministic while suppressor snapshots and entries are safe to inspect in tests or diagnostics without revealing game text. Debugging exact duplicate content requires re-running OCR with explicit user-visible debug settings rather than weakening the default privacy posture.
 - Follow-up: When live capture and `/api/ocr/test` are wired up, they must route candidates through `processOcrCandidate` and avoid persisting the suppressor state.
+
+### DEC-003
+- Date: 2026-05-27
+- Context: T-005-002 introduces glossary substitution and translation cache keying. Cache keys must distinguish provider, target language, source text, and glossary revision, but keys can leak game text if built from raw strings.
+- Options: include normalized source text directly in the key; include glossary-applied text in the key; include only SHA-256 hashes and controlled identifiers.
+- Decision: Translation cache keys use only controlled identifiers and hashes: `v1:<provider>:<targetLang>:<glossaryRevision>:<sourceTextHash>`. `sourceTextHash` is SHA-256 over normalized source text, and `glossaryRevision` is SHA-256 over canonical source/target glossary pairs sorted by deterministic JavaScript UTF-16 code unit order.
+- Consequences: Cache lookup remains deterministic across process restarts and host locales once SQLite cache storage exists, while logs and diagnostics can include cache keys without exposing raw OCR text or glossary replacements. Glossary term ids and notes are intentionally excluded from the revision because they do not affect translated text.
+- Follow-up: T-005-003 provider adapters and later persistence slices must treat this key as the only translation-cache identity and must not add plaintext source text to cache keys.

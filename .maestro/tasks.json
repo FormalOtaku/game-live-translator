@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T13:52:49.019Z",
+  "migrated_at": "2026-05-27T14:15:09.293Z",
   "source_path": "TASKS.md",
-  "source_sha256": "33ae92118e54712de29c539a43be0cfbef0a5a529076eaf961847ceebb384e09",
+  "source_sha256": "b1403ecb7f86def7624f861ca2d2344239d32fdf42f43522f7bfed4ffc50c69c",
   "task_count": 10,
   "counts": {
-    "todo": 5,
+    "todo": 4,
     "doing": 0,
     "blocked": 0,
-    "done": 5
+    "done": 6
   },
   "tasks": [
     {
@@ -45,7 +45,7 @@
       "title": "Implement deterministic core runtime pipeline",
       "status": "todo",
       "owner": "codex",
-      "notes": "Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 complete, next T-005-002"
+      "notes": "Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 and T-005-002 complete, next T-005-003"
     },
     {
       "id": "T-005-001",
@@ -57,9 +57,9 @@
     {
       "id": "T-005-002",
       "title": "Glossary application and translation cache keys",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "Production-grade core pipeline slices for v1 Japanese-to-English OBS flow"
+      "notes": "Added deterministic glossary application and privacy-safe translation cache key core with 10 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0"
     },
     {
       "id": "T-005-003",

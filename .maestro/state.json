@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T13:54:52.117Z",
+  "migrated_at": "2026-05-27T14:18:46.769Z",
   "source_path": "STATE.md",
-  "source_sha256": "5243c96e3d341c84245bff32ef23dfd42a88e63526cf59037bfc2f15262ed1ff",
+  "source_sha256": "f7552946d5f65429ab6576ed708c7ab4a6863d712e0eb946a0bd2e1000d0fd65",
   "current_focus": {
     "milestone": null,
     "active_task_ids": [
@@ -12,21 +12,21 @@
   },
   "slice_progress": {
     "current_slice_prefix": "T-005",
-    "current_slice_id": "T-005-002",
-    "current_slice_goal": "Glossary application and translation cache keys",
+    "current_slice_id": "T-005-003",
+    "current_slice_goal": "Translation provider adapters and provider error mapping",
     "current_slice_status": "todo",
-    "completed_slices": 1,
+    "completed_slices": 2,
     "total_slices": 5,
-    "progress_pct": 20,
-    "next_slice_id": "T-005-002",
-    "next_slice_goal": "Glossary application and translation cache keys",
-    "last_checkpoint": "2026-05-27T13:54:52.116Z",
+    "progress_pct": 40,
+    "next_slice_id": "T-005-003",
+    "next_slice_goal": "Translation provider adapters and provider error mapping",
+    "last_checkpoint": "2026-05-27T14:18:46.768Z",
     "done": [
-      "T-005-001"
+      "T-005-001",
+      "T-005-002"
     ],
     "doing": [],
     "todo": [
-      "T-005-002",
       "T-005-003",
       "T-005-004",
       "T-005-005"

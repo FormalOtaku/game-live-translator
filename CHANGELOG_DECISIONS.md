@@ -31,3 +31,16 @@
 - Regression tests added first: `test/ocr-text.test.js` covers normalization, low-confidence rejection, empty/noise rejection, accepted Japanese text, duplicate suppression within TTL, TTL expiry, and the no-raw-text suppressor snapshot invariant.
 - Migration needed: None.
 - Rollback plan: Revert the new core module, tests, and spec/decision entries; no runtime data migration is required.
+
+### CHG-20260527-003
+- Date: 2026-05-27
+- Summary: Added deterministic glossary application and privacy-safe translation cache key generation for T-005-002.
+- Reason: The translation pipeline needs stable glossary substitution and cache keys before provider adapters land, so repeated translations can be reused without embedding raw game text in keys or diagnostics.
+- Impact scope (DB/API/UI):
+  - DB: No schema change in this slice. Future SQLite translation cache rows should use the generated key and may store provider output according to privacy settings.
+  - API: Translation cache key composition is now specified as `v1:<provider>:<targetLang>:<glossaryRevision>:<sourceTextHash>`, and glossary revision is derived from canonical source/target pairs.
+  - UI: Glossary preview can reuse the same single-pass longest-match application semantics that runtime translation will use.
+- Risk: Literal glossary replacement may not cover inflected or context-sensitive Japanese terms. This is acceptable for v1 core proper-noun stabilization and can be expanded later behind new tests.
+- Regression tests added first: `test/translation-cache.test.js` covers longest-term glossary application, deterministic code-unit tie breakers, non-cascading replacements, invalid glossary input, order-independent glossary revisions, privacy-safe cache key shape, target/provider validation, and cache-key changes when glossary targets, source text, or provider change.
+- Migration needed: None.
+- Rollback plan: Revert the new core module, tests, and spec/decision entries; no persisted data is introduced.
