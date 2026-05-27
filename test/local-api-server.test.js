@@ -1856,6 +1856,505 @@ test('manual OCR API inherits local CORS policy without preflight OCR calls', as
   }
 });
 
+test('translate test API runs provider with prepared input and validates result', async () => {
+  const calls = [];
+  const profile = makeApiProfile({
+    id: 'profile_translate',
+    translationProvider: 'echo',
+    glossary: [{ id: 'g1', sourceTerm: '勇者', targetTerm: 'hero' }],
+  });
+  const translationResult = {
+    sourceText: '勇者が現れた',
+    translatedText: 'A hero has appeared',
+    provider: 'echo',
+    durationMs: 9,
+    cacheHit: false,
+  };
+  const repository = {
+    getProfile(profileId) {
+      calls.push(['getProfile', profileId]);
+      return profile;
+    },
+  };
+  const translateTestProvider = {
+    async runTranslateTest(args) {
+      calls.push(['runTranslateTest', args]);
+      return translationResult;
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+    translateTestProvider,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'profile_translate', text: '勇者が現れた' },
+    });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.parsed, translationResult);
+    assert.equal(calls.length, 2);
+    assert.deepEqual(calls[0], ['getProfile', 'profile_translate']);
+    assert.equal(calls[1][0], 'runTranslateTest');
+    assert.strictEqual(calls[1][1].profile, profile);
+    const passedInput = calls[1][1].input;
+    assert.equal(passedInput.provider, 'echo');
+    assert.equal(passedInput.targetLang, 'en');
+    assert.equal(typeof passedInput.cacheKey, 'string');
+    assert.equal(passedInput.cacheKey.startsWith('v1:echo:en:'), true);
+    assert.equal(typeof passedInput.sourceText, 'string');
+    assert.equal(typeof passedInput.glossaryAppliedText, 'string');
+    assert.equal(passedInput.glossaryAppliedText.includes('hero'), true);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('translate test API serializes only canonical TranslationResult fields', async () => {
+  const profile = makeApiProfile({ id: 'profile_translate', translationProvider: 'echo' });
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile() {
+        return profile;
+      },
+    },
+    translateTestProvider: {
+      runTranslateTest() {
+        return {
+          sourceText: 'src',
+          translatedText: 'dst',
+          provider: 'echo',
+          durationMs: 5,
+          cacheHit: false,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'profile_translate', text: 'hi' },
+    });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(Object.keys(response.parsed).sort(), [
+      'cacheHit', 'durationMs', 'provider', 'sourceText', 'translatedText',
+    ]);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('translate test API rejects malformed requests before repository and provider calls', async () => {
+  const calls = [];
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        calls.push(['getProfile', profileId]);
+        return makeApiProfile({ id: profileId });
+      },
+    },
+    translateTestProvider: {
+      runTranslateTest(args) {
+        calls.push(['runTranslateTest', args]);
+        return {
+          sourceText: 'x', translatedText: 'y', provider: 'echo', durationMs: 0, cacheHit: false,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+  try {
+    const rawText = '秘密のテキスト';
+    const empty = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: '', text: '' },
+    });
+    assert.equal(empty.statusCode, 400);
+    assert.equal(empty.parsed.error.code, 'VALIDATION_ERROR');
+
+    const unknown = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'p1', text: rawText, extra: 'nope' },
+    });
+    assert.equal(unknown.statusCode, 400);
+    assert.equal(unknown.parsed.error.code, 'VALIDATION_ERROR');
+    assert.equal(JSON.stringify(unknown.parsed).includes(rawText), false);
+
+    assert.deepEqual(calls, []);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('translate test API preserves PROFILE_NOT_FOUND and DB_UNAVAILABLE before provider calls', async () => {
+  const missingCalls = [];
+  const missingApi = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        missingCalls.push(['getProfile', profileId]);
+        throw new ContractError('PROFILE_NOT_FOUND', 'Missing profile');
+      },
+    },
+    translateTestProvider: {
+      runTranslateTest(args) {
+        missingCalls.push(['runTranslateTest', args]);
+        return {
+          sourceText: 'x', translatedText: 'y', provider: 'echo', durationMs: 0, cacheHit: false,
+        };
+      },
+    },
+  });
+  const missingStarted = await missingApi.start();
+  try {
+    const response = await requestJson({
+      port: missingStarted.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'missing', text: 'hi' },
+    });
+    assert.equal(response.statusCode, 404);
+    assert.equal(response.parsed.error.code, 'PROFILE_NOT_FOUND');
+    assert.deepEqual(missingCalls, [['getProfile', 'missing']]);
+  } finally {
+    await missingApi.stop();
+  }
+
+  const unavailableCalls = [];
+  const unavailableApi = createLocalApiServer({
+    preferredPort: 0,
+    translateTestProvider: {
+      runTranslateTest(args) {
+        unavailableCalls.push(['runTranslateTest', args]);
+        return {
+          sourceText: 'x', translatedText: 'y', provider: 'echo', durationMs: 0, cacheHit: false,
+        };
+      },
+    },
+  });
+  const unavailableStarted = await unavailableApi.start();
+  try {
+    const response = await requestJson({
+      port: unavailableStarted.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'p1', text: 'hi' },
+    });
+    assert.equal(response.statusCode, 503);
+    assert.equal(response.parsed.error.code, 'DB_UNAVAILABLE');
+    assert.deepEqual(unavailableCalls, []);
+  } finally {
+    await unavailableApi.stop();
+  }
+});
+
+test('translate test API reports PROVIDER_UNKNOWN when no translate provider is installed', async () => {
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        return makeApiProfile({ id: profileId, translationProvider: 'echo' });
+      },
+    },
+  });
+  const started = await api.start();
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'profile_translate', text: 'hi' },
+    });
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.parsed.error.code, 'PROVIDER_UNKNOWN');
+    assert.equal(response.parsed.error.retryable, false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('translate test API maps invalid profile provider and target language before provider calls', async () => {
+  const calls = [];
+  const cases = [
+    {
+      profile: makeApiProfile({ id: 'profile_bad_provider', translationProvider: 'google' }),
+      body: { profileId: 'profile_bad_provider', text: 'hi' },
+      code: 'PROVIDER_UNKNOWN',
+    },
+    {
+      profile: makeApiProfile({ id: 'profile_bad_lang', targetLang: 'fr' }),
+      body: { profileId: 'profile_bad_lang', text: 'hi' },
+      code: 'TARGET_LANG_INVALID',
+    },
+  ];
+
+  for (const testCase of cases) {
+    const api = createLocalApiServer({
+      preferredPort: 0,
+      profileRepository: {
+        getProfile(profileId) {
+          calls.push(['getProfile', profileId]);
+          return testCase.profile;
+        },
+      },
+      translateTestProvider: {
+        runTranslateTest(args) {
+          calls.push(['runTranslateTest', args]);
+          return {
+            sourceText: 's',
+            translatedText: 't',
+            provider: 'echo',
+            durationMs: 1,
+            cacheHit: false,
+          };
+        },
+      },
+    });
+    const started = await api.start();
+    try {
+      const response = await requestJson({
+        port: started.port,
+        path: '/api/translate/test',
+        method: 'POST',
+        body: testCase.body,
+      });
+      assert.equal(response.statusCode, 400);
+      assert.equal(response.parsed.error.code, testCase.code);
+    } finally {
+      await api.stop();
+    }
+  }
+
+  assert.deepEqual(calls, [
+    ['getProfile', 'profile_bad_provider'],
+    ['getProfile', 'profile_bad_lang'],
+  ]);
+});
+
+test('translate test API maps provider ContractError codes to retryable privacy-safe ApiError', async () => {
+  const leakedKey = 'sk-TRANSLATESECRETKEY1234';
+  const profile = makeApiProfile({ id: 'profile_translate', translationProvider: 'deepl' });
+  const cases = [
+    { code: 'PROVIDER_KEY_MISSING', status: 503, retryable: false },
+    { code: 'PROVIDER_AUTH_FAILED', status: 502, retryable: false },
+    { code: 'PROVIDER_RATE_LIMITED', status: 429, retryable: true },
+    { code: 'PROVIDER_QUOTA_EXCEEDED', status: 429, retryable: false },
+    { code: 'PROVIDER_NETWORK_ERROR', status: 502, retryable: true },
+    { code: 'PROVIDER_RESPONSE_INVALID', status: 502, retryable: false },
+    { code: 'PROVIDER_UNKNOWN', status: 400, retryable: false },
+    { code: 'TARGET_LANG_INVALID', status: 400, retryable: false },
+  ];
+
+  for (const { code, status, retryable } of cases) {
+    const api = createLocalApiServer({
+      preferredPort: 0,
+      profileRepository: { getProfile: () => profile },
+      translateTestProvider: {
+        runTranslateTest() {
+          throw new ContractError(code, `provider failed with ${leakedKey}`);
+        },
+      },
+    });
+    const started = await api.start();
+    try {
+      const response = await requestJson({
+        port: started.port,
+        path: '/api/translate/test',
+        method: 'POST',
+        body: { profileId: 'profile_translate', text: 'hi' },
+      });
+      assert.equal(response.statusCode, status, `status for ${code}`);
+      assert.equal(response.parsed.error.code, code);
+      assert.equal(response.parsed.error.retryable, retryable, `retryable for ${code}`);
+      assert.equal(JSON.stringify(response.parsed).includes(leakedKey), false);
+    } finally {
+      await api.stop();
+    }
+  }
+});
+
+test('translate test API collapses unknown thrown values to PROVIDER_UNKNOWN', async () => {
+  const profile = makeApiProfile({ id: 'profile_translate', translationProvider: 'echo' });
+  const leakedKey = 'sk-UNKNOWNTRANSLATELEAK1';
+  for (const thrown of [
+    new Error(`upstream blew up with ${leakedKey}`),
+    `text exception ${leakedKey}`,
+  ]) {
+    const api = createLocalApiServer({
+      preferredPort: 0,
+      profileRepository: { getProfile: () => profile },
+      translateTestProvider: {
+        runTranslateTest() {
+          throw thrown;
+        },
+      },
+    });
+    const started = await api.start();
+    try {
+      const response = await requestJson({
+        port: started.port,
+        path: '/api/translate/test',
+        method: 'POST',
+        body: { profileId: 'profile_translate', text: 'hi' },
+      });
+      assert.equal(response.statusCode, 400);
+      assert.equal(response.parsed.error.code, 'PROVIDER_UNKNOWN');
+      assert.equal(response.parsed.error.retryable, false);
+      assert.equal(JSON.stringify(response.parsed).includes(leakedKey), false);
+    } finally {
+      await api.stop();
+    }
+  }
+});
+
+test('translate test API rejects invalid provider output without leaking translated text', async () => {
+  const profile = makeApiProfile({ id: 'profile_translate', translationProvider: 'echo' });
+  const leakedKey = 'sk-RESPONSEINVALIDLEAK';
+  const rawText = '秘密の翻訳本文';
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: { getProfile: () => profile },
+    translateTestProvider: {
+      runTranslateTest() {
+        return {
+          sourceText: rawText,
+          translatedText: rawText,
+          provider: 'echo',
+          durationMs: -1,
+          cacheHit: 'no',
+          apiKey: leakedKey,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'profile_translate', text: 'hi' },
+    });
+    assert.equal(response.statusCode, 502);
+    assert.equal(response.parsed.error.code, 'PROVIDER_RESPONSE_INVALID');
+    assert.equal(Array.isArray(response.parsed.error.details.fieldErrors), true);
+    const byField = Object.fromEntries(
+      response.parsed.error.details.fieldErrors.map((error) => [error.field, error.code]),
+    );
+    assert.equal(byField.durationMs, 'TRANSLATION_RESULT_DURATION_INVALID');
+    assert.equal(byField.cacheHit, 'TRANSLATION_RESULT_CACHE_HIT_INVALID');
+    assert.equal(byField.apiKey, 'UNKNOWN_TRANSLATION_RESULT_FIELD');
+    const serialized = JSON.stringify(response.parsed);
+    assert.equal(serialized.includes(rawText), false);
+    assert.equal(serialized.includes(leakedKey), false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('translate test API rejects provider mismatch without serializing translation output', async () => {
+  const profile = makeApiProfile({ id: 'profile_translate', translationProvider: 'deepl' });
+  const rawText = '秘密のprovider mismatch本文';
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: { getProfile: () => profile },
+    translateTestProvider: {
+      runTranslateTest() {
+        return {
+          sourceText: rawText,
+          translatedText: rawText,
+          provider: 'echo',
+          durationMs: 4,
+          cacheHit: false,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'profile_translate', text: 'hi' },
+    });
+    assert.equal(response.statusCode, 502);
+    assert.equal(response.parsed.error.code, 'PROVIDER_RESPONSE_INVALID');
+    assert.equal(response.parsed.error.details.fieldErrors[0].field, 'provider');
+    assert.equal(response.parsed.error.details.fieldErrors[0].code, 'TRANSLATION_PROVIDER_MISMATCH');
+    assert.equal(JSON.stringify(response.parsed).includes(rawText), false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('translate test API inherits local CORS policy and method handling without provider calls', async () => {
+  const calls = [];
+  const profile = makeApiProfile({ id: 'profile_translate', translationProvider: 'echo' });
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        calls.push(['getProfile', profileId]);
+        return profile;
+      },
+    },
+    translateTestProvider: {
+      runTranslateTest(args) {
+        calls.push(['runTranslateTest', args]);
+        return {
+          sourceText: 's',
+          translatedText: 't',
+          provider: 'echo',
+          durationMs: 1,
+          cacheHit: false,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+  try {
+    const allowedOrigin = `http://127.0.0.1:${started.port}`;
+    const preflight = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'OPTIONS',
+      headers: { Origin: allowedOrigin },
+    });
+    assert.equal(preflight.statusCode, 204);
+    assert.equal(preflight.headers['access-control-allow-origin'], allowedOrigin);
+    assert.equal(preflight.headers['access-control-allow-methods'], 'GET, POST, PUT, DELETE, OPTIONS');
+    assert.equal(preflight.headers['access-control-allow-headers'], 'Content-Type');
+    assert.deepEqual(calls, []);
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'GET',
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'POST');
+    assert.equal(wrongMethod.parsed.error.code, 'METHOD_NOT_ALLOWED');
+    assert.deepEqual(calls, []);
+  } finally {
+    await api.stop();
+  }
+});
+
 test('profile API lists and creates profiles through the injected repository', async () => {
   const calls = [];
   const createdProfile = makeApiProfile({ id: 'profile_created', name: 'Created Profile' });

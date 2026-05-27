@@ -12,6 +12,8 @@ const {
   assertCaptureSourcesResponse,
   assertOcrResult,
   assertOcrTestRequest,
+  assertTranslateTestRequest,
+  assertTranslationResult,
   validateRoiRect,
 } = require('../contracts/validation');
 const { sanitizeSubtitleForOverlay } = require('../core/subtitle-state');
@@ -27,6 +29,7 @@ const {
   providerErrorToRuntimeStatus,
   providerErrorRetryable,
 } = require('../core/translation-providers');
+const { prepareTranslationInput } = require('../core/translation-cache');
 
 const DEFAULT_PREFERRED_PORT = 39600;
 const DEFAULT_MAX_PORT_ATTEMPTS = 8;
@@ -321,6 +324,48 @@ function ocrTestProviderUnavailable() {
   );
 }
 
+function translateTestProviderUnavailable() {
+  return new ContractError(
+    'PROVIDER_UNKNOWN',
+    'Translation provider is not available',
+  );
+}
+
+const PROVIDER_ERROR_SAFE_MESSAGES = Object.freeze({
+  PROVIDER_KEY_MISSING: 'Translation provider key is not configured',
+  PROVIDER_AUTH_FAILED: 'Translation provider rejected the API key',
+  PROVIDER_RATE_LIMITED: 'Translation provider rate limit reached',
+  PROVIDER_QUOTA_EXCEEDED: 'Translation provider quota exceeded',
+  PROVIDER_NETWORK_ERROR: 'Translation provider network error',
+  PROVIDER_RESPONSE_INVALID: 'Translation provider returned an invalid response',
+  PROVIDER_UNKNOWN: 'Translation provider failed',
+  TARGET_LANG_INVALID: 'Translation target language is invalid',
+});
+
+function mapTranslateProviderError(error) {
+  if (error instanceof ContractError && typeof error.code === 'string' &&
+      Object.prototype.hasOwnProperty.call(PROVIDER_ERROR_SAFE_MESSAGES, error.code)) {
+    return new ContractError(error.code, PROVIDER_ERROR_SAFE_MESSAGES[error.code]);
+  }
+  return new ContractError('PROVIDER_UNKNOWN', PROVIDER_ERROR_SAFE_MESSAGES.PROVIDER_UNKNOWN);
+}
+
+function mapTranslateInputPreparationError(error) {
+  if (!(error instanceof ContractError) || error.code !== 'VALIDATION_ERROR' || !isObject(error.details)) {
+    return error;
+  }
+  const fieldErrors = Array.isArray(error.details.fieldErrors)
+    ? error.details.fieldErrors
+    : [];
+  if (fieldErrors.some((field) => field && field.code === 'PROVIDER_UNKNOWN')) {
+    return new ContractError('PROVIDER_UNKNOWN', PROVIDER_ERROR_SAFE_MESSAGES.PROVIDER_UNKNOWN);
+  }
+  if (fieldErrors.some((field) => field && field.code === 'TARGET_LANG_INVALID')) {
+    return new ContractError('TARGET_LANG_INVALID', PROVIDER_ERROR_SAFE_MESSAGES.TARGET_LANG_INVALID);
+  }
+  return error;
+}
+
 function getProfileRepository(repository, methods) {
   if (!isObject(repository)) throw profileRepositoryUnavailable();
   for (const method of methods) {
@@ -358,6 +403,13 @@ function getOcrTestProvider(provider) {
   return provider;
 }
 
+function getTranslateTestProvider(provider) {
+  if (!isObject(provider) || typeof provider.runTranslateTest !== 'function') {
+    throw translateTestProviderUnavailable();
+  }
+  return provider;
+}
+
 function sanitizeCaptureSourcesResponse(payload) {
   return Object.freeze({
     sources: Object.freeze(payload.sources.map((source) => {
@@ -391,6 +443,33 @@ function sanitizeOcrResult(payload) {
     output.rejectionReason = payload.rejectionReason;
   }
   return Object.freeze(output);
+}
+
+function sanitizeTranslationResult(payload) {
+  return Object.freeze({
+    sourceText: payload.sourceText,
+    translatedText: payload.translatedText,
+    provider: payload.provider,
+    durationMs: payload.durationMs,
+    cacheHit: payload.cacheHit,
+  });
+}
+
+function assertTranslationResultProviderMatches(payload, expectedProvider) {
+  if (payload.provider === expectedProvider) return;
+  throw new ContractError(
+    'PROVIDER_RESPONSE_INVALID',
+    PROVIDER_ERROR_SAFE_MESSAGES.PROVIDER_RESPONSE_INVALID,
+    {
+      fieldErrors: [
+        fieldError(
+          'provider',
+          'TRANSLATION_PROVIDER_MISMATCH',
+          'provider must match the profile translationProvider',
+        ),
+      ],
+    },
+  );
 }
 
 function remapCaptureSourceFieldErrors(fieldErrors) {
@@ -551,6 +630,16 @@ function statusCodeForContractError(error) {
   if (code === 'CAPTURE_FAILED') return 500;
   if (code === 'OCR_ENGINE_ERROR') return 500;
   if (code === 'DB_READ_FAILED') return 500;
+  if (code === 'TARGET_LANG_INVALID') return 400;
+  if (code === 'PROVIDER_KEY_MISSING') return 503;
+  if (code === 'PROVIDER_RATE_LIMITED' || code === 'PROVIDER_QUOTA_EXCEEDED') return 429;
+  if (
+    code === 'PROVIDER_AUTH_FAILED' ||
+    code === 'PROVIDER_NETWORK_ERROR' ||
+    code === 'PROVIDER_RESPONSE_INVALID'
+  ) {
+    return 502;
+  }
   return 500;
 }
 
@@ -633,6 +722,7 @@ function createLocalApiServer(options = {}) {
   const captureSourceProvider = options.captureSourceProvider;
   const captureController = options.captureController;
   const ocrTestProvider = options.ocrTestProvider;
+  const translateTestProvider = options.translateTestProvider;
   let selectedPort = null;
   let upgradeAttached = false;
   let captureRuntimeStatus = null;
@@ -994,6 +1084,78 @@ function createLocalApiServer(options = {}) {
     return sanitizeOcrResult(result);
   }
 
+  async function runManualTranslateTest(payload) {
+    assertTranslateTestRequest(payload);
+    const repository = getProfileRepository(profileRepository, ['getProfile']);
+    const profile = repository.getProfile(payload.profileId);
+
+    const glossary = isObject(profile) && Array.isArray(profile.glossary)
+      ? profile.glossary
+      : [];
+    const translationProvider = isObject(profile) ? profile.translationProvider : undefined;
+    const targetLang = isObject(profile) ? profile.targetLang : undefined;
+
+    let input;
+    try {
+      input = prepareTranslationInput({
+        text: payload.text,
+        glossary,
+        provider: translationProvider,
+        targetLang,
+      });
+    } catch (error) {
+      throw mapTranslateInputPreparationError(error);
+    }
+
+    const provider = getTranslateTestProvider(translateTestProvider);
+
+    let result;
+    try {
+      result = await provider.runTranslateTest({ profile, input });
+    } catch (error) {
+      throw mapTranslateProviderError(error);
+    }
+
+    try {
+      assertTranslationResult(result);
+      assertTranslationResultProviderMatches(result, translationProvider);
+    } catch (error) {
+      const details = error instanceof ContractError &&
+        isObject(error.details) &&
+        Array.isArray(error.details.fieldErrors)
+        ? { fieldErrors: error.details.fieldErrors }
+        : undefined;
+      throw new ContractError(
+        'PROVIDER_RESPONSE_INVALID',
+        PROVIDER_ERROR_SAFE_MESSAGES.PROVIDER_RESPONSE_INVALID,
+        details,
+      );
+    }
+    return sanitizeTranslationResult(result);
+  }
+
+  async function handleTranslateRoute(pathname, req, res) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'api' || segments[1] !== 'translate') return false;
+
+    try {
+      if (segments.length === 3 && segments[2] === 'test') {
+        if (req.method !== 'POST') {
+          writeMethodNotAllowed(res, ['POST']);
+          return true;
+        }
+        const payload = await readJsonBody(req);
+        writeJson(res, 200, await runManualTranslateTest(payload));
+        return true;
+      }
+    } catch (error) {
+      writeContractError(res, error);
+      return true;
+    }
+
+    return false;
+  }
+
   async function handleCaptureRoute(pathname, req, res) {
     const segments = pathname.split('/').filter(Boolean);
     if (segments[0] !== 'api' || segments[1] !== 'capture') return false;
@@ -1346,6 +1508,7 @@ function createLocalApiServer(options = {}) {
     if (await handleProfileRoute(pathname, req, res)) return;
     if (await handleCaptureRoute(pathname, req, res)) return;
     if (await handleOcrRoute(pathname, req, res)) return;
+    if (await handleTranslateRoute(pathname, req, res)) return;
     if (await handleThemeRoute(pathname, req, res)) return;
     if (await handleSettingsRoute(pathname, req, res)) return;
     if (await handleProviderKeyRoute(pathname, req, res)) return;

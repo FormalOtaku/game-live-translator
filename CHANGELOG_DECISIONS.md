@@ -304,3 +304,16 @@
 - Regression tests added first: `test/contracts.test.js` covers valid request/result shapes, unknown-field rejection, invalid provider/duration/cache fields, and no secret/raw text leakage from validation errors.
 - Migration needed: None.
 - Rollback plan: Revert the translation test validators, focused tests, and spec/decision entries. Existing capture/OCR/config/server contracts remain unchanged.
+
+### CHG-20260528-024
+- Date: 2026-05-28
+- Summary: Wired T-009-002 `POST /api/translate/test` endpoint through an injected translation provider seam with privacy-safe error mapping.
+- Reason: First-Run and Translation Settings need a live `/api/translate/test` route that runs the configured provider against user-supplied test text while preserving the T-009-001 validation boundary and canonical ApiError shapes.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The route is stateless and does not persist supplied text, translated text, glossary entries, cache entries, provider keys, or diagnostics.
+  - API: Adds `translateTestProvider.runTranslateTest({ profile, input })` to `createLocalApiServer`, wires `POST /api/translate/test`, applies `assertTranslateTestRequest`/`assertTranslationResult` at the boundary, requires provider output to match the loaded profile's `translationProvider`, derives `input` through `prepareTranslationInput`, maps recognized provider `ContractError` codes to canonical privacy-safe `ApiError` codes with `retryable` driven by `providerErrorRetryable`, preserves `PROFILE_NOT_FOUND`/`DB_UNAVAILABLE`, and matches `/api/ocr/test` method/CORS behavior.
+  - UI: First-Run and Translation Settings can render translation test results plus actionable retryable/non-retryable provider errors without parsing provider exception text.
+- Risk: Runtime translation-status broadcast is intentionally out of scope; T-009-003 must add `/api/status` and `/ws/app` updates without changing this route's response shape. Concrete provider adapters must continue to throw `ContractError` with the documented vocabulary so the mapping stays exhaustive.
+- Regression tests added first: `test/local-api-server.test.js` adds focused tests for happy-path translation, request validation, profile-lookup error propagation, provider failure mapping (key-missing, rate-limited, network), redaction, invalid provider output, missing provider, method/CORS behavior, and serialization to canonical `TranslationResult` fields.
+- Migration needed: None.
+- Rollback plan: Revert the `/api/translate/test` route, `translateTestProvider` option, status mapping additions, focused tests, and spec/decision entries. The T-009-001 validation boundary remains intact.

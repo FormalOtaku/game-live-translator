@@ -1,0 +1,31 @@
+{
+  "schema_version": "maestro.pending-review-evidence.v1",
+  "task_id": "T-009-002",
+  "evidence": [
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-009-002-r1/claude/review/review.json; receive=.maestro/agent-pass/T-009-002-r1/claude/review/receive-report.json",
+    "review.json; reviewed_files=7; findings=3; must_fix=0",
+    "unresolved P1/P2=0",
+    "agent-pass review limitation: Brief lists TASKS.md and STATE.md as target_files but neither file is in the captured diff. Consistent with the prior slice's in-flight workflow (TASKS.md/STATE.md are updated at slice close, not while implementing). Confirming this is the intended sequence rather than an oversight.",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-009-002-r2/claude/review/review.json; receive=.maestro/agent-pass/T-009-002-r2/claude/review/receive-report.json",
+    "review.json; reviewed_files=7; findings=10; must_fix=0"
+  ],
+  "sources": [
+    {
+      "slice_id": "T-009-002-r1",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-009-002-r1/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-009-002-r1/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T23:41:53.308Z"
+    },
+    {
+      "slice_id": "T-009-002-r2",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-009-002-r2/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-009-002-r2/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T23:47:27.617Z"
+    }
+  ],
+  "updated_at": "2026-05-27T23:47:27.617Z"
+}

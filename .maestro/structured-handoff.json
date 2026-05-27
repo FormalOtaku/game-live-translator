@@ -1,11 +1,11 @@
 {
   "completed_items": [
-    "TranslateTestRequest validator,TranslationResult validator,privacy-safe contract tests,T-009 specs and decision notes"
+    "POST /api/translate/test route,translateTestProvider seam,prepareTranslationInput route boundary,provider result mismatch guard,provider/profile error mapping,privacy-safe route tests,T-009-002 specs and migration note"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-023 translation test validator boundary"
+    "DEC-024 translation test endpoint provider seam"
   ],
   "open_questions": [],
-  "summary": "T-009-001 complete: translation test contract boundary is executable with validate/assert helpers for TranslateTestRequest and TranslationResult, privacy-safe focused tests, and specs/decision/migration notes. Verification passed locally and in Docker: node --check files, node --test test/contracts.test.js 69 pass, npm test 265 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-001-r1 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-002 is now doing: implement POST /api/translate/test provider seam."
+  "summary": "T-009-002 complete: POST /api/translate/test is wired through translateTestProvider.runTranslateTest with assertTranslateTestRequest, profile lookup, prepareTranslationInput, TranslationResult validation, provider/profile match enforcement, canonical TranslationResult serialization, provider/profile error mapping, privacy-safe redaction, and method/CORS coverage. Verification passed locally and in Docker: node --check files, node --test test/local-api-server.test.js 75 pass, npm test 276 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-002-r2 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-003 is now doing: translation runtime status broadcast."
 }

@@ -29,24 +29,24 @@
 <body>
   <main>
     <header>
-      <p class="meta">Generated from structured Maestro state at 2026-05-27T23:20:32.995Z</p>
+      <p class="meta">Generated from structured Maestro state at 2026-05-27T23:48:10.523Z</p>
       <h1>Maestro<br>Project Report</h1>
       <p class="meta">/home/murasaki01/Projects/Game_Live_Translator</p>
     </header>
     <section class="grid">
       <div class="card"><span class="metric">34</span><span class="muted">tasks</span></div>
       <div class="card"><span class="metric">2</span><span class="muted">doing</span></div>
-      <div class="card"><span class="metric">2</span><span class="muted">todo</span></div>
-      <div class="card"><span class="metric">30</span><span class="muted">done</span></div>
+      <div class="card"><span class="metric">1</span><span class="muted">todo</span></div>
+      <div class="card"><span class="metric">31</span><span class="muted">done</span></div>
       <div class="card"><span class="metric">0</span><span class="muted">decisions</span></div>
     </section>
     <section>
       <h2>Current Focus</h2>
       <div class="card">
         <p><strong>Milestone:</strong> (none)</p>
-        <p><strong>Current slice:</strong> T-009-002</p>
-        <p><strong>Goal:</strong> Translation test endpoint provider seam</p>
-        <p><strong>Progress:</strong> 25%</p>
+        <p><strong>Current slice:</strong> T-009-003</p>
+        <p><strong>Goal:</strong> Translation runtime status broadcast</p>
+        <p><strong>Progress:</strong> 50%</p>
       </div>
     </section>
     <section>
@@ -83,9 +83,9 @@
 <tr><td>T-008-004</td><td>Capture start stop runtime status</td><td><span class="pill done">done</span></td><td>codex</td><td>Added POST /api/capture/start and /api/capture/stop through injected captureController with profile/saved captureSource validation, serialized operations, privacy-safe AppStatus runtime updates, deterministic {ok:true}, CAPTURE_ALREADY_RUNNING, and stop retry/resync handling. Local and Docker npm test/build/lint pass with 260 tests; git diff --check pass; Claude T-008-004-r2 module review clean with findings=7, must_fix=0, unresolved P1/P2=0.</td></tr>
 <tr><td>T-008-005</td><td>Capture OCR smoke runbook and parent closeout</td><td><span class="pill done">done</span></td><td>codex</td><td>Added npm run smoke:capture-ocr, scripts/smoke-capture-ocr-api.js, test/capture-ocr-api-smoke.test.js, CAPTURE_OCR_SMOKE_RUNBOOK_JA.md, and closeout spec/decision/runbook updates covering source enumeration, manual OCR, capture start/stop status, conflicts, and privacy invariants. Local and Docker npm test/build/lint/smoke:capture-ocr pass with 261 tests; git diff --check pass; Claude T-008-005-r3 full-diff review clean with findings=3 P3, must_fix=0, unresolved P1/P2=0.</td></tr>
 <tr><td>T-009</td><td>Implement translation test API core</td><td><span class="pill doing">doing</span></td><td>codex</td><td>Parent goal: add production-grade v1 translation test API support for First-Run and Translation Settings, including request/response validation, provider factory seam, glossary/cache preparation, provider error/runtime status mapping, privacy-safe no-key/no-raw-debug behavior, and repeatable smoke evidence. DB/API/UI impact: no schema bump expected; API /api/translate/test endpoint; UI First-Run/Translation Settings/Home status readiness.</td></tr>
-<tr><td>T-009-001</td><td>Translation test contract validation</td><td><span class="pill done">done</span></td><td>codex</td><td>PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr>
-<tr><td>T-009-002</td><td>Translation test endpoint provider seam</td><td><span class="pill doing">doing</span></td><td>codex</td><td>PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr>
-<tr><td>T-009-003</td><td>Translation runtime status broadcast</td><td><span class="pill todo">todo</span></td><td>codex</td><td>PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr>
+<tr><td>T-009-001</td><td>Translation test contract validation</td><td><span class="pill done">done</span></td><td>codex</td><td>Added TranslateTestRequest and TranslationResult validators/assert wrappers with value-free field errors, unknown-field rejection, provider vocabulary reuse, and focused privacy-safe contract tests. Local and Docker npm test/build/lint pass with 265 tests; git diff --check pass; Claude T-009-001-r1 module review clean with must_fix=0 and unresolved P1/P2=0.</td></tr>
+<tr><td>T-009-002</td><td>Translation test endpoint provider seam</td><td><span class="pill done">done</span></td><td>codex</td><td>PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr>
+<tr><td>T-009-003</td><td>Translation runtime status broadcast</td><td><span class="pill doing">doing</span></td><td>codex</td><td>PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr>
 <tr><td>T-009-004</td><td>Translation API smoke runbook and parent closeout</td><td><span class="pill todo">todo</span></td><td>codex</td><td>PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion.</td></tr></tbody>
       </table>
     </section>

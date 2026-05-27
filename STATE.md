@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-009
-- current_slice_id: T-009-002
-- current_slice_goal: Translation test endpoint provider seam
+- current_slice_id: T-009-003
+- current_slice_goal: Translation runtime status broadcast
 - current_slice_status: doing
-- completed_slices: 1
+- completed_slices: 2
 - total_slices: 4
-- progress_pct: 25
-- next_slice_id: T-009-003
-- next_slice_goal: Translation runtime status broadcast
-- last_checkpoint: 2026-05-27T23:20:32.994Z
+- progress_pct: 50
+- next_slice_id: T-009-004
+- next_slice_goal: Translation API smoke runbook and parent closeout
+- last_checkpoint: 2026-05-27T23:48:10.522Z
 ## Session Flow
 - current_session_role: supervisor
 - recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: Deterministic validation and imported Claude review evidence satisfied for T-009-001; no human validation required.
-- last_completed_slice: T-009-001
-- handoff_summary: T-009-001 complete: translation test contract boundary is executable with validate/assert helpers for TranslateTestRequest and TranslationResult, privacy-safe focused tests, and specs/decision/migration notes. Verification passed locally and in Docker: node --check files, node --test test/contracts.test.js 69 pass, npm test 265 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-001-r1 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-002 is now doing: implement POST /api/translate/test provider seam.
-- next_action: start T-009-002 endpoint provider seam implementation
-- updated_at: 2026-05-27T23:20:32.991Z
+- checkpoint_reason: Deterministic verification and imported Claude review evidence satisfied for T-009-002; no human validation required.
+- last_completed_slice: T-009-002
+- handoff_summary: T-009-002 complete: POST /api/translate/test is wired through translateTestProvider.runTranslateTest with assertTranslateTestRequest, profile lookup, prepareTranslationInput, TranslationResult validation, provider/profile match enforcement, canonical TranslationResult serialization, provider/profile error mapping, privacy-safe redaction, and method/CORS coverage. Verification passed locally and in Docker: node --check files, node --test test/local-api-server.test.js 75 pass, npm test 276 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-002-r2 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-003 is now doing: translation runtime status broadcast.
+- next_action: start T-009-003 translation runtime status broadcast implementation
+- updated_at: 2026-05-27T23:48:10.519Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T23:20:18.763Z",
+  "migrated_at": "2026-05-27T23:48:02.105Z",
   "source_path": "TASKS.md",
-  "source_sha256": "aff6b44766ccbe2de23f3b1b8055dcb81245bdde4ae107fe90d7b5cf98f6cc19",
+  "source_sha256": "9420ddf33162a97e2df60ebef5cc7d5b93114e4017755929a8b3d55e6524c9e9",
   "task_count": 34,
   "counts": {
-    "todo": 2,
+    "todo": 1,
     "doing": 2,
     "blocked": 0,
-    "done": 30
+    "done": 31
   },
   "tasks": [
     {
@@ -232,14 +232,14 @@
     {
       "id": "T-009-002",
       "title": "Translation test endpoint provider seam",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+      "notes": "Wired POST /api/translate/test through translateTestProvider.runTranslateTest with request validation, profile lookup, prepareTranslationInput, TranslationResult validation, provider/profile match enforcement, canonical serialization, provider/profile error mapping, privacy-safe redaction, and method/CORS tests. Local and Docker npm test/build/lint pass with 276 tests; git diff --check pass; Claude T-009-002-r2 module review clean with must_fix=0 and unresolved P1/P2=0."
     },
     {
       "id": "T-009-003",
       "title": "Translation runtime status broadcast",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
     },
