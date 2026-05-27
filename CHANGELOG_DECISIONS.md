@@ -213,3 +213,16 @@
 - Regression tests added first: storage tests cover privacy row read/fallback and validation-before-write; provider-key-store tests cover write/delete, provider validation, key redaction, adapter failure mapping, and absence of read/list methods; local API tests cover privacy/key routes, method errors, DB/keychain unavailable, and no key echo.
 - Migration needed: None. Provider keys remain outside SQLite, profile exports, diagnostics, and logs.
 - Rollback plan: Disable `/api/settings/privacy` and `/api/keys/{provider}` routes while preserving existing profile/theme/glossary APIs; no SQLite data migration rollback is required.
+
+### CHG-20260528-017
+- Date: 2026-05-28
+- Summary: Added the T-007 configuration API smoke command and parent-closeout runbook.
+- Reason: The profile/configuration API parent needs one reproducible live-HTTP smoke that proves the combined route surface works with injected persistence and secure-store boundaries, rather than relying only on focused unit tests.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The smoke uses injected config dependencies and keeps the SQLite schema version 1 contract unchanged.
+  - API: Adds `npm run smoke:config`, `scripts/smoke-config-api.js`, and `test/config-api-smoke.test.js`. The smoke covers profiles, active profile, safe export, themes, glossary import/export, privacy settings, provider key write/delete-only semantics, method guards, canonical errors, and redaction/no-readback invariants.
+  - UI: First-run, Profiles, Glossary, Overlay Theme Editor, Privacy Settings, and Translation Settings flows gain parent-closeout evidence that their backing local routes are available as one coherent API.
+- Risk: This remains a dependency-free contract smoke over injected adapters, not a Windows keychain or concrete SQLite driver smoke. Real-adapter smoke should be added when those adapters land.
+- Regression tests added first: `test/config-api-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no provider key/source sentinel in stdout.
+- Migration needed: None.
+- Rollback plan: Remove `npm run smoke:config`, the smoke script, runbook, focused smoke test, and spec/decision entries. Existing profile/theme/glossary/privacy/key API behavior remains covered by unit tests.

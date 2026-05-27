@@ -124,6 +124,7 @@
 - T-007-003 wires the profile repository and localhost HTTP contract for profile CRUD, active profile selection, and safe profile export. Profile creates/updates validate before SQLite writes, active profile id is stored as app metadata, deleting the active profile is blocked, and exported profile JSON is validated against `ProfileExport` so API keys, OCR text, translated text, images, screenshots, and logs cannot be returned.
 - T-007-004 wires overlay theme CRUD and per-profile glossary export/import into the same repository and localhost HTTP contract. Built-in themes remain read-only templates, custom themes are blocked from deletion while in use, and glossary import is all-or-nothing so invalid JSON/CSV rows cannot partially overwrite a working profile glossary.
 - T-007-005 wires privacy settings and write-only provider key APIs. Privacy settings are read/updated through the SQLite repository boundary, while provider key writes/deletes go through a separate secure-store adapter only; provider keys still have no read-back API, SQLite repository method, profile export path, log path, or diagnostic payload path.
+- T-007-006 adds `npm run smoke:config` as the parent-closeout smoke for the profile/configuration API core, covering live HTTP profile CRUD/active/export, theme CRUD, glossary import/export, privacy settings, provider key write/delete-only semantics, and config API privacy invariants.
 
 ## UI Impact
 - v1 introduces desktop screens documented in `UI_SPEC.md`: First-Run Wizard, Home/Status, Capture Setup, OCR Preview, Translation Settings, Glossary, Overlay Theme Editor, OBS Setup Guide, Profiles, Privacy Settings, Logs/Diagnostics, and About/Support.
@@ -136,6 +137,7 @@
 - [ ] Default settings create no OCR image files, OCR full-text logs, or translation full-text logs.
 - [x] The T-006 localhost server core refuses non-localhost bind configuration before listening.
 - [x] T-006 localhost API/OBS overlay server core has a repeatable smoke command covering `/health`, `/api/status`, `/overlay`, `/ws/app`, and `/ws/overlay`.
+- [x] T-007 profile/configuration API core has a repeatable smoke command covering profiles, themes, glossary, privacy settings, and write-only provider keys.
 - [x] Overlay escaping is verified with malicious OCR/subtitle payload fixtures in core and overlay renderer tests.
 - [ ] Capture, translation, overlay reconnect, backend restart, and port conflict have recoverable UI states.
 - [ ] 1280x720, 1920x1080, and 2560x1440 overlay layouts do not clip or overlap subtitle text.

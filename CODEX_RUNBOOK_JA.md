@@ -34,7 +34,7 @@
   - `doing` は1件のみ
 - 親タスク完了時:
   - full diff review
-  - `npm run smoke:server` を実行し、対象親タスクの主要 runtime contract を再確認する
+  - 対象親タスクに smoke command がある場合は実行する（例: T-006 `npm run smoke:server`, T-007 `npm run smoke:config`）
   - cleanup スライス確認
   - `PARENT_TASK_CHECKLIST_JA.md` に沿って人手検証を依頼
 

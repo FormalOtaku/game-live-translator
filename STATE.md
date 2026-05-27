@@ -45,24 +45,24 @@
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-007
-- current_slice_id: T-007-006
-- current_slice_goal: Configuration API smoke runbook and parent closeout
-- current_slice_status: doing
-- completed_slices: 5
-- total_slices: 6
-- progress_pct: 83
-- next_slice_id:
-- next_slice_goal:
-- last_checkpoint: 2026-05-27T21:03:59.614Z
+- current_slice_prefix: (none)
+- current_slice_id: (none)
+- current_slice_goal: (none)
+- current_slice_status: (none)
+- completed_slices: 0
+- total_slices: 0
+- progress_pct: 0
+- next_slice_id: (none)
+- next_slice_goal: (none)
+- last_checkpoint: 2026-05-27T21:25:50.219Z
 ## Session Flow
-- current_session_role: execution
-- recommended_next_session_role: execution
-- checkpoint_status: none
-- checkpoint_reason: T-007 parent still in progress; no human checkpoint required until parent closeout.
-- last_completed_slice: T-007-005
-- handoff_summary: T-007-005 complete: privacy settings GET/PUT and write-only provider key PUT/DELETE contracts landed. Added SQLite getPrivacySettings fallback, secure-store provider key write/delete boundary with no read/list method, local API privacy/key routes with redacted KEYCHAIN_UNAVAILABLE handling, malformed JSON guards, and spec/decision/migration/changelog updates. Local and Docker npm test/build/lint pass with 229 tests; git diff --check passes; Claude sidecar T-007-005-r2 clean with must_fix=0 and unresolved P1/P2=0.
-- next_action: start T-007-006 configuration API smoke runbook and T-007 parent closeout
-- updated_at: 2026-05-27T21:03:59.611Z
+- current_session_role: supervisor
+- recommended_next_session_role: spec
+- checkpoint_status: satisfied
+- checkpoint_reason: T-007 deterministic API smoke/runbook closeout evidence complete; no human validation required.
+- last_completed_slice: T-007-006
+- handoff_summary: T-007 complete: configuration API core parent closeout landed with npm run smoke:config, CONFIG_API_SMOKE_RUNBOOK_JA.md, child-process regression test, and spec/runbook/checklist updates. Local and Docker npm test/build/lint/smoke:server/smoke:config pass with 230 tests; git diff --check pass; Claude T-007-006-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: Start spec session to select/decompose the next parent task for production-grade v1.
+- updated_at: 2026-05-27T21:25:50.217Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

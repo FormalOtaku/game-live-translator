@@ -273,6 +273,18 @@ type DiagnosticBundle = {
   - `/ws/overlay` replays the latest sanitized subtitle and broadcasts subtitle publish and clear changes.
 - Smoke output must be concise JSON and must not include provider keys, raw OCR/source text, translated debug text, screenshots, stack traces, or remote hosts.
 
+## Configuration API Smoke Command
+- T-007-006 adds `npm run smoke:config` as the executable parent-closeout smoke for the dependency-free profile/configuration API core.
+- The smoke command starts `createLocalApiServer` on an ephemeral `127.0.0.1` port with injected `profileRepository` and `providerKeyStore` implementations and exercises the live HTTP route surface instead of calling route handlers directly.
+- Required smoke assertions:
+  - `/health` reports the selected localhost port and `bindAddress: "127.0.0.1"`.
+  - `GET/POST /api/profiles`, `GET/PUT/DELETE /api/profiles/{id}`, `PUT /api/profiles/active`, and `GET /api/profiles/{id}/export` return canonical shapes and preserve safe export/privacy behavior.
+  - `GET/POST /api/themes`, `GET/PUT/DELETE /api/themes/{id}` cover custom theme mutation plus built-in theme conflict behavior.
+  - `GET /api/profiles/{id}/glossary/export` and `POST /api/profiles/{id}/glossary/import` cover glossary round trips.
+  - `GET/PUT /api/settings/privacy` covers privacy read/update and `Allow: GET, PUT` for unsupported methods.
+  - `PUT/DELETE /api/keys/{provider}` return only `{ ok: true }`; `GET /api/keys/{provider}` proves there is no readback endpoint; unknown providers return `PROVIDER_UNKNOWN`.
+- Smoke output must be concise JSON and must not include provider keys, raw OCR/source text, translated debug text, screenshots, stack traces, or remote hosts.
+
 ### `/ws/overlay` Wire Contract
 - T-006-003 implements `/ws/overlay` in the dependency-free localhost server core. The production FastAPI sidecar must preserve the same observable behavior.
 - Upgrade behavior:

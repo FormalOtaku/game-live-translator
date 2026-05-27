@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "queue_policy": "forward_only",
-  "kickoff_task_id": "T-007",
-  "active_task_id": "T-007",
-  "updated_at": "2026-05-27T21:03:48.694Z"
+  "kickoff_task_id": null,
+  "active_task_id": null,
+  "updated_at": "2026-05-27T21:24:13.275Z"
 }

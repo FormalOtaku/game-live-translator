@@ -141,3 +141,11 @@
 - Decision: Add `createProviderKeyStore({ adapter })` as the only provider-key persistence boundary. It validates provider ids and key write bodies, calls injected secure-store write/delete primitives, maps adapter failures to `KEYCHAIN_UNAVAILABLE`, returns only `{ ok: true }`, and intentionally exposes no read/list method.
 - Consequences: The localhost API harness can test write/delete semantics without adding native keychain dependencies or plaintext files. Future Electron/Windows integration must plug the adapter into OS secure storage while preserving the same write-only contract and redacted errors.
 - Follow-up: Add a Windows integration smoke once the concrete keychain adapter is selected, but keep the dependency-free adapter contract as the regression fixture.
+
+### DEC-017
+- Date: 2026-05-28
+- Context: T-007 closeout needs reproducible evidence that the profile/configuration HTTP route surface works as one live localhost API, not only as isolated repository and route unit tests. The parent task combines profiles, active selection, safe export, themes, glossary import/export, privacy settings, and write-only provider keys.
+- Options: rely on `npm test` only; add a manual checklist only; add a dependency-free smoke command that starts the localhost server with injected config dependencies and exercises the route surface over real HTTP.
+- Decision: Add `npm run smoke:config` and protect it with `test/config-api-smoke.test.js`. The smoke starts `createLocalApiServer` on an ephemeral `127.0.0.1` port, verifies the live configuration API contracts, confirms provider keys are write/delete-only with no readback endpoint, and prints concise JSON evidence without provider-key shaped strings or raw source sentinels.
+- Consequences: T-007 parent closeout can be reproduced locally and in Docker/devcontainer workflows without real provider credentials, OBS, or a native SQLite/keychain dependency. Future FastAPI/Electron integration must preserve the same observable config API behavior or update this smoke/runbook in the same slice.
+- Follow-up: When a concrete Windows secure-storage adapter and SQLite driver are wired, add a product-level smoke that runs against those real adapters while keeping this dependency-free contract smoke as a fast regression fixture.

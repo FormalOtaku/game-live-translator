@@ -6,6 +6,7 @@
     "test": "node --test",
     "test:contracts": "node --test test/contracts.test.js",
     "smoke:server": "node scripts/smoke-local-api.js",
+    "smoke:config": "node scripts/smoke-config-api.js",
     "check:syntax": "node scripts/check-syntax.js",
     "build": "npm run check:syntax",
     "lint": "npm run check:syntax"

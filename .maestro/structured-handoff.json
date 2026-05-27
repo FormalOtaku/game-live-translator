@@ -1,9 +1,9 @@
 {
   "completed_items": [
-    "T-007-003"
+    "T-007,T-007-006"
   ],
   "blockers": [],
   "decisions_made": [],
   "open_questions": [],
-  "summary": "T-007-003 complete: profile CRUD/active/export API core added. SQLite repository now supports list/get/update/delete/get-active/set-active/export with schema v1, reserved id rejection for active/import, transactional write checks, and safe ProfileExport validation. Local API server now exposes profile list/create/get/update/delete/activate/export routes with canonical redacted ApiError mapping and validation details. Specs/decisions/migration notes updated. Local npm test/build/lint and Docker npm test/build/lint pass; git diff --check pass; Claude sidecar T-007-003-r2 imported clean with must_fix=0 and unresolved P1/P2=0."
+  "summary": "T-007 complete: configuration API core parent closeout landed with npm run smoke:config, CONFIG_API_SMOKE_RUNBOOK_JA.md, child-process regression test, and spec/runbook/checklist updates. Local and Docker npm test/build/lint/smoke:server/smoke:config pass with 230 tests; git diff --check pass; Claude T-007-006-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
 }

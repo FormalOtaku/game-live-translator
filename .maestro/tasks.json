@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T21:03:48.693Z",
+  "migrated_at": "2026-05-27T21:24:13.273Z",
   "source_path": "TASKS.md",
-  "source_sha256": "2eb158afc8da13d067c2cf9b8cc450e827ce12832fcfee9be3e70cc66e0740b1",
+  "source_sha256": "a37663cc5314782ae13508589396e38929959fa3634e1a26779ac7449c4d7537",
   "task_count": 23,
   "counts": {
-    "todo": 1,
-    "doing": 1,
+    "todo": 0,
+    "doing": 0,
     "blocked": 0,
-    "done": 21
+    "done": 23
   },
   "tasks": [
     {
@@ -127,9 +127,9 @@
     {
       "id": "T-007",
       "title": "Implement persisted profile configuration API core",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "Parent goal: add production-grade v1 contracts and local API surface for profiles, overlay themes, glossary import/export, privacy settings, and write-only provider keys, with SQLite/secure-storage boundaries preserved and profile exports rejecting API keys/OCR text/translation text/images/logs. DB/API/UI impact: DB schema_version=1 planning and persistence boundary; API profile/config endpoints; UI first-run/Home/Status configuration dependencies."
+      "notes": "Parent complete: production-grade v1 profile/config contracts, SQLite repository boundary, profile CRUD/active/export API, theme/glossary API, privacy settings, write-only provider key API, and repeatable npm run smoke:config closeout landed. Local and Docker npm test/build/lint/smoke:server/smoke:config pass with 230 tests; Claude T-007-006-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
     },
     {
       "id": "T-007-001",
@@ -169,9 +169,9 @@
     {
       "id": "T-007-006",
       "title": "Configuration API smoke runbook and parent closeout",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
+      "notes": "Added npm run smoke:config, scripts/smoke-config-api.js, child-process regression test, and CONFIG_API_SMOKE_RUNBOOK_JA.md covering profiles/themes/glossary/privacy/provider-key write-delete no-readback. Local and Docker npm test/build/lint/smoke:server/smoke:config pass with 230 tests; git diff --check pass; Claude T-007-006-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
     }
   ]
 }
