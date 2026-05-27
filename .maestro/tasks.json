@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T22:45:35.581Z",
+  "migrated_at": "2026-05-27T23:08:14.573Z",
   "source_path": "TASKS.md",
-  "source_sha256": "99f1f86fca4cf303dd4f67c692c3886fee611a292c8160ccba23bbc0f5b9a0da",
+  "source_sha256": "700841f702a28ab260742b55904f47c05eb037102dc8c8209c306b6afe6ba5f5",
   "task_count": 29,
   "counts": {
     "todo": 0,
-    "doing": 2,
+    "doing": 0,
     "blocked": 0,
-    "done": 27
+    "done": 29
   },
   "tasks": [
     {
@@ -176,9 +176,9 @@
     {
       "id": "T-008",
       "title": "Implement capture and OCR test API core",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "Parent goal: add production-grade v1 capture source enumeration, ROI/manual OCR test, capture start/stop runtime status, privacy-safe OCR errors, and repeatable smoke evidence for First-Run/Capture Setup/OCR Preview dependencies. DB/API/UI impact: no schema bump expected; API capture/OCR endpoints; UI Capture Setup/OCR Preview/Home status readiness."
+      "notes": "Parent complete: capture/OCR API core now has executable validators, GET /api/capture/sources, POST /api/ocr/test, POST /api/capture/start, POST /api/capture/stop, privacy-safe runtime status, and repeatable npm run smoke:capture-ocr closeout evidence. Local and Docker npm test/build/lint/smoke:capture-ocr pass with 261 tests; git diff --check pass; Claude T-008-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
     },
     {
       "id": "T-008-001",
@@ -211,9 +211,9 @@
     {
       "id": "T-008-005",
       "title": "Capture OCR smoke runbook and parent closeout",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+      "notes": "Added npm run smoke:capture-ocr, scripts/smoke-capture-ocr-api.js, test/capture-ocr-api-smoke.test.js, CAPTURE_OCR_SMOKE_RUNBOOK_JA.md, and closeout spec/decision/runbook updates covering source enumeration, manual OCR, capture start/stop status, conflicts, and privacy invariants. Local and Docker npm test/build/lint/smoke:capture-ocr pass with 261 tests; git diff --check pass; Claude T-008-005-r3 full-diff review clean with findings=3 P3, must_fix=0, unresolved P1/P2=0."
     }
   ]
 }

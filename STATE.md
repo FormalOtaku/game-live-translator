@@ -41,28 +41,28 @@
 
 ## Current Focus
 - milestone:
-- active_task_ids: T-008
+- active_task_ids: (none)
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-008
-- current_slice_id: T-008-005
-- current_slice_goal: Capture OCR smoke runbook and parent closeout
-- current_slice_status: doing
-- completed_slices: 4
-- total_slices: 5
-- progress_pct: 80
-- next_slice_id:
-- next_slice_goal:
-- last_checkpoint: 2026-05-27T22:45:41.475Z
+- current_slice_prefix: (none)
+- current_slice_id: (none)
+- current_slice_goal: (none)
+- current_slice_status: (none)
+- completed_slices: 0
+- total_slices: 0
+- progress_pct: 0
+- next_slice_id: (none)
+- next_slice_goal: (none)
+- last_checkpoint: 2026-05-27T23:08:32.104Z
 ## Session Flow
 - current_session_role: execution
-- recommended_next_session_role: execution
-- checkpoint_status: none
-- checkpoint_reason: T-008 parent remains in progress; no human checkpoint required after deterministic capture start/stop route slice.
-- last_completed_slice: T-008-004
-- handoff_summary: T-008-004 complete: added capture start/stop API backed by injected captureController, serialized runtime operations, profile/captureSource validation, privacy-safe AppStatus updates, deterministic ok envelopes, CAPTURE_ALREADY_RUNNING and stop retry/resync semantics. Verification: local npm test 260 pass, npm run build pass, npm run lint pass, git diff --check pass; Docker game-live-translator-dev npm test 260 pass, build pass, lint pass; Claude agent-pass review T-008-004-r2 clean with unresolved P1/P2=0.
-- next_action: Continue T-008-005 capture OCR smoke runbook and T-008 parent closeout.
-- updated_at: 2026-05-27T22:45:41.472Z
+- recommended_next_session_role: spec
+- checkpoint_status: satisfied
+- checkpoint_reason: T-008 deterministic closeout evidence is satisfied; no human visual/device validation required for this dependency-free API contract parent.
+- last_completed_slice: T-008-005
+- handoff_summary: T-008 parent complete: capture/OCR API core now has executable validators, GET /api/capture/sources, POST /api/ocr/test, POST /api/capture/start, POST /api/capture/stop, privacy-safe runtime status, and npm run smoke:capture-ocr parent closeout evidence. Verification: local npm test 261 pass, build/lint pass, smoke:capture-ocr pass, git diff --check pass; Docker game-live-translator-dev npm test 261 pass, build/lint pass, smoke:capture-ocr pass; Claude T-008-005-r3 full-diff review clean with unresolved P1/P2=0.
+- next_action: Start a spec session to define the next parent task, likely concrete Windows capture/OCR adapter integration and product-level smoke, before editing new implementation files.
+- updated_at: 2026-05-27T23:08:32.101Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

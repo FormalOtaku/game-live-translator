@@ -129,6 +129,7 @@
 - T-008-002 wires `GET /api/capture/sources` into the localhost API harness through a dependency-injected capture source provider. The route validates source lists before returning them, maps unavailable/failed/invalid enumeration to privacy-safe `CAPTURE_ENUM_FAILED`, and leaves concrete Windows monitor/window discovery to the future Electron adapter without adding persistence or native dependencies in the core contract.
 - T-008-003 wires `POST /api/ocr/test` into the localhost API harness through a dependency-injected OCR test provider. The route validates the profile-bound request, uses a request ROI override or saved profile ROI, returns `ROI_MISSING` before engine calls when no ROI exists, validates the OCR engine result before responding, and maps engine failures to privacy-safe `OCR_ENGINE_ERROR` without persisting OCR text or screenshots.
 - T-008-004 wires `POST /api/capture/start` and `POST /api/capture/stop` through a dependency-injected capture controller. The routes validate profile/source readiness, update sanitized capture runtime status for `/api/status` and `/ws/app`, return fixed `{ ok: true }` success envelopes, and never serialize capture frames, screenshot paths, raw OCR text, controller output, or provider keys.
+- T-008-005 adds `npm run smoke:capture-ocr` as the parent-closeout smoke for the capture/OCR API core, covering live HTTP source enumeration, manual OCR success/failure, capture start/stop status, conflict behavior, and privacy invariants with injected adapters.
 
 ## UI Impact
 - v1 introduces desktop screens documented in `UI_SPEC.md`: First-Run Wizard, Home/Status, Capture Setup, OCR Preview, Translation Settings, Glossary, Overlay Theme Editor, OBS Setup Guide, Profiles, Privacy Settings, Logs/Diagnostics, and About/Support.
@@ -142,6 +143,7 @@
 - [x] The T-006 localhost server core refuses non-localhost bind configuration before listening.
 - [x] T-006 localhost API/OBS overlay server core has a repeatable smoke command covering `/health`, `/api/status`, `/overlay`, `/ws/app`, and `/ws/overlay`.
 - [x] T-007 profile/configuration API core has a repeatable smoke command covering profiles, themes, glossary, privacy settings, and write-only provider keys.
+- [x] T-008 capture/OCR API core has a repeatable smoke command covering source enumeration, manual OCR test, capture start/stop status, and no-leak errors.
 - [x] Overlay escaping is verified with malicious OCR/subtitle payload fixtures in core and overlay renderer tests.
 - [ ] Capture, translation, overlay reconnect, backend restart, and port conflict have recoverable UI states.
 - [ ] 1280x720, 1920x1080, and 2560x1440 overlay layouts do not clip or overlap subtitle text.

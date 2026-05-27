@@ -1,26 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T22:45:41.475Z",
+  "migrated_at": "2026-05-27T23:08:32.104Z",
   "source_path": "STATE.md",
-  "source_sha256": "1b6660eb2ec6a6dca3c004b96da660f5d8b8548826e64e6da4c26e3df8b56514",
+  "source_sha256": "5baf332ba5d1a56da3458615b20abbc404226f2c9b21eeeb9f5f87a7f61d9096",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": [
-      "T-008"
-    ]
+    "active_task_ids": []
   },
   "slice_progress": {
-    "current_slice_prefix": "T-008",
-    "current_slice_id": "T-008-005",
-    "current_slice_goal": "Capture OCR smoke runbook and parent closeout",
-    "current_slice_status": "doing",
-    "completed_slices": 4,
-    "total_slices": 5,
-    "progress_pct": 80,
+    "current_slice_prefix": null,
+    "current_slice_id": null,
+    "current_slice_goal": null,
+    "current_slice_status": null,
+    "completed_slices": 0,
+    "total_slices": 0,
+    "progress_pct": 0,
     "next_slice_id": null,
     "next_slice_goal": null,
-    "last_checkpoint": "2026-05-27T22:45:41.475Z",
+    "last_checkpoint": "2026-05-27T23:08:32.104Z",
     "done": [],
     "doing": [],
     "todo": []

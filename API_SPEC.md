@@ -316,6 +316,17 @@ type DiagnosticBundle = {
 - `OCR_ENGINE_ERROR` responses may include validator field names/codes for invalid engine output, but must not include provider keys, captured images, screenshots, stack traces, raw provider exception text, or debug logs. Raw OCR text appears only in a valid `OcrResult` response for the user's explicit manual test request and is not persisted by this route.
 - Only `POST` is allowed on `/api/ocr/test`; other methods return `METHOD_NOT_ALLOWED` with `Allow: POST`. The endpoint preserves the existing localhost bind and CORS behavior.
 
+## Capture/OCR API Smoke Command
+- T-008-005 adds `npm run smoke:capture-ocr` as the executable parent-closeout smoke for the dependency-free capture/OCR API core.
+- The smoke command starts `createLocalApiServer` on an ephemeral `127.0.0.1` port with injected `profileRepository`, `captureSourceProvider`, `captureController`, and `ocrTestProvider` implementations and exercises the live HTTP route surface instead of calling route handlers directly.
+- Required smoke assertions:
+  - `/health` reports the selected localhost port and `bindAddress: "127.0.0.1"`.
+  - `GET /api/capture/sources` returns only validated `CaptureSource` fields, and provider exceptions map to privacy-safe `CAPTURE_ENUM_FAILED`.
+  - `POST /api/ocr/test` returns a validated `OcrResult` for a profile ROI, `ROI_MISSING` before engine calls when the profile has no ROI, and privacy-safe `OCR_ENGINE_ERROR` for engine failure.
+  - `POST /api/capture/start` calls the injected controller with the saved `captureSource`, returns fixed `{ ok: true }`, updates `/api/status.capture` to `CAPTURE_RUNNING`, and rejects a second start as `CAPTURE_ALREADY_RUNNING` without a second controller start.
+  - `POST /api/capture/stop` returns fixed `{ ok: true }`, updates `/api/status.capture` to `CAPTURE_STOPPED`, and rejects an idle stop as `CAPTURE_NOT_RUNNING`.
+- Smoke output must be concise JSON and must not include provider keys, raw OCR/source text, screenshot paths, captured image identifiers, stack traces, raw provider/controller exception text, or remote hosts.
+
 ### `/ws/overlay` Wire Contract
 - T-006-003 implements `/ws/overlay` in the dependency-free localhost server core. The production FastAPI sidecar must preserve the same observable behavior.
 - Upgrade behavior:

@@ -278,3 +278,16 @@
 - Regression tests added first: `test/local-api-server.test.js` covers start/stop success, `/api/status` and `/ws/app` updates, fixed success envelopes, request validation before calls, repository/source/controller failure mapping and redaction, stop-not-running, concurrent start/stop serialization, stop failure recovery/resync behavior, method guards, and CORS preflight behavior.
 - Migration needed: None.
 - Rollback plan: Remove the capture start/stop routes, injected controller handling, focused tests, and spec entries. Existing source enumeration, OCR test, profile/config, and status routes remain unchanged.
+
+### CHG-20260528-022
+- Date: 2026-05-28
+- Summary: Added the T-008 capture/OCR API smoke command and parent-closeout runbook.
+- Reason: The capture/OCR API parent needs one reproducible live-HTTP smoke that proves the combined route surface works with injected capture and OCR adapters, rather than relying only on focused unit tests.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The smoke uses injected adapters and keeps capture session/status in memory only.
+  - API: Adds `npm run smoke:capture-ocr`, `scripts/smoke-capture-ocr-api.js`, and `test/capture-ocr-api-smoke.test.js`. The smoke covers source enumeration, manual OCR success/failure, capture start/stop status, duplicate/idle conflicts, canonical errors, and redaction/no-persistence invariants.
+  - UI: First-Run, Capture Setup, OCR Preview, and Home/Status gain parent-closeout evidence that their backing local capture/OCR routes are available as one coherent API.
+- Risk: This remains a dependency-free contract smoke over injected adapters, not a Windows desktop-capture or PaddleOCR smoke. Real-adapter smoke should be added when those adapters land.
+- Regression tests added first: `test/capture-ocr-api-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no provider key/source/screenshot sentinel in stdout.
+- Migration needed: None.
+- Rollback plan: Remove `npm run smoke:capture-ocr`, the smoke script, runbook, focused smoke test, and spec/decision entries. Existing capture/OCR route behavior remains covered by unit tests.

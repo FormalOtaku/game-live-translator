@@ -1,9 +1,9 @@
 {
   "completed_items": [
-    "T-008-004"
+    "T-008"
   ],
   "blockers": [],
   "decisions_made": [],
   "open_questions": [],
-  "summary": "T-008-004 complete: added capture start/stop API backed by injected captureController, serialized runtime operations, profile/captureSource validation, privacy-safe AppStatus updates, deterministic ok envelopes, CAPTURE_ALREADY_RUNNING and stop retry/resync semantics. Verification: local npm test 260 pass, npm run build pass, npm run lint pass, git diff --check pass; Docker game-live-translator-dev npm test 260 pass, build pass, lint pass; Claude agent-pass review T-008-004-r2 clean with unresolved P1/P2=0."
+  "summary": "T-008 parent complete: capture/OCR API core now has executable validators, GET /api/capture/sources, POST /api/ocr/test, POST /api/capture/start, POST /api/capture/stop, privacy-safe runtime status, and npm run smoke:capture-ocr parent closeout evidence. Verification: local npm test 261 pass, build/lint pass, smoke:capture-ocr pass, git diff --check pass; Docker game-live-translator-dev npm test 261 pass, build/lint pass, smoke:capture-ocr pass; Claude T-008-005-r3 full-diff review clean with unresolved P1/P2=0."
 }
