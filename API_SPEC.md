@@ -309,6 +309,20 @@ type DiagnosticBundle = {
   - Frame expiry uses `createdAt + displayMs`; expired frames are omitted from snapshots and `latestFrame()`.
   - `clearFrame()` removes the latest frame without changing client counters.
 
+## Runtime OCR-To-Overlay Pipeline
+- Deterministic runtime composition lives in `src/core/runtime-pipeline.js`.
+- `runOcrToOverlayPipeline({ profile, ocrCandidate, provider, duplicateSuppressor?, overlayState?, nowMs?, clock?, idFactory?, includeSourceText? })` executes one candidate through the same core sequence the live runtime uses:
+  1. OCR normalization/filtering uses the same reason-code contract as `processOcrCandidate`.
+  2. Rejected OCR candidates return `{ accepted: false, stage: "ocr", rejectionReason }` and must not call a translation provider or publish a subtitle frame.
+  3. Duplicate suppression is two-phase in the runtime pipeline: it checks the hash before translation, but records the accepted OCR hash only after provider translation and subtitle publication succeed. Provider failures therefore remain retryable for unchanged on-screen text.
+  4. `prepareTranslationInput` applies glossary terms and creates a privacy-safe translation cache key over the normalized pre-glossary source text.
+  5. The injected provider translates the glossary-applied text with `targetLang="en"` for v1.
+  6. `createSubtitleFrame` builds the escaped subtitle frame, and `OverlayState.publishFrame` stores it when an overlay state object is supplied.
+- The runtime result is an in-process object only. It may contain normalized OCR text and glossary attribution for UI/debug workflows, but default persistence, diagnostics, logs, profile export, and overlay replay must not include raw/source OCR text.
+- `cacheKey` is safe for status surfaces and diagnostics because it contains only controlled identifiers and hashes. It must not contain raw OCR text, glossary target text, provider keys, or translated output.
+- Provider failures propagate as their existing `ContractError` codes and must not publish a subtitle frame. Callers may map retryability with `isRetryableProviderError`.
+- Overlay snapshots from this pipeline must replay `escapedText` and omit `sourceText` by default even when the internal subtitle frame is built with debug source text.
+
 ## Error Model
 - Canonical error shape: `ApiError`.
 - Validation error code: `VALIDATION_ERROR` with `details.fieldErrors`.
@@ -318,9 +332,9 @@ type DiagnosticBundle = {
 
 ## WebSocket Behavior
 - `/ws/app` sends status snapshots on connection and on state changes.
-- `/ws/overlay` sends the latest `SubtitleFrame` on connection if one exists, then new frames.
+- `/ws/overlay` sends the latest sanitized `SubtitleFrame` on connection if one exists, then new frames.
 - Clients reconnect with exponential backoff; the server must tolerate duplicate reconnects.
-- Subtitle text is transported as plain strings and escaped by the overlay before DOM insertion.
+- Subtitle frames transport both normalized `translatedText` and pre-escaped `escapedText`; overlay DOM code must render `escapedText` for broadcast output.
 - Debug fields such as source text and confidence may be omitted from overlay frames unless debug mode is enabled.
 
 ## Data Persistence Contracts

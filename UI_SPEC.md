@@ -55,6 +55,7 @@
 - Purpose: one-screen readiness check before streaming.
 - Inputs: active profile selector, Start/Stop translation toggle, copy overlay URL, restart backend.
 - Outputs: backend status, bound port, overlay URL, overlay client count, capture state, last OCR status, last translation status, provider, profile, and version.
+- Runtime source: Home/Status consumes the core OCR-to-overlay pipeline snapshot for last OCR status, last translation status, privacy-safe cache key, and overlay client count; it must not invent alternate rejection or provider status codes.
 - Loading: initial status fetch.
 - Empty: no active profile.
 - Error: backend down, port unavailable, overlay disconnected, provider unavailable.
@@ -179,6 +180,7 @@
 - 900-1099px: sidebar collapses to icons with tooltips.
 - Below 900px: show resize guard; mobile is out of scope.
 - Overlay: responsive to OBS Browser Source dimensions and anchored by theme settings.
+- Overlay runtime: rendered subtitles must come from `SubtitleFrame.escapedText` in the OCR-to-overlay pipeline snapshot, not from raw OCR text or debug-only source text.
 
 ## UX Acceptance Criteria
 - [ ] First-run wizard is completable by keyboard only.

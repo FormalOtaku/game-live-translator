@@ -29,13 +29,13 @@
   },
   "session_flow": {
     "current_session_role": "supervisor",
-    "recommended_next_session_role": "execution",
+    "recommended_next_session_role": "spec",
     "checkpoint_status": "satisfied",
-    "checkpoint_reason": "T-005-004 complete: local and devcontainer npm test/build/lint pass; Claude sidecar T-005-004-r2 clean with findings=0, must_fix=0, unresolved P1/P2=0.",
-    "last_completed_slice": "T-005-004",
-    "handoff_summary": "T-005-004 complete: deterministic subtitle frame construction and in-memory overlay state primitives landed with escapedText, debug sourceText privacy defaults, expiry/reconnect snapshots, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-004-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0.",
-    "next_action": "start_execution_session",
-    "updated_at": "2026-05-27T15:05:51.211Z"
+    "checkpoint_reason": "T-005 parent verification complete with deterministic tests and Claude sidecar full-diff evidence.",
+    "last_completed_slice": "T-005-005",
+    "handoff_summary": "T-005 complete: deterministic core runtime pipeline landed across OCR normalization/filtering/duplicate suppression, glossary application and privacy-safe cache keys, echo/DeepL provider adapters, subtitle/overlay state, and OCR-to-overlay runtime integration with 86 passing tests; local and devcontainer npm test/build/lint pass; T-005-005 module re-review clean and T-005 full-diff re-review clean with unresolved P1/P2=0.",
+    "next_action": "Define the next parent task for production v1 core, likely localhost API/overlay server wiring around the completed runtime pipeline.",
+    "updated_at": "2026-05-27T15:41:57.289Z"
   },
   "ui_design_policy": {
     "surface_priority": [
@@ -245,12 +245,5 @@
       ]
     },
     "note": "When true, Maestro may send repository context, diffs, prompts, and logs from this repo to interactive Claude Code sidecar sessions for review/patch/fix/design automation."
-  },
-  "active_task_id": "T-005",
-  "last_kickoff": {
-    "idea": "synced from task activation",
-    "started_at": "2026-05-27T13:13:24.743Z",
-    "task_id": "T-005",
-    "decision_id": "DEC-001"
   }
 }

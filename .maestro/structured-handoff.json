@@ -1,9 +1,11 @@
 {
   "completed_items": [
-    "T-005-004"
+    "T-005"
   ],
   "blockers": [],
-  "decisions_made": [],
+  "decisions_made": [
+    "DEC-006"
+  ],
   "open_questions": [],
-  "summary": "T-005-004 complete: deterministic subtitle frame construction and in-memory overlay state primitives landed with escapedText, debug sourceText privacy defaults, expiry/reconnect snapshots, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review T-005-004-r2 imported clean with findings=0, must_fix=0, unresolved P1/P2=0."
+  "summary": "T-005 complete: deterministic core runtime pipeline landed across OCR normalization/filtering/duplicate suppression, glossary application and privacy-safe cache keys, echo/DeepL provider adapters, subtitle/overlay state, and OCR-to-overlay runtime integration with 86 passing tests; local and devcontainer npm test/build/lint pass; T-005-005 module re-review clean and T-005 full-diff re-review clean with unresolved P1/P2=0."
 }

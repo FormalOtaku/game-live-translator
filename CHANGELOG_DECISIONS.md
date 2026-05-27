@@ -70,3 +70,16 @@
 - Regression tests added first: `test/subtitle-state.test.js` covers frame shape, deterministic ids/timestamps, source-text omission by default, explicit debug source text, malicious HTML escaping, validation failures, latest-frame replay, expiry, clear behavior, and overlay client counters.
 - Migration needed: None.
 - Rollback plan: Revert the new core module, tests, and spec/decision entries; no persisted data is introduced.
+
+### CHG-20260528-006
+- Date: 2026-05-28
+- Summary: Added the deterministic OCR-to-overlay runtime pipeline fixture for T-005-005.
+- Reason: The v1 core needs one verified path from accepted OCR text through glossary/cache-key preparation, provider translation, subtitle frame creation, and overlay state publication before API/UI slices wire it to capture and OBS.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The pipeline is in-memory only and must not persist OCR/source text, translated text, glossary attribution, subtitle frames, or overlay snapshots by default.
+  - API: Adds the `runOcrToOverlayPipeline` core contract, including OCR rejection semantics, privacy-safe cache key propagation, provider failure propagation, and source-text omission from overlay snapshots.
+  - UI: Home/Status and overlay views can consume one canonical runtime snapshot for OCR status, translation status, cache key, overlay clients, and escaped subtitle text.
+- Risk: The in-process result intentionally contains normalized OCR/debug attribution for immediate UI workflows; future diagnostics and persistence slices must continue to redact or omit these fields by default.
+- Regression tests added first: `test/runtime-pipeline.test.js` covers successful OCR -> glossary/cache -> provider -> subtitle -> overlay publication, OCR rejection without provider/publish side effects, duplicate suppression, malicious subtitle escaping, source-text omission from overlay replay, provider failure no-publish behavior, and provider mismatch validation.
+- Migration needed: None.
+- Rollback plan: Revert the runtime pipeline module, tests, and spec/decision entries; no persisted data is introduced.

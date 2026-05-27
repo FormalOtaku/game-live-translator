@@ -120,7 +120,7 @@
 
 ## Acceptance Criteria
 - [ ] First-run setup can produce a visible English subtitle in OBS from a synthetic Japanese test scene within 5 minutes.
-- [ ] OCR, translation, cache, glossary, duplicate suppression, and overlay update work end-to-end with deterministic fixtures.
+- [x] OCR, translation, cache, glossary, duplicate suppression, and overlay update work end-to-end with deterministic core fixtures.
 - [ ] API keys do not appear in SQLite, exported profiles, logs, diagnostics bundles, or error messages.
 - [ ] Default settings create no OCR image files, OCR full-text logs, or translation full-text logs.
 - [ ] The local server refuses non-localhost bind configuration.

@@ -1,15 +1,29 @@
 {
   "repo_path": "/home/murasaki01/Projects/Game_Live_Translator",
-  "generated_at": "2026-05-27T15:05:51.249Z",
-  "trigger": "checkpoint_mark",
+  "generated_at": "2026-05-27T15:41:57.330Z",
+  "trigger": "session_handoff",
   "summary": {
-    "suggestion_count": 0,
-    "high_priority_count": 0,
-    "review_health_status": "healthy",
+    "suggestion_count": 1,
+    "high_priority_count": 1,
+    "review_health_status": "critical",
     "doctor_finding_count": 0,
     "doctor_repairable_count": 0,
     "unstable_run_count": 0,
     "unresolved_infra_count": 0
   },
-  "suggestions": []
+  "suggestions": [
+    {
+      "id": "review_infra_reliability",
+      "priority": "high",
+      "category": "review_infra",
+      "title": "Review infra reliability needs attention",
+      "summary": "review health is critical; infra degraded count=1",
+      "next_action": "maestro review diag --path . --tool all --lines 20 --json",
+      "evidence": [
+        "window=20 primary_success=0% infra_degraded=100% dominant_empty_result=0% coverage_reduced=0% coverage_recovered=0% packet_capture=0%",
+        "infra_degraded_records=1"
+      ],
+      "source": "review_diag"
+    }
+  ]
 }

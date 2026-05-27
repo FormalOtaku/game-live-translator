@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T15:04:37.370Z",
+  "migrated_at": "2026-05-27T15:41:08.554Z",
   "source_path": "TASKS.md",
-  "source_sha256": "4d5658a744833b612b8b35a05a0ff1a443fd8161bf1b4ce02e6808adad895d88",
+  "source_sha256": "80c7d60af09dc04fbcb2a5e0732ede101ed3a0e807d4f4817162994b6a98e6e1",
   "task_count": 10,
   "counts": {
-    "todo": 2,
+    "todo": 0,
     "doing": 0,
     "blocked": 0,
-    "done": 8
+    "done": 10
   },
   "tasks": [
     {
@@ -43,9 +43,9 @@
     {
       "id": "T-005",
       "title": "Implement deterministic core runtime pipeline",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 through T-005-004 complete, next T-005-005"
+      "notes": "Parent complete: deterministic OCR normalization/filtering, duplicate suppression, glossary/cache keys, provider adapters, subtitle/overlay state, and OCR-to-overlay integration landed; local and devcontainer npm test/build/lint pass; full-diff Claude sidecar re-review clean with unresolved P1/P2=0"
     },
     {
       "id": "T-005-001",
@@ -78,9 +78,9 @@
     {
       "id": "T-005-005",
       "title": "Deterministic OCR-to-overlay integration fixture",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "Production-grade core pipeline slices for v1 Japanese-to-English OBS flow"
+      "notes": "Added runOcrToOverlayPipeline with two-phase duplicate recording, glossary/cache preparation, provider validation, subtitle frame creation, overlay publication, retry-after-provider-failure behavior, and 10 focused tests; local and devcontainer npm test/build/lint pass; Claude module re-review clean with unresolved P1/P2=0"
     }
   ]
 }

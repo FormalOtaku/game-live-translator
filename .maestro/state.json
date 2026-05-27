@@ -1,35 +1,26 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T15:05:51.215Z",
+  "migrated_at": "2026-05-27T15:41:57.292Z",
   "source_path": "STATE.md",
-  "source_sha256": "0faf0abecaf7d9319a73018ac1e9131c018e9606897cfca8f0c62d23ec6609d8",
+  "source_sha256": "2684ec14fbbcce9d808fde49c8f5192e563038859e5e896c01d8f0f464f9f08a",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": [
-      "T-005"
-    ]
+    "active_task_ids": []
   },
   "slice_progress": {
-    "current_slice_prefix": "T-005",
-    "current_slice_id": "T-005-005",
-    "current_slice_goal": "Deterministic OCR-to-overlay integration fixture",
-    "current_slice_status": "todo",
-    "completed_slices": 4,
-    "total_slices": 5,
-    "progress_pct": 80,
-    "next_slice_id": "T-005-005",
-    "next_slice_goal": "Deterministic OCR-to-overlay integration fixture",
-    "last_checkpoint": "2026-05-27T15:05:51.214Z",
-    "done": [
-      "T-005-001",
-      "T-005-002",
-      "T-005-003",
-      "T-005-004"
-    ],
+    "current_slice_prefix": null,
+    "current_slice_id": null,
+    "current_slice_goal": null,
+    "current_slice_status": null,
+    "completed_slices": 0,
+    "total_slices": 0,
+    "progress_pct": 0,
+    "next_slice_id": null,
+    "next_slice_goal": null,
+    "last_checkpoint": "2026-05-27T15:41:57.291Z",
+    "done": [],
     "doing": [],
-    "todo": [
-      "T-005-005"
-    ]
+    "todo": []
   }
 }

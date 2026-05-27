@@ -22,6 +22,9 @@
 5. `overlay_themes`: theme display name and CSS/token JSON.
 6. `app_meta`: schema version and feature flags.
 
+## No-Migration Runtime Slices
+- 2026-05-28 T-005-005: OCR-to-overlay runtime pipeline is in-memory only. It introduces no SQLite tables, no profile export schema changes, no cache persistence, and no key storage movement. Future persistence slices must decide explicitly which sanitized pipeline fields, if any, are durable.
+
 ## Migration Steps
 1. Pre-checks: confirm current `app_meta.schema_version`, backup DB, verify disk write access, verify app is not actively capturing.
 2. Data/schema migration: run forward-only migration in a transaction.
