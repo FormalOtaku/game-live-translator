@@ -1,31 +1,35 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T13:08:50.251Z",
+  "migrated_at": "2026-05-27T13:54:52.117Z",
   "source_path": "STATE.md",
-  "source_sha256": "78c8c4ae2bbe60239a31b2c010897205ea8806dc46535573048262fb7b4f46d9",
+  "source_sha256": "5243c96e3d341c84245bff32ef23dfd42a88e63526cf59037bfc2f15262ed1ff",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": []
+    "active_task_ids": [
+      "T-005"
+    ]
   },
   "slice_progress": {
-    "current_slice_prefix": "T-004",
-    "current_slice_id": "T-004",
-    "current_slice_goal": "Stabilize build/test in devcontainer",
-    "current_slice_status": "done",
-    "completed_slices": 4,
-    "total_slices": 4,
-    "progress_pct": 100,
-    "next_slice_id": null,
-    "next_slice_goal": "decompose next implementation parent task",
-    "last_checkpoint": "2026-05-27T22:08:50+09:00",
+    "current_slice_prefix": "T-005",
+    "current_slice_id": "T-005-002",
+    "current_slice_goal": "Glossary application and translation cache keys",
+    "current_slice_status": "todo",
+    "completed_slices": 1,
+    "total_slices": 5,
+    "progress_pct": 20,
+    "next_slice_id": "T-005-002",
+    "next_slice_goal": "Glossary application and translation cache keys",
+    "last_checkpoint": "2026-05-27T13:54:52.116Z",
     "done": [
-      "T-001",
-      "T-002",
-      "T-003",
-      "T-004"
+      "T-005-001"
     ],
     "doing": [],
-    "todo": []
+    "todo": [
+      "T-005-002",
+      "T-005-003",
+      "T-005-004",
+      "T-005-005"
+    ]
   }
 }

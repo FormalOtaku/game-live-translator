@@ -1,0 +1,32 @@
+{
+  "schema_version": "maestro.pending-review-evidence.v1",
+  "task_id": "T-005-001",
+  "evidence": [
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-005-001/claude/review/review.json; receive=.maestro/agent-pass/T-005-001/claude/review/receive-report.json",
+    "review.json; reviewed_files=12; findings=5; must_fix=0",
+    "unresolved P1/P2=0",
+    "agent-pass review limitation: T-005-001 only ships the core module; wiring into live capture, /api/ocr/test, and the profile resolver is deferred to later slices. The review assumes that future slices will treat processOcrCandidate as the only public entry point and will source confidenceFloor from the active profile (see DEC-002 follow-up).",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-005-001-r2/claude/review/review.json; receive=.maestro/agent-pass/T-005-001-r2/claude/review/receive-report.json",
+    "review.json; reviewed_files=12; findings=0; must_fix=0",
+    "agent-pass review limitation: T-005-001 still only ships the core module. The follow-up slices (T-005-002..T-005-005) must wire processOcrCandidate into live capture, /api/ocr/test, and the profile resolver so confidenceFloor comes from the active profile and the DuplicateSuppressor is constructed by the runtime, not by callers."
+  ],
+  "sources": [
+    {
+      "slice_id": "T-005-001",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-005-001/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-005-001/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T13:48:38.927Z"
+    },
+    {
+      "slice_id": "T-005-001-r2",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-005-001-r2/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-005-001-r2/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T13:51:58.758Z"
+    }
+  ],
+  "updated_at": "2026-05-27T13:51:58.758Z"
+}

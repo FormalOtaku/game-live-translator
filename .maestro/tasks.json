@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T11:43:37.252Z",
+  "migrated_at": "2026-05-27T13:52:49.019Z",
   "source_path": "TASKS.md",
-  "source_sha256": "39391121dcce14e9b14fcc3337e46a0b4f66fbd759778cda47f506d7a5ea2dbb",
-  "task_count": 4,
+  "source_sha256": "33ae92118e54712de29c539a43be0cfbef0a5a529076eaf961847ceebb384e09",
+  "task_count": 10,
   "counts": {
-    "todo": 0,
+    "todo": 5,
     "doing": 0,
     "blocked": 0,
-    "done": 4
+    "done": 5
   },
   "tasks": [
     {
@@ -39,6 +39,48 @@
       "status": "done",
       "owner": "codex",
       "notes": "Replaced placeholder build/lint with cross-platform scripts/check-syntax.js and added test:contracts; local and devcontainer npm test/build/lint pass; Claude sidecar review clean with unresolved P1/P2=0 and must_fix=0"
+    },
+    {
+      "id": "T-005",
+      "title": "Implement deterministic core runtime pipeline",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "Parent for OCR normalization/filtering, glossary/cache, provider adapters, subtitle state, and end-to-end deterministic fixtures; T-005-001 complete, next T-005-002"
+    },
+    {
+      "id": "T-005-001",
+      "title": "OCR normalization filtering duplicate suppression",
+      "status": "done",
+      "owner": "codex",
+      "notes": "Added OCR normalization/filtering and hash-only duplicate suppression core with 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0"
+    },
+    {
+      "id": "T-005-002",
+      "title": "Glossary application and translation cache keys",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "Production-grade core pipeline slices for v1 Japanese-to-English OBS flow"
+    },
+    {
+      "id": "T-005-003",
+      "title": "Translation provider adapters and provider error mapping",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "Production-grade core pipeline slices for v1 Japanese-to-English OBS flow"
+    },
+    {
+      "id": "T-005-004",
+      "title": "Subtitle frame and overlay state primitives",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "Production-grade core pipeline slices for v1 Japanese-to-English OBS flow"
+    },
+    {
+      "id": "T-005-005",
+      "title": "Deterministic OCR-to-overlay integration fixture",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "Production-grade core pipeline slices for v1 Japanese-to-English OBS flow"
     }
   ]
 }

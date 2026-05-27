@@ -92,13 +92,19 @@ type GlossaryTerm = {
   note?: string;
 };
 
+type OcrRejectionReason =
+  | "EMPTY_TEXT"
+  | "CONFIDENCE_TOO_LOW"
+  | "NOISE_TEXT"
+  | "DUPLICATE_TEXT";
+
 type OcrResult = {
   text: string;
   normalizedText: string;
   confidence: number;
   durationMs: number;
   accepted: boolean;
-  rejectionReason?: string;
+  rejectionReason?: OcrRejectionReason;
 };
 
 type TranslationResult = {
@@ -222,6 +228,20 @@ type DiagnosticBundle = {
 - `targetLang` is fixed to `"en"` in v1.
 - Provider ids are controlled vocabulary values registered by the backend; v1 required ids are `deepl` and `echo`.
 - Built-in theme ids are `classic_subtitle`, `stream_box`, and `minimal`; built-in themes are read-only and can only be duplicated into custom themes.
+
+## OCR Text Normalization And Filtering
+- Runtime OCR candidates pass through a deterministic normalize -> filter -> duplicate-suppress sequence before translation.
+- `normalizeOcrText` applies Unicode `NFKC`, strips control and zero-width characters, collapses Unicode whitespace to one ASCII space, and trims edges.
+- Non-string OCR text normalizes to `""`.
+- `evaluateOcrCandidate` rejects candidates in this order:
+  - `EMPTY_TEXT`: normalized text is empty.
+  - `CONFIDENCE_TOO_LOW`: confidence is not finite, outside `[0, 1]`, or below the active profile's `ocrConfidenceFloor`.
+  - `NOISE_TEXT`: normalized text has no Unicode letter or number characters.
+- `processOcrCandidate` adds duplicate suppression after a candidate passes evaluation:
+  - `DUPLICATE_TEXT`: SHA-256 hash of normalized text matches an in-memory entry inside the active TTL window.
+- Duplicate suppression requires a caller-provided `DuplicateSuppressor`. Omitting it runs normalization/filtering only; passing any other object is a validation error.
+- Duplicate suppression is in-memory only and stores `{ hash, firstSeenAt }` records. It must not store raw OCR text, normalized OCR text, captured images, or translated text.
+- Duplicate suppression snapshots are diagnostic-safe by contract: they expose only TTL metadata and hashes/timestamps.
 
 ## Error Model
 - Canonical error shape: `ApiError`.

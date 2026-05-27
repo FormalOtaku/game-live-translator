@@ -41,28 +41,28 @@
 
 ## Current Focus
 - milestone:
-- active_task_ids: (none)
+- active_task_ids: T-005
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-004
-- current_slice_id: T-004
-- current_slice_goal: Stabilize build/test in devcontainer
-- current_slice_status: done
-- completed_slices: 4
-- total_slices: 4
-- progress_pct: 100
-- next_slice_id: (none)
-- next_slice_goal: decompose next implementation parent task
-- last_checkpoint: 2026-05-27T22:08:50+09:00
+- current_slice_prefix: T-005
+- current_slice_id: T-005-002
+- current_slice_goal: Glossary application and translation cache keys
+- current_slice_status: todo
+- completed_slices: 1
+- total_slices: 5
+- progress_pct: 20
+- next_slice_id: T-005-002
+- next_slice_goal: Glossary application and translation cache keys
+- last_checkpoint: 2026-05-27T13:54:52.116Z
 ## Session Flow
 - current_session_role: execution
-- recommended_next_session_role: spec
+- recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-004 deterministic verification and Maestro Claude sidecar review are complete.
-- last_completed_slice: T-004
-- handoff_summary: T-004 completed: placeholder build/lint scripts now use cross-platform scripts/check-syntax.js, test:contracts was added, local and devcontainer npm test/build/lint pass, and Claude sidecar review evidence is imported with must_fix=0 and unresolved P1/P2=0.
-- next_action: Define the next parent task and decompose it into PR-sized implementation slices for the v1 core product.
-- updated_at: 2026-05-27T13:08:50.249Z
+- checkpoint_reason: T-005-001 deterministic verification and Maestro Claude sidecar re-review are complete.
+- last_completed_slice: T-005-001
+- handoff_summary: T-005-001 complete: deterministic OCR normalization/filtering and hash-only duplicate suppression core landed with 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review imported clean with findings=0, must_fix=0, unresolved P1/P2=0.
+- next_action: Start T-005-002 glossary application and translation cache key slice.
+- updated_at: 2026-05-27T13:54:52.114Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.
