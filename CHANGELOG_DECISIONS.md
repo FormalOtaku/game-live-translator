@@ -135,3 +135,16 @@
 - Regression tests added first: focused local server tests cover `/ws/app` non-upgrade `WS_REJECTED`, on-connect snapshot redaction (no `sourceText`/provider key/raw OCR leakage), runtime-status republish broadcast, publish/clear overlay state broadcast, multi-client fan-out, overlay client-count broadcast on overlay connect/disconnect, origin rejection with 403 `WS_REJECTED`, text/control ping handling, oversized text/control frame rejection, retryable/non-retryable `providerErrorToRuntimeStatus` mapping with redacted messages, `/api/status` runtime-status source failure fallback, and `buildApiErrorFromContractError` retryability without message parsing.
 - Migration needed: None.
 - Rollback plan: Revert the `/ws/app` endpoint, runtime error mapping helpers, focused tests, and spec/decision entries; no persisted data is introduced.
+
+### CHG-20260528-011
+- Date: 2026-05-28
+- Summary: Added the T-006 parent-closeout smoke command and server smoke runbook.
+- Reason: The localhost API/OBS overlay server core needs one repeatable end-to-end operational check that exercises the actual HTTP and WebSocket wire contract before the parent task is closed.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The smoke command uses only in-memory `OverlayState` and ephemeral server state.
+  - API: Adds `npm run smoke:server`, which validates `/health`, `/api/status`, `/overlay`, `/ws/app`, `/ws/overlay`, retryable `WS_REJECTED` envelopes, AppStatus broadcasts, overlay replay/broadcast, and privacy redaction.
+  - UI: Provides the evidence path for Home/Status and OBS Setup Guide assumptions before those UI surfaces consume the local API.
+- Risk: The smoke command is a synthetic harness, not a substitute for future Windows + OBS manual release validation. It deliberately validates the current Node contract harness while the production target remains Electron plus Python FastAPI sidecar.
+- Regression tests added first: `test/server-smoke.test.js` runs `scripts/smoke-local-api.js` as a child process and asserts pass JSON, selected localhost overlay URL, expected check list, and no source text/provider key leakage in stdout.
+- Migration needed: None.
+- Rollback plan: Revert the smoke script, package script, runbook, regression test, and spec/decision entries; no persisted data is introduced.

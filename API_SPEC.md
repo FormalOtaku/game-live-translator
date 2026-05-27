@@ -258,6 +258,19 @@ type DiagnosticBundle = {
 | WS UPGRADE | `/ws/app` | App status stream | optional ping | `AppStatus` snapshots/events | `WS_REJECTED` |
 | WS UPGRADE | `/ws/overlay` | OBS subtitle stream | optional ping | `SubtitleFrame` snapshots/events | `WS_REJECTED` |
 
+## Server Smoke Command
+- T-006-005 adds `npm run smoke:server` as the executable parent-closeout smoke for the dependency-free localhost server core.
+- The smoke command starts `createLocalApiServer` on an ephemeral `127.0.0.1` port and verifies the live wire contract for `/health`, `/api/status`, `/overlay`, `/ws/app`, and `/ws/overlay`.
+- The command must use real HTTP requests and raw WebSocket clients, not direct function calls, for endpoint behavior.
+- Required smoke assertions:
+  - `/health` reports the selected localhost port and `bindAddress: "127.0.0.1"`.
+  - `/api/status` returns sanitized `AppStatus`, omits `lastSubtitle.sourceText`, and redacts provider-key shaped messages.
+  - `/overlay` returns self-contained no-store OBS HTML with CSP/nosniff headers, no remote assets, and escaped subtitle text.
+  - non-upgrade `/ws/app` and `/ws/overlay` return canonical retryable `WS_REJECTED` envelopes.
+  - `/ws/app` sends sanitized `AppStatus` on connect and broadcasts overlay client count, subtitle publish, and clear changes.
+  - `/ws/overlay` replays the latest sanitized subtitle and broadcasts subtitle publish and clear changes.
+- Smoke output must be concise JSON and must not include provider keys, raw OCR/source text, translated debug text, screenshots, stack traces, or remote hosts.
+
 ### `/ws/overlay` Wire Contract
 - T-006-003 implements `/ws/overlay` in the dependency-free localhost server core. The production FastAPI sidecar must preserve the same observable behavior.
 - Upgrade behavior:

@@ -6,7 +6,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
-const sourceRoots = ['src', 'test'];
+const sourceRoots = ['src', 'test', 'scripts'];
 
 function collectJavaScriptFiles(absoluteDir) {
   if (!fs.existsSync(absoluteDir)) {
@@ -38,7 +38,7 @@ const files = sourceRoots
   .sort((a, b) => a.localeCompare(b));
 
 if (files.length === 0) {
-  console.error('No JavaScript files found under src/ or test/.');
+  console.error(`No JavaScript files found under ${sourceRoots.map((root) => `${root}/`).join(', ')}.`);
   process.exit(1);
 }
 

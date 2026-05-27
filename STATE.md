@@ -45,24 +45,24 @@
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-006
-- current_slice_id: T-006-005
-- current_slice_goal: Server smoke runbook and parent closeout
-- current_slice_status: todo
-- completed_slices: 4
-- total_slices: 5
-- progress_pct: 80
-- next_slice_id: T-006-005
-- next_slice_goal: Server smoke runbook and parent closeout
-- last_checkpoint: 2026-05-27T18:00:05.067Z
+- current_slice_prefix: (none)
+- current_slice_id: (none)
+- current_slice_goal: (none)
+- current_slice_status: (none)
+- completed_slices: 0
+- total_slices: 0
+- progress_pct: 0
+- next_slice_id: (none)
+- next_slice_goal: (none)
+- last_checkpoint: 2026-05-27T18:50:36.708Z
 ## Session Flow
 - current_session_role: supervisor
-- recommended_next_session_role: execution
+- recommended_next_session_role: spec
 - checkpoint_status: satisfied
-- checkpoint_reason: T-006-004 deterministic verification and Claude review gate satisfied.
-- last_completed_slice: T-006-004
-- handoff_summary: T-006-004 complete: dependency-free /ws/app AppStatus WebSocket stream added with shared single upgrade dispatcher, same localhost/configured Origin policy as HTTP and /ws/overlay, sanitized status snapshot on connect, publishStatus runtime republish, OverlayState publish/clear/client-count broadcasts, app/overlay WS path conflict validation, ping/close and oversized-frame handling, /api/status safe runtime-status-source fallback, and provider ContractError to RuntimeStatus/ApiError retryability mapping. Specs/changelog/decision/migration notes updated. Verification: local npm test/build/lint pass with 129 tests; Docker devcontainer-equivalent npm test/build/lint pass with 129 tests; git diff --check pass. Claude sidecar review T-006-004-r3 imported clean with must_fix=0 and unresolved P1/P2=0. Next slice is T-006-005 parent closeout and smoke documentation.
-- next_action: start_execution_session
-- updated_at: 2026-05-27T17:59:21.821Z
+- checkpoint_reason: T-006 all child slices complete with deterministic local/Docker verification, smoke evidence, and imported full-diff Claude review.
+- last_completed_slice: T-006-005
+- handoff_summary: T-006 parent complete: localhost-only API/OBS overlay server core now has /health, /api/status, /overlay, /ws/overlay, /ws/app, provider retryability mapping, repeatable npm run smoke:server, SERVER_SMOKE_RUNBOOK_JA.md, and parent closeout evidence. Local and Docker npm test/build/lint/smoke pass with 130 tests; git diff --check pass; Claude T-006-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0. Next work should start a spec session to choose/decompose the next parent task toward the Windows/Electron/FastAPI product surface.
+- next_action: start_spec_session
+- updated_at: 2026-05-27T18:50:36.705Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

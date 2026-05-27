@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T18:00:30.213Z",
+  "migrated_at": "2026-05-27T18:51:47.993Z",
   "source_path": "TASKS.md",
-  "source_sha256": "23b8b8fc9f439600f38c43c9a08ead590f01cf8cd1f0b5d8007fff14d743da8f",
+  "source_sha256": "9fedc304b238152a83bf88c3801f565fbb78bcb22bd827f985efd38ffb162101",
   "task_count": 16,
   "counts": {
-    "todo": 2,
+    "todo": 0,
     "doing": 0,
     "blocked": 0,
-    "done": 14
+    "done": 16
   },
   "tasks": [
     {
@@ -85,9 +85,9 @@
     {
       "id": "T-006",
       "title": "Implement localhost API and OBS overlay server core",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "Parent target: localhost-only health/status/overlay HTTP surface, sanitized OBS overlay delivery, WebSocket reconnect snapshots, runtime status mapping, and smoke evidence around the completed deterministic runtime pipeline."
+      "notes": "Parent complete: localhost-only /health, /api/status, /overlay, /ws/overlay, /ws/app, provider retryability mapping, and repeatable npm run smoke:server closeout landed; local and Docker npm test/build/lint/smoke pass with 130 tests; Claude T-006-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
     },
     {
       "id": "T-006-001",
@@ -120,9 +120,9 @@
     {
       "id": "T-006-005",
       "title": "Server smoke runbook and parent closeout",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": "T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification."
+      "notes": "Added dependency-free scripts/smoke-local-api.js, test/server-smoke.test.js, npm run smoke:server, SERVER_SMOKE_RUNBOOK_JA.md, and closeout spec/decision updates; local and Docker npm test/build/lint/smoke pass with 130 tests; Claude T-006-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
     }
   ]
 }

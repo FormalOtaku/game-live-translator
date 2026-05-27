@@ -29,24 +29,24 @@
 <body>
   <main>
     <header>
-      <p class="meta">Generated from structured Maestro state at 2026-05-27T18:00:30.214Z</p>
+      <p class="meta">Generated from structured Maestro state at 2026-05-27T18:51:47.994Z</p>
       <h1>Maestro<br>Project Report</h1>
       <p class="meta">/home/murasaki01/Projects/Game_Live_Translator</p>
     </header>
     <section class="grid">
       <div class="card"><span class="metric">16</span><span class="muted">tasks</span></div>
       <div class="card"><span class="metric">0</span><span class="muted">doing</span></div>
-      <div class="card"><span class="metric">2</span><span class="muted">todo</span></div>
-      <div class="card"><span class="metric">14</span><span class="muted">done</span></div>
+      <div class="card"><span class="metric">0</span><span class="muted">todo</span></div>
+      <div class="card"><span class="metric">16</span><span class="muted">done</span></div>
       <div class="card"><span class="metric">0</span><span class="muted">decisions</span></div>
     </section>
     <section>
       <h2>Current Focus</h2>
       <div class="card">
         <p><strong>Milestone:</strong> (none)</p>
-        <p><strong>Current slice:</strong> T-006-005</p>
-        <p><strong>Goal:</strong> Server smoke runbook and parent closeout</p>
-        <p><strong>Progress:</strong> 80%</p>
+        <p><strong>Current slice:</strong> (none)</p>
+        <p><strong>Goal:</strong> (none)</p>
+        <p><strong>Progress:</strong> 0%</p>
       </div>
     </section>
     <section>
@@ -63,12 +63,12 @@
 <tr><td>T-005-003</td><td>Translation provider adapters and provider error mapping</td><td><span class="pill done">done</span></td><td>codex</td><td>Added deterministic echo and injected DeepL provider adapters with controlled provider error mapping and 19 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0</td></tr>
 <tr><td>T-005-004</td><td>Subtitle frame and overlay state primitives</td><td><span class="pill done">done</span></td><td>codex</td><td>Added deterministic subtitle frame and in-memory overlay state primitives with escapedText, privacy-safe sourceText omission, expiry/reconnect snapshots, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0</td></tr>
 <tr><td>T-005-005</td><td>Deterministic OCR-to-overlay integration fixture</td><td><span class="pill done">done</span></td><td>codex</td><td>Added runOcrToOverlayPipeline with two-phase duplicate recording, glossary/cache preparation, provider validation, subtitle frame creation, overlay publication, retry-after-provider-failure behavior, and 10 focused tests; local and devcontainer npm test/build/lint pass; Claude module re-review clean with unresolved P1/P2=0</td></tr>
-<tr><td>T-006</td><td>Implement localhost API and OBS overlay server core</td><td><span class="pill todo">todo</span></td><td>codex</td><td>Parent target: localhost-only health/status/overlay HTTP surface, sanitized OBS overlay delivery, WebSocket reconnect snapshots, runtime status mapping, and smoke evidence around the completed deterministic runtime pipeline.</td></tr>
+<tr><td>T-006</td><td>Implement localhost API and OBS overlay server core</td><td><span class="pill done">done</span></td><td>codex</td><td>Parent complete: localhost-only /health, /api/status, /overlay, /ws/overlay, /ws/app, provider retryability mapping, and repeatable npm run smoke:server closeout landed; local and Docker npm test/build/lint/smoke pass with 130 tests; Claude T-006-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0.</td></tr>
 <tr><td>T-006-001</td><td>Localhost HTTP bind health and status core</td><td><span class="pill done">done</span></td><td>codex</td><td>Added localhost HTTP server core with bind enforcement, port fallback, health/status JSON, redacted ApiError, no-wildcard CORS, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar T-006-001-r2 clean with unresolved P1/P2=0</td></tr>
 <tr><td>T-006-002</td><td>OBS overlay HTML renderer and safety fixtures</td><td><span class="pill done">done</span></td><td>codex</td><td>Added OBS overlay renderer and /overlay route with transparent self-contained HTML, escapedText-only rendering, no raw/debug text, no remote assets, CSP/no-store/nosniff headers, and 21 overlay/server focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar T-006-002-r2 clean with findings=0 and unresolved P1/P2=0</td></tr>
 <tr><td>T-006-003</td><td>Overlay WebSocket replay and broadcast core</td><td><span class="pill done">done</span></td><td>codex</td><td>Added dependency-free /ws/overlay WebSocket core with local/configured Origin gating, latest sanitized subtitle replay, live publishFrame broadcast, clearFrame events, ping/close/protocol rejection, overlay client counters, and 8 WebSocket/subscriber tests; local and devcontainer npm test/build/lint pass with 115 tests; Claude sidecar T-006-003-r3 clean with must_fix=0 and unresolved P1/P2=0</td></tr>
 <tr><td>T-006-004</td><td>App status stream and runtime error mapping</td><td><span class="pill done">done</span></td><td>codex</td><td>Added dependency-free /ws/app AppStatus stream with shared upgrade dispatcher, sanitized status snapshots, runtime/overlay broadcasts, provider retryability mapping, /api/status fallback, and 129 passing local/Docker tests; Claude T-006-004-r3 clean with must_fix=0 and unresolved P1/P2=0</td></tr>
-<tr><td>T-006-005</td><td>Server smoke runbook and parent closeout</td><td><span class="pill todo">todo</span></td><td>codex</td><td>T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification.</td></tr></tbody>
+<tr><td>T-006-005</td><td>Server smoke runbook and parent closeout</td><td><span class="pill done">done</span></td><td>codex</td><td>Added dependency-free scripts/smoke-local-api.js, test/server-smoke.test.js, npm run smoke:server, SERVER_SMOKE_RUNBOOK_JA.md, and closeout spec/decision updates; local and Docker npm test/build/lint/smoke pass with 130 tests; Claude T-006-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0.</td></tr></tbody>
       </table>
     </section>
     <section>

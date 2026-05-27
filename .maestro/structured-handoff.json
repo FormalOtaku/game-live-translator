@@ -1,12 +1,11 @@
 {
   "completed_items": [
-    "T-006-004"
+    "T-006,T-006-005"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-010 app status stream remains separate from overlay stream",
-    "retryability is code-driven"
+    "DEC-011"
   ],
   "open_questions": [],
-  "summary": "T-006-004 complete: dependency-free /ws/app AppStatus WebSocket stream added with shared single upgrade dispatcher, same localhost/configured Origin policy as HTTP and /ws/overlay, sanitized status snapshot on connect, publishStatus runtime republish, OverlayState publish/clear/client-count broadcasts, app/overlay WS path conflict validation, ping/close and oversized-frame handling, /api/status safe runtime-status-source fallback, and provider ContractError to RuntimeStatus/ApiError retryability mapping. Specs/changelog/decision/migration notes updated. Verification: local npm test/build/lint pass with 129 tests; Docker devcontainer-equivalent npm test/build/lint pass with 129 tests; git diff --check pass. Claude sidecar review T-006-004-r3 imported clean with must_fix=0 and unresolved P1/P2=0. Next slice is T-006-005 parent closeout and smoke documentation."
+  "summary": "T-006 parent complete: localhost-only API/OBS overlay server core now has /health, /api/status, /overlay, /ws/overlay, /ws/app, provider retryability mapping, repeatable npm run smoke:server, SERVER_SMOKE_RUNBOOK_JA.md, and parent closeout evidence. Local and Docker npm test/build/lint/smoke pass with 130 tests; git diff --check pass; Claude T-006-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0. Next work should start a spec session to choose/decompose the next parent task toward the Windows/Electron/FastAPI product surface."
 }

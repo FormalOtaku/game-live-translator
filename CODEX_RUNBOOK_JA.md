@@ -33,7 +33,8 @@
   - 3-6 子スライスへ分解（`T-xxx-001` 形式）
   - `doing` は1件のみ
 - 親タスク完了時:
-- full diff review
+  - full diff review
+  - `npm run smoke:server` を実行し、対象親タスクの主要 runtime contract を再確認する
   - cleanup スライス確認
   - `PARENT_TASK_CHECKLIST_JA.md` に沿って人手検証を依頼
 
@@ -73,5 +74,6 @@
 ## 8. 最終出力の最小セット
 - 変更ファイル一覧
 - テスト結果（pass/fail）
+- smoke 結果（対象親タスクに smoke command がある場合）
 - 未解決 P1/P2/P3
 - 次アクション（あれば）
