@@ -83,3 +83,16 @@
 - Regression tests added first: `test/runtime-pipeline.test.js` covers successful OCR -> glossary/cache -> provider -> subtitle -> overlay publication, OCR rejection without provider/publish side effects, duplicate suppression, malicious subtitle escaping, source-text omission from overlay replay, provider failure no-publish behavior, and provider mismatch validation.
 - Migration needed: None.
 - Rollback plan: Revert the runtime pipeline module, tests, and spec/decision entries; no persisted data is introduced.
+
+### CHG-20260528-007
+- Date: 2026-05-28
+- Summary: Started T-006 with a localhost HTTP server contract core for `/health` and `/api/status`.
+- Reason: The completed runtime pipeline needs a real localhost-only API surface before OBS overlay HTML, WebSocket replay, and Electron status screens can be wired safely.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The server core is in-memory and reads only sanitized runtime state.
+  - API: Adds the `createLocalApiServer` contract, `127.0.0.1` bind enforcement before listen, sequential local port fallback, canonical `ApiError` responses, no-wildcard CORS, `/health`, and privacy-safe `/api/status`.
+  - UI: Home/Status must trust the backend-reported `overlayUrl`, bound port, overlay client count, and sanitized latest subtitle instead of constructing host/port state itself.
+- Risk: This Node implementation is a contract harness for the current core repo while the product target remains a Python FastAPI sidecar. The wire contract must remain stable if the implementation is wrapped or ported.
+- Regression tests added first: `test/local-api-server.test.js` covers non-localhost bind rejection, selected port reporting, sequential fallback and exhaustion on port conflict, sanitized and empty status snapshots, canonical 404/405/500 errors, and CORS not using a wildcard.
+- Migration needed: None.
+- Rollback plan: Revert the server core, focused tests, and T-006 spec/decision entries; no persisted data is introduced.

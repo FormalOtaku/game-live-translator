@@ -61,3 +61,11 @@
 - Decision: `runOcrToOverlayPipeline` returns a full frozen in-process result for immediate runtime/UI use, including OCR evaluation, translation preparation, cache key, provider result, subtitle frame, and overlay snapshot. The overlay snapshot remains privacy-sanitized by `OverlayState.publishFrame`, and persistence/log/diagnostic surfaces must continue to omit raw/source text by default.
 - Consequences: Tests can verify the complete deterministic path without network, secrets, persistence, or OBS. UI code gets one canonical status source instead of re-deriving OCR and translation states. The pipeline result must be treated as volatile runtime state, not as a durable diagnostic payload.
 - Follow-up: API/WebSocket slices should expose only the sanitized subset appropriate for each endpoint, and diagnostics must include `cacheKey`/status codes rather than raw OCR or translated text unless an explicit debug export policy is added.
+
+### DEC-007
+- Date: 2026-05-28
+- Context: T-006 needs to expose the completed runtime pipeline through a localhost API, but the current repository is a Node core harness while the product target is an Electron app with a Python FastAPI sidecar.
+- Options: add a Python FastAPI sidecar immediately; build only pure contract helpers and defer all serving behavior; add a dependency-free Node localhost server core that exercises the same wire contract and can later be wrapped or ported.
+- Decision: Implement a dependency-free Node localhost server core for T-006 as the executable contract harness. It must enforce `127.0.0.1` before listen, report the selected local port, emit canonical `ApiError` envelopes, avoid wildcard CORS, and expose only privacy-safe status payloads.
+- Consequences: The project gains deterministic API/overlay server tests without adding framework dependencies or secrets, while preserving the documented FastAPI production target. Any later Python sidecar must keep the same `/health`, `/api/status`, bind, CORS, and error semantics.
+- Follow-up: T-006-002/T-006-003 should add the actual OBS overlay HTML and WebSocket replay/broadcast behavior on top of this local server boundary.

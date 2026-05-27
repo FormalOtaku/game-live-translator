@@ -113,6 +113,7 @@
 - v1 introduces a localhost-only internal API between Electron UI, Python sidecar, and OBS overlay.
 - Stable contracts are defined in `API_SPEC.md` and include REST status/config/profile operations plus WebSocket app and overlay streams.
 - Error responses use a canonical envelope and retryability classification.
+- T-006 implements the executable localhost HTTP contract core first: `/health` and `/api/status` must prove the selected `127.0.0.1` bind, selected port, sanitized overlay URL, overlay client count, and canonical error shape before broader profile/capture endpoints are added.
 
 ## UI Impact
 - v1 introduces desktop screens documented in `UI_SPEC.md`: First-Run Wizard, Home/Status, Capture Setup, OCR Preview, Translation Settings, Glossary, Overlay Theme Editor, OBS Setup Guide, Profiles, Privacy Settings, Logs/Diagnostics, and About/Support.
@@ -123,7 +124,7 @@
 - [x] OCR, translation, cache, glossary, duplicate suppression, and overlay update work end-to-end with deterministic core fixtures.
 - [ ] API keys do not appear in SQLite, exported profiles, logs, diagnostics bundles, or error messages.
 - [ ] Default settings create no OCR image files, OCR full-text logs, or translation full-text logs.
-- [ ] The local server refuses non-localhost bind configuration.
+- [x] The T-006 localhost server core refuses non-localhost bind configuration before listening.
 - [ ] Overlay escaping is verified with malicious OCR payload fixtures.
 - [ ] Capture, translation, overlay reconnect, backend restart, and port conflict have recoverable UI states.
 - [ ] 1280x720, 1920x1080, and 2560x1440 overlay layouts do not clip or overlap subtitle text.

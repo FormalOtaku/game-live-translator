@@ -24,6 +24,7 @@
 
 ## No-Migration Runtime Slices
 - 2026-05-28 T-005-005: OCR-to-overlay runtime pipeline is in-memory only. It introduces no SQLite tables, no profile export schema changes, no cache persistence, and no key storage movement. Future persistence slices must decide explicitly which sanitized pipeline fields, if any, are durable.
+- 2026-05-28 T-006-001: Localhost HTTP server core is in-memory only. It introduces no SQLite tables, no profile export schema changes, no persistent status store, and no key storage movement. Port selection and runtime status are process state only.
 
 ## Migration Steps
 1. Pre-checks: confirm current `app_meta.schema_version`, backup DB, verify disk write access, verify app is not actively capturing.

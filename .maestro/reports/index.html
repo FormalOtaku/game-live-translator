@@ -29,24 +29,24 @@
 <body>
   <main>
     <header>
-      <p class="meta">Generated from structured Maestro state at 2026-05-27T15:41:57.292Z</p>
+      <p class="meta">Generated from structured Maestro state at 2026-05-27T16:09:40.069Z</p>
       <h1>Maestro<br>Project Report</h1>
       <p class="meta">/home/murasaki01/Projects/Game_Live_Translator</p>
     </header>
     <section class="grid">
-      <div class="card"><span class="metric">10</span><span class="muted">tasks</span></div>
+      <div class="card"><span class="metric">16</span><span class="muted">tasks</span></div>
       <div class="card"><span class="metric">0</span><span class="muted">doing</span></div>
-      <div class="card"><span class="metric">0</span><span class="muted">todo</span></div>
-      <div class="card"><span class="metric">10</span><span class="muted">done</span></div>
+      <div class="card"><span class="metric">5</span><span class="muted">todo</span></div>
+      <div class="card"><span class="metric">11</span><span class="muted">done</span></div>
       <div class="card"><span class="metric">0</span><span class="muted">decisions</span></div>
     </section>
     <section>
       <h2>Current Focus</h2>
       <div class="card">
         <p><strong>Milestone:</strong> (none)</p>
-        <p><strong>Current slice:</strong> (none)</p>
-        <p><strong>Goal:</strong> (none)</p>
-        <p><strong>Progress:</strong> 0%</p>
+        <p><strong>Current slice:</strong> T-006-002</p>
+        <p><strong>Goal:</strong> OBS overlay HTML renderer and safety fixtures</p>
+        <p><strong>Progress:</strong> 20%</p>
       </div>
     </section>
     <section>
@@ -62,7 +62,13 @@
 <tr><td>T-005-002</td><td>Glossary application and translation cache keys</td><td><span class="pill done">done</span></td><td>codex</td><td>Added deterministic glossary application and privacy-safe translation cache key core with 10 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0</td></tr>
 <tr><td>T-005-003</td><td>Translation provider adapters and provider error mapping</td><td><span class="pill done">done</span></td><td>codex</td><td>Added deterministic echo and injected DeepL provider adapters with controlled provider error mapping and 19 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0</td></tr>
 <tr><td>T-005-004</td><td>Subtitle frame and overlay state primitives</td><td><span class="pill done">done</span></td><td>codex</td><td>Added deterministic subtitle frame and in-memory overlay state primitives with escapedText, privacy-safe sourceText omission, expiry/reconnect snapshots, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0</td></tr>
-<tr><td>T-005-005</td><td>Deterministic OCR-to-overlay integration fixture</td><td><span class="pill done">done</span></td><td>codex</td><td>Added runOcrToOverlayPipeline with two-phase duplicate recording, glossary/cache preparation, provider validation, subtitle frame creation, overlay publication, retry-after-provider-failure behavior, and 10 focused tests; local and devcontainer npm test/build/lint pass; Claude module re-review clean with unresolved P1/P2=0</td></tr></tbody>
+<tr><td>T-005-005</td><td>Deterministic OCR-to-overlay integration fixture</td><td><span class="pill done">done</span></td><td>codex</td><td>Added runOcrToOverlayPipeline with two-phase duplicate recording, glossary/cache preparation, provider validation, subtitle frame creation, overlay publication, retry-after-provider-failure behavior, and 10 focused tests; local and devcontainer npm test/build/lint pass; Claude module re-review clean with unresolved P1/P2=0</td></tr>
+<tr><td>T-006</td><td>Implement localhost API and OBS overlay server core</td><td><span class="pill todo">todo</span></td><td>codex</td><td>Parent target: localhost-only health/status/overlay HTTP surface, sanitized OBS overlay delivery, WebSocket reconnect snapshots, runtime status mapping, and smoke evidence around the completed deterministic runtime pipeline.</td></tr>
+<tr><td>T-006-001</td><td>Localhost HTTP bind health and status core</td><td><span class="pill done">done</span></td><td>codex</td><td>T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification.</td></tr>
+<tr><td>T-006-002</td><td>OBS overlay HTML renderer and safety fixtures</td><td><span class="pill todo">todo</span></td><td>codex</td><td>T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification.</td></tr>
+<tr><td>T-006-003</td><td>Overlay WebSocket replay and broadcast core</td><td><span class="pill todo">todo</span></td><td>codex</td><td>T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification.</td></tr>
+<tr><td>T-006-004</td><td>App status stream and runtime error mapping</td><td><span class="pill todo">todo</span></td><td>codex</td><td>T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification.</td></tr>
+<tr><td>T-006-005</td><td>Server smoke runbook and parent closeout</td><td><span class="pill todo">todo</span></td><td>codex</td><td>T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification.</td></tr></tbody>
       </table>
     </section>
     <section>

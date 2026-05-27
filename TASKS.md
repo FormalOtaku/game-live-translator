@@ -11,7 +11,11 @@
 ## Backlog
 | ID | Title | Status | Owner | Notes |
 |---|---|---|---|---|
-| (none) |  |  |  |  |
+| T-006 | Implement localhost API and OBS overlay server core | todo | codex | Parent target: localhost-only health/status/overlay HTTP surface, sanitized OBS overlay delivery, WebSocket reconnect snapshots, runtime status mapping, and smoke evidence around the completed deterministic runtime pipeline. |
+| T-006-002 | OBS overlay HTML renderer and safety fixtures | todo | codex | T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification. |
+| T-006-003 | Overlay WebSocket replay and broadcast core | todo | codex | T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification. |
+| T-006-004 | App status stream and runtime error mapping | todo | codex | T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification. |
+| T-006-005 | Server smoke runbook and parent closeout | todo | codex | T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification. |
 
 ## Done
 | ID | Title | Date | Evidence |
@@ -26,3 +30,4 @@
 | T-005-003 | Translation provider adapters and provider error mapping |  | Added deterministic echo and injected DeepL provider adapters with controlled provider error mapping and 19 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0 |
 | T-005-004 | Subtitle frame and overlay state primitives |  | Added deterministic subtitle frame and in-memory overlay state primitives with escapedText, privacy-safe sourceText omission, expiry/reconnect snapshots, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar re-review clean with findings=0, must_fix=0, unresolved P1/P2=0 |
 | T-005-005 | Deterministic OCR-to-overlay integration fixture |  | Added runOcrToOverlayPipeline with two-phase duplicate recording, glossary/cache preparation, provider validation, subtitle frame creation, overlay publication, retry-after-provider-failure behavior, and 10 focused tests; local and devcontainer npm test/build/lint pass; Claude module re-review clean with unresolved P1/P2=0 |
+| T-006-001 | Localhost HTTP bind health and status core |  | Added localhost HTTP server core with bind enforcement, port fallback, health/status JSON, redacted ApiError, no-wildcard CORS, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar T-006-001-r2 clean with unresolved P1/P2=0 |

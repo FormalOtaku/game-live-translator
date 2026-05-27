@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T15:41:08.554Z",
+  "migrated_at": "2026-05-27T16:08:45.583Z",
   "source_path": "TASKS.md",
-  "source_sha256": "80c7d60af09dc04fbcb2a5e0732ede101ed3a0e807d4f4817162994b6a98e6e1",
-  "task_count": 10,
+  "source_sha256": "b70ae27330d06ce6b41f6beccb2b3b2e140e54669f18f04b5cd6516e5af691c2",
+  "task_count": 16,
   "counts": {
-    "todo": 0,
+    "todo": 5,
     "doing": 0,
     "blocked": 0,
-    "done": 10
+    "done": 11
   },
   "tasks": [
     {
@@ -81,6 +81,48 @@
       "status": "done",
       "owner": "codex",
       "notes": "Added runOcrToOverlayPipeline with two-phase duplicate recording, glossary/cache preparation, provider validation, subtitle frame creation, overlay publication, retry-after-provider-failure behavior, and 10 focused tests; local and devcontainer npm test/build/lint pass; Claude module re-review clean with unresolved P1/P2=0"
+    },
+    {
+      "id": "T-006",
+      "title": "Implement localhost API and OBS overlay server core",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "Parent target: localhost-only health/status/overlay HTTP surface, sanitized OBS overlay delivery, WebSocket reconnect snapshots, runtime status mapping, and smoke evidence around the completed deterministic runtime pipeline."
+    },
+    {
+      "id": "T-006-001",
+      "title": "Localhost HTTP bind health and status core",
+      "status": "done",
+      "owner": "codex",
+      "notes": "Added localhost HTTP server core with bind enforcement, port fallback, health/status JSON, redacted ApiError, no-wildcard CORS, and 12 focused tests; local and devcontainer npm test/build/lint pass; Claude sidecar T-006-001-r2 clean with unresolved P1/P2=0"
+    },
+    {
+      "id": "T-006-002",
+      "title": "OBS overlay HTML renderer and safety fixtures",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification."
+    },
+    {
+      "id": "T-006-003",
+      "title": "Overlay WebSocket replay and broadcast core",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification."
+    },
+    {
+      "id": "T-006-004",
+      "title": "App status stream and runtime error mapping",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification."
+    },
+    {
+      "id": "T-006-005",
+      "title": "Server smoke runbook and parent closeout",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "T-006 decomposes localhost API/overlay server work into PR-sized slices with localhost-only bind, privacy-safe overlay/status payloads, reconnect behavior, app status stream semantics, and closeout verification."
     }
   ]
 }

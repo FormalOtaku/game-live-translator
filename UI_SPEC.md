@@ -56,6 +56,7 @@
 - Inputs: active profile selector, Start/Stop translation toggle, copy overlay URL, restart backend.
 - Outputs: backend status, bound port, overlay URL, overlay client count, capture state, last OCR status, last translation status, provider, profile, and version.
 - Runtime source: Home/Status consumes the core OCR-to-overlay pipeline snapshot for last OCR status, last translation status, privacy-safe cache key, and overlay client count; it must not invent alternate rejection or provider status codes.
+- Backend source: Home/Status reads `/api/status` from the selected `127.0.0.1` port; the displayed overlay URL must match the backend-reported `overlayUrl` and must never be constructed from a LAN, wildcard, or user-supplied host.
 - Loading: initial status fetch.
 - Empty: no active profile.
 - Error: backend down, port unavailable, overlay disconnected, provider unavailable.

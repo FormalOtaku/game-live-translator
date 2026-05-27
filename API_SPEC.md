@@ -218,6 +218,19 @@ type DiagnosticBundle = {
 | DELETE | `/api/keys/{provider}` | Remove provider API key | - | `{ ok: true }` | `KEYCHAIN_UNAVAILABLE`, `PROVIDER_UNKNOWN` |
 | GET | `/api/diagnostics/bundle` | Build redacted diagnostics | - | `DiagnosticBundle` | `DIAGNOSTICS_FAILED` |
 
+## Localhost HTTP Server Core
+- T-006 introduces a dependency-free localhost server core in `src/server/local-api-server.js` as the executable wire-contract harness for the v1 local API. The production sidecar may wrap or port this contract to Python FastAPI, but endpoint shapes, bind restrictions, error envelopes, and privacy rules must remain compatible.
+- `createLocalApiServer({ bindAddress, preferredPort, maxPortAttempts, version, overlayState, runtimeStatus, activeProfileId, allowedOrigins, allowSamePortLocalhostOrigin })` is the T-006 server factory.
+- Bind behavior:
+  - `bindAddress` defaults to `127.0.0.1` and any other value, including `0.0.0.0`, `::`, LAN IPs, or hostnames, raises `NON_LOCALHOST_BIND_REJECTED` before listening.
+  - `preferredPort` defaults to `39600`; when unavailable, the server may try sequential local ports up to `maxPortAttempts` and must report the selected port through `/health` and `/api/status`.
+  - A port conflict after all attempts returns a canonical retryable `PORT_UNAVAILABLE` error to the caller instead of silently binding to a remote interface.
+- HTTP behavior:
+  - `GET /health` returns `HealthResponse` with `bindAddress: "127.0.0.1"` and the selected port.
+  - `GET /api/status` returns `AppStatus`; `overlayUrl` is computed from the selected local port, `overlayClients` comes from `OverlayState.snapshot()`, and `lastSubtitle` is sanitized with no `sourceText` field by default.
+  - Unsupported paths and methods return `ApiError` envelopes; raw exception text, provider keys, OCR text, translated text, captured images, and debug payloads must not be included.
+  - CORS must not use `*`; responses may echo only configured local Electron origins or same-port localhost overlay origins. `allowSamePortLocalhostOrigin` defaults to `true` and may be set to `false` by a future hardened deployment that wants configured origins only.
+
 ## WebSocket Endpoints
 | Method | Path | Purpose | Client Sends | Server Sends | Error Codes |
 |---|---|---|---|---|---|
@@ -349,7 +362,7 @@ type DiagnosticBundle = {
 - Breaking changes require `CHANGELOG_DECISIONS.md` and `MIGRATION_PLAN.md` updates before implementation.
 
 ## API Acceptance Criteria
-- [ ] `/health` proves bind address is `127.0.0.1`.
+- [x] `/health` proves bind address is `127.0.0.1` in the T-006 localhost server core.
 - [ ] Profile export never includes forbidden fields.
 - [ ] Saving a key returns only `{ ok: true }` and key readback is impossible.
 - [ ] Overlay WebSocket receives a valid `SubtitleFrame` and reconnects to the last frame.

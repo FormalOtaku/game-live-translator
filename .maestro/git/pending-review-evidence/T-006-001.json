@@ -1,0 +1,30 @@
+{
+  "schema_version": "maestro.pending-review-evidence.v1",
+  "task_id": "T-006-001",
+  "evidence": [
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-006-001/claude/review/review.json; receive=.maestro/agent-pass/T-006-001/claude/review/receive-report.json",
+    "review.json; reviewed_files=10; findings=7; must_fix=0",
+    "unresolved P1/P2=0",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-006-001-r2/claude/review/review.json; receive=.maestro/agent-pass/T-006-001-r2/claude/review/receive-report.json",
+    "review.json; reviewed_files=10; findings=8; must_fix=0"
+  ],
+  "sources": [
+    {
+      "slice_id": "T-006-001",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-006-001/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-006-001/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T16:03:23.622Z"
+    },
+    {
+      "slice_id": "T-006-001-r2",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-006-001-r2/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-006-001-r2/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T16:07:58.503Z"
+    }
+  ],
+  "updated_at": "2026-05-27T16:07:58.503Z"
+}
