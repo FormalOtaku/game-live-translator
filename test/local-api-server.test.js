@@ -653,6 +653,495 @@ test('capture source API inherits local CORS policy without preflight enumeratio
   }
 });
 
+test('manual OCR API runs provider with request ROI override and validates result', async () => {
+  const calls = [];
+  const profile = makeApiProfile({
+    id: 'profile_ocr',
+    roi: { x: 1, y: 2, width: 300, height: 120 },
+  });
+  const ocrResult = {
+    text: '勇者',
+    normalizedText: '勇者',
+    confidence: 0.92,
+    durationMs: 18.5,
+    accepted: true,
+  };
+  const requestRoi = { x: 10, y: 20, width: 640, height: 180 };
+  const repository = {
+    getProfile(profileId) {
+      calls.push(['getProfile', profileId]);
+      return profile;
+    },
+  };
+  const ocrTestProvider = {
+    async runOcrTest(input) {
+      calls.push(['runOcrTest', input]);
+      return ocrResult;
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+    ocrTestProvider,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      body: { profileId: 'profile_ocr', roi: requestRoi },
+    });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.parsed, ocrResult);
+    assert.equal(calls.length, 2);
+    assert.deepEqual(calls[0], ['getProfile', 'profile_ocr']);
+    assert.equal(calls[1][0], 'runOcrTest');
+    assert.strictEqual(calls[1][1].profile, profile);
+    assert.deepEqual(calls[1][1].roi, requestRoi);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('manual OCR API falls back to profile ROI and preserves rejected OCR results', async () => {
+  const calls = [];
+  const profileRoi = { x: 2, y: 4, width: 320, height: 90 };
+  const rejectedResult = {
+    text: '',
+    normalizedText: '',
+    confidence: 0,
+    durationMs: 11,
+    accepted: false,
+    rejectionReason: 'EMPTY_TEXT',
+  };
+  const repository = {
+    getProfile(profileId) {
+      calls.push(['getProfile', profileId]);
+      return makeApiProfile({ id: profileId, roi: profileRoi });
+    },
+  };
+  const ocrTestProvider = {
+    runOcrTest(input) {
+      calls.push(['runOcrTest', input]);
+      return rejectedResult;
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+    ocrTestProvider,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      body: { profileId: 'profile_ocr' },
+    });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.parsed, rejectedResult);
+    assert.equal(calls[1][0], 'runOcrTest');
+    assert.deepEqual(calls[1][1].roi, profileRoi);
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/ocr/test',
+      method: 'GET',
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'POST');
+    assert.equal(wrongMethod.parsed.error.code, 'METHOD_NOT_ALLOWED');
+  } finally {
+    await api.stop();
+  }
+});
+
+test('manual OCR API rejects malformed requests before repository and provider calls', async () => {
+  const calls = [];
+  const rawOcrText = '秘密のOCR本文';
+  const repository = {
+    getProfile(profileId) {
+      calls.push(['getProfile', profileId]);
+      return makeApiProfile({ id: profileId, roi: { x: 0, y: 0, width: 320, height: 90 } });
+    },
+  };
+  const ocrTestProvider = {
+    runOcrTest(input) {
+      calls.push(['runOcrTest', input]);
+      return {
+        text: 'never',
+        normalizedText: 'never',
+        confidence: 1,
+        durationMs: 1,
+        accepted: true,
+      };
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: repository,
+    ocrTestProvider,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      body: {
+        profileId: '',
+        roi: { x: NaN, y: 0, width: -1, height: 0 },
+        text: rawOcrText,
+      },
+    });
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.parsed.error.code, 'VALIDATION_ERROR');
+    const serialized = JSON.stringify(response.parsed);
+    assert.equal(serialized.includes(rawOcrText), false);
+    assert.deepEqual(calls, []);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('manual OCR API maps profile not found and missing ROI before engine calls', async () => {
+  const missingProfileCalls = [];
+  const missingProfileApi = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        missingProfileCalls.push(['getProfile', profileId]);
+        throw new ContractError('PROFILE_NOT_FOUND', 'Missing profile');
+      },
+    },
+    ocrTestProvider: {
+      runOcrTest(input) {
+        missingProfileCalls.push(['runOcrTest', input]);
+        return {
+          text: 'never',
+          normalizedText: 'never',
+          confidence: 1,
+          durationMs: 1,
+          accepted: true,
+        };
+      },
+    },
+  });
+  const missingProfileStarted = await missingProfileApi.start();
+
+  try {
+    const response = await requestJson({
+      port: missingProfileStarted.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      body: { profileId: 'missing' },
+    });
+    assert.equal(response.statusCode, 404);
+    assert.equal(response.parsed.error.code, 'PROFILE_NOT_FOUND');
+    assert.deepEqual(missingProfileCalls, [['getProfile', 'missing']]);
+  } finally {
+    await missingProfileApi.stop();
+  }
+
+  const missingRoiCalls = [];
+  const missingRoiApi = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        missingRoiCalls.push(['getProfile', profileId]);
+        return makeApiProfile({ id: profileId });
+      },
+    },
+    ocrTestProvider: {
+      runOcrTest(input) {
+        missingRoiCalls.push(['runOcrTest', input]);
+        return {
+          text: 'never',
+          normalizedText: 'never',
+          confidence: 1,
+          durationMs: 1,
+          accepted: true,
+        };
+      },
+    },
+  });
+  const missingRoiStarted = await missingRoiApi.start();
+
+  try {
+    const response = await requestJson({
+      port: missingRoiStarted.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      body: { profileId: 'profile_no_roi' },
+    });
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.parsed.error.code, 'ROI_MISSING');
+    assert.equal(response.parsed.error.details.fieldErrors[0].field, 'roi');
+    assert.deepEqual(missingRoiCalls, [['getProfile', 'profile_no_roi']]);
+  } finally {
+    await missingRoiApi.stop();
+  }
+});
+
+test('manual OCR API preserves profile repository availability errors before engine calls', async () => {
+  const unavailableCalls = [];
+  const unavailableApi = createLocalApiServer({
+    preferredPort: 0,
+    ocrTestProvider: {
+      runOcrTest(input) {
+        unavailableCalls.push(['runOcrTest', input]);
+        return {
+          text: 'never',
+          normalizedText: 'never',
+          confidence: 1,
+          durationMs: 1,
+          accepted: true,
+        };
+      },
+    },
+  });
+  const unavailableStarted = await unavailableApi.start();
+
+  try {
+    const response = await requestJson({
+      port: unavailableStarted.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      body: { profileId: 'profile_ocr' },
+    });
+    assert.equal(response.statusCode, 503);
+    assert.equal(response.parsed.error.code, 'DB_UNAVAILABLE');
+    assert.deepEqual(unavailableCalls, []);
+  } finally {
+    await unavailableApi.stop();
+  }
+
+  const leakedKey = 'sk-DBUNAVAILABLESECRET12';
+  const failingCalls = [];
+  const failingApi = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        failingCalls.push(['getProfile', profileId]);
+        throw new ContractError('DB_UNAVAILABLE', `DB unavailable ${leakedKey}`);
+      },
+    },
+    ocrTestProvider: {
+      runOcrTest(input) {
+        failingCalls.push(['runOcrTest', input]);
+        return {
+          text: 'never',
+          normalizedText: 'never',
+          confidence: 1,
+          durationMs: 1,
+          accepted: true,
+        };
+      },
+    },
+  });
+  const failingStarted = await failingApi.start();
+
+  try {
+    const response = await requestJson({
+      port: failingStarted.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      body: { profileId: 'profile_ocr' },
+    });
+    assert.equal(response.statusCode, 503);
+    assert.equal(response.parsed.error.code, 'DB_UNAVAILABLE');
+    assert.equal(JSON.stringify(response.parsed).includes(leakedKey), false);
+    assert.deepEqual(failingCalls, [['getProfile', 'profile_ocr']]);
+  } finally {
+    await failingApi.stop();
+  }
+});
+
+test('manual OCR API maps missing and failed engines to redacted OCR_ENGINE_ERROR', async () => {
+  const profile = makeApiProfile({ id: 'profile_ocr', roi: { x: 0, y: 0, width: 320, height: 90 } });
+  const missingEngineApi = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile() {
+        return profile;
+      },
+    },
+  });
+  const missingEngineStarted = await missingEngineApi.start();
+
+  try {
+    const response = await requestJson({
+      port: missingEngineStarted.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      body: { profileId: 'profile_ocr' },
+    });
+    assert.equal(response.statusCode, 500);
+    assert.equal(response.parsed.error.code, 'OCR_ENGINE_ERROR');
+    assert.equal(response.parsed.error.retryable, false);
+    assert.equal(Object.hasOwn(response.parsed.error, 'stack'), false);
+  } finally {
+    await missingEngineApi.stop();
+  }
+
+  const leakedKey = 'sk-ABCDEFGHIJKLMNOP1234';
+  for (const thrown of [
+    new Error(`OCR failed with ${leakedKey}`),
+    `OCR failed with ${leakedKey}`,
+  ]) {
+    const failingApi = createLocalApiServer({
+      preferredPort: 0,
+      profileRepository: {
+        getProfile() {
+          return profile;
+        },
+      },
+      ocrTestProvider: {
+        runOcrTest() {
+          throw thrown;
+        },
+      },
+    });
+    const failingStarted = await failingApi.start();
+
+    try {
+      const response = await requestJson({
+        port: failingStarted.port,
+        path: '/api/ocr/test',
+        method: 'POST',
+        body: { profileId: 'profile_ocr' },
+      });
+      assert.equal(response.statusCode, 500);
+      assert.equal(response.parsed.error.code, 'OCR_ENGINE_ERROR');
+      assert.equal(response.parsed.error.message, 'OCR engine failed');
+      assert.equal(JSON.stringify(response.parsed).includes(leakedKey), false);
+      assert.equal(Object.hasOwn(response.parsed.error, 'stack'), false);
+    } finally {
+      await failingApi.stop();
+    }
+  }
+});
+
+test('manual OCR API rejects invalid engine output without leaking OCR values', async () => {
+  const apiKey = 'secret-provider-token';
+  const rawOcrText = '秘密のOCR本文';
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        return makeApiProfile({
+          id: profileId,
+          roi: { x: 0, y: 0, width: 320, height: 90 },
+        });
+      },
+    },
+    ocrTestProvider: {
+      runOcrTest() {
+        return {
+          text: rawOcrText,
+          normalizedText: rawOcrText,
+          confidence: 2,
+          durationMs: -1,
+          accepted: 'yes',
+          rejectionReason: 'RAW_SECRET_REASON',
+          apiKey,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      body: { profileId: 'profile_ocr' },
+    });
+    assert.equal(response.statusCode, 500);
+    assert.equal(response.parsed.error.code, 'OCR_ENGINE_ERROR');
+    assert.equal(response.parsed.error.message, 'OCR engine returned an invalid result');
+    assert.equal(Array.isArray(response.parsed.error.details.fieldErrors), true);
+
+    const byField = Object.fromEntries(
+      response.parsed.error.details.fieldErrors.map((error) => [error.field, error.code]),
+    );
+    assert.equal(byField.confidence, 'OCR_RESULT_CONFIDENCE_INVALID');
+    assert.equal(byField.durationMs, 'OCR_RESULT_DURATION_INVALID');
+    assert.equal(byField.accepted, 'OCR_RESULT_ACCEPTED_INVALID');
+    assert.equal(byField.apiKey, 'UNKNOWN_OCR_RESULT_FIELD');
+    const serialized = JSON.stringify(response.parsed);
+    assert.equal(serialized.includes(apiKey), false);
+    assert.equal(serialized.includes(rawOcrText), false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('manual OCR API inherits local CORS policy without preflight OCR calls', async () => {
+  const calls = [];
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    profileRepository: {
+      getProfile(profileId) {
+        calls.push(['getProfile', profileId]);
+        return makeApiProfile({
+          id: profileId,
+          roi: { x: 0, y: 0, width: 320, height: 90 },
+        });
+      },
+    },
+    ocrTestProvider: {
+      runOcrTest(input) {
+        calls.push(['runOcrTest', input]);
+        return {
+          text: '勇者',
+          normalizedText: '勇者',
+          confidence: 0.9,
+          durationMs: 12,
+          accepted: true,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const allowedOrigin = `http://127.0.0.1:${started.port}`;
+    const preflight = await requestJson({
+      port: started.port,
+      path: '/api/ocr/test',
+      method: 'OPTIONS',
+      headers: { Origin: allowedOrigin },
+    });
+    assert.equal(preflight.statusCode, 204);
+    assert.equal(preflight.headers['access-control-allow-origin'], allowedOrigin);
+    assert.equal(preflight.headers['access-control-allow-methods'], 'GET, POST, PUT, DELETE, OPTIONS');
+    assert.equal(preflight.headers['access-control-allow-headers'], 'Content-Type');
+    assert.deepEqual(calls, []);
+
+    const disallowed = await requestJson({
+      port: started.port,
+      path: '/api/ocr/test',
+      method: 'POST',
+      headers: { Origin: 'https://evil.example.com' },
+      body: { profileId: 'profile_ocr' },
+    });
+    assert.equal(disallowed.statusCode, 200);
+    assert.equal(disallowed.headers['access-control-allow-origin'], undefined);
+    assert.equal(disallowed.headers.vary, 'Origin');
+    assert.equal(disallowed.parsed.normalizedText, '勇者');
+    assert.equal(calls.length, 2);
+  } finally {
+    await api.stop();
+  }
+});
+
 test('profile API lists and creates profiles through the injected repository', async () => {
   const calls = [];
   const createdProfile = makeApiProfile({ id: 'profile_created', name: 'Created Profile' });

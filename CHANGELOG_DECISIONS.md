@@ -252,3 +252,16 @@
 - Regression tests added first: `test/local-api-server.test.js` covers successful async enumeration, 405 method guard, missing-provider failure, thrown provider failure redaction, and invalid provider output redaction.
 - Migration needed: None.
 - Rollback plan: Remove the capture route, injected provider handling, focused tests, and spec entries. Existing status/config/profile routes remain unchanged.
+
+### CHG-20260528-020
+- Date: 2026-05-28
+- Summary: Wired the manual OCR test endpoint for T-008-003.
+- Reason: Capture Setup and OCR Preview need a live route that exercises one OCR pass against the selected profile/ROI before continuous capture start is available. The core contract must stay dependency-free while the future Electron/Windows/PaddleOCR adapter owns real screenshot capture and recognition.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The route reads profile configuration through the existing repository boundary and does not persist OCR text, screenshots, captured images, source-list cache, provider keys, logs, or diagnostics.
+  - API: Adds `POST /api/ocr/test` to `createLocalApiServer` using `profileRepository.getProfile(profileId)` and `ocrTestProvider.runOcrTest({ profile, roi })`. Requests are validated with `assertOcrTestRequest`; ROI falls back from request override to saved profile ROI; missing ROI returns `ROI_MISSING`; engine failures and invalid engine output map to privacy-safe `OCR_ENGINE_ERROR`; responses are validated with `assertOcrResult`.
+  - UI: First-Run, Capture Setup, and OCR Preview can run a one-shot OCR check, show controlled rejection reasons/confidence, and handle missing ROI or engine failure without parsing raw provider exceptions.
+- Risk: This is the HTTP contract and OCR adapter seam only. The future concrete OCR provider must preserve the same request/result shape, no-persistence defaults, and redacted error behavior when it performs real capture/crop/OCR.
+- Regression tests added first: `test/local-api-server.test.js` covers successful ROI override and profile ROI fallback, method/request validation, profile not found, ROI missing, missing provider, thrown/non-Error provider failures, invalid provider output redaction, result sanitization, and CORS inheritance.
+- Migration needed: None.
+- Rollback plan: Remove the OCR test route, injected provider handling, focused tests, and spec entries. Existing capture source and profile/config routes remain unchanged.

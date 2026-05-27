@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T22:03:14.640Z",
+  "migrated_at": "2026-05-27T22:22:18.759Z",
   "source_path": "TASKS.md",
-  "source_sha256": "934c2dc327772c5d8cc567b1daaccfdacc6fe65ba117bac533082147aa3f6193",
+  "source_sha256": "cfa2c27ccd2fbeb8c6232c528643b28b03652c85d13122f229c49481f3f6f480",
   "task_count": 29,
   "counts": {
-    "todo": 2,
+    "todo": 1,
     "doing": 2,
     "blocked": 0,
-    "done": 25
+    "done": 26
   },
   "tasks": [
     {
@@ -197,14 +197,14 @@
     {
       "id": "T-008-003",
       "title": "Manual OCR test endpoint",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+      "notes": "Added POST /api/ocr/test through injected ocrTestProvider.runOcrTest with request/profile ROI fallback, OcrResult validation/sanitization, privacy-safe OCR_ENGINE_ERROR mapping, DB_UNAVAILABLE/PROFILE_NOT_FOUND/ROI_MISSING preservation, CORS/method coverage, and spec/decision updates. Local and Docker npm test/build/lint pass with 250 tests; git diff --check pass; Claude T-008-003-r2 module review clean with findings=5 info, must_fix=0, unresolved P1/P2=0."
     },
     {
       "id": "T-008-004",
       "title": "Capture start stop runtime status",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
     },

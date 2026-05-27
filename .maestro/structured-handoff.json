@@ -1,9 +1,9 @@
 {
   "completed_items": [
-    "T-008-002"
+    "T-008-003"
   ],
   "blockers": [],
   "decisions_made": [],
   "open_questions": [],
-  "summary": "T-008-002 complete: wired GET /api/capture/sources through injected captureSourceProvider.enumerateCaptureSources(), validates with assertCaptureSourcesResponse, sanitizes only CaptureSource fields before JSON, maps missing/thrown/non-Error/invalid provider output to privacy-safe CAPTURE_ENUM_FAILED, and covers GET-only/CORS behavior with 46 local-api-server tests. Local and Docker npm test/build/lint pass with 242 tests; git diff --check pass; Claude T-008-002-r2 module review clean with findings=0, must_fix=0, unresolved P1/P2=0."
+  "summary": "T-008-003 complete: added POST /api/ocr/test through injected ocrTestProvider.runOcrTest, request/profile ROI fallback, OcrResult validation/sanitization, privacy-safe OCR_ENGINE_ERROR mapping, DB_UNAVAILABLE/PROFILE_NOT_FOUND/ROI_MISSING behavior, CORS/method coverage, and spec/decision updates. Local and Docker npm test/build/lint pass with 250 tests; git diff --check pass; Claude T-008-003-r2 module review clean with findings=5 info, must_fix=0, unresolved P1/P2=0."
 }

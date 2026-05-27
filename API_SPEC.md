@@ -299,6 +299,13 @@ type DiagnosticBundle = {
 - `CAPTURE_ENUM_FAILED` responses must be privacy-safe: they may include validator field names/codes for invalid provider output, but must not include provider keys, raw OCR text, captured images, screenshots, stack traces, debug logs, or raw provider exception text.
 - Only `GET` is allowed on `/api/capture/sources`; other methods return `METHOD_NOT_ALLOWED` with `Allow: GET`. The endpoint preserves the existing localhost bind, CORS, no-store-free JSON, and no-persistence behavior.
 
+## Manual OCR Test Endpoint
+- T-008-003 wires `POST /api/ocr/test` into the localhost API harness with a dependency-injected `ocrTestProvider.runOcrTest({ profile, roi })` boundary. The future OCR adapter owns screenshot capture, ROI crop, preprocessing, and PaddleOCR execution behind this interface.
+- The route validates the request with `assertOcrTestRequest`, loads the profile through `profileRepository.getProfile(profileId)`, uses request `roi` when supplied or `profile.roi` otherwise, and returns `ROI_MISSING` when neither exists. Profile lookup preserves `PROFILE_NOT_FOUND` and `DB_UNAVAILABLE` behavior from the profile API.
+- Provider output must pass `assertOcrResult` before response. Successful responses return only `text`, `normalizedText`, `confidence`, `durationMs`, `accepted`, and optional `rejectionReason`; invalid provider output, missing provider methods, and thrown provider errors map to privacy-safe `OCR_ENGINE_ERROR`.
+- `OCR_ENGINE_ERROR` responses may include validator field names/codes for invalid engine output, but must not include provider keys, captured images, screenshots, stack traces, raw provider exception text, or debug logs. Raw OCR text appears only in a valid `OcrResult` response for the user's explicit manual test request and is not persisted by this route.
+- Only `POST` is allowed on `/api/ocr/test`; other methods return `METHOD_NOT_ALLOWED` with `Allow: POST`. The endpoint preserves the existing localhost bind and CORS behavior.
+
 ### `/ws/overlay` Wire Contract
 - T-006-003 implements `/ws/overlay` in the dependency-free localhost server core. The production FastAPI sidecar must preserve the same observable behavior.
 - Upgrade behavior:

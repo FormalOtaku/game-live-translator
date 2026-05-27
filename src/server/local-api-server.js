@@ -7,7 +7,12 @@ const {
   assertLocalhostBind,
   redactSecrets,
 } = require('../contracts/security');
-const { assertCaptureSourcesResponse } = require('../contracts/validation');
+const {
+  assertCaptureSourcesResponse,
+  assertOcrResult,
+  assertOcrTestRequest,
+  validateRoiRect,
+} = require('../contracts/validation');
 const { sanitizeSubtitleForOverlay } = require('../core/subtitle-state');
 const { OVERLAY_CSP, renderOverlayHtml } = require('./overlay-renderer');
 const {
@@ -299,6 +304,13 @@ function captureSourceProviderUnavailable() {
   );
 }
 
+function ocrTestProviderUnavailable() {
+  return new ContractError(
+    'OCR_ENGINE_ERROR',
+    'OCR engine is not available',
+  );
+}
+
 function getProfileRepository(repository, methods) {
   if (!isObject(repository)) throw profileRepositoryUnavailable();
   for (const method of methods) {
@@ -322,6 +334,13 @@ function getCaptureSourceProvider(provider) {
   return provider;
 }
 
+function getOcrTestProvider(provider) {
+  if (!isObject(provider) || typeof provider.runOcrTest !== 'function') {
+    throw ocrTestProviderUnavailable();
+  }
+  return provider;
+}
+
 function sanitizeCaptureSourcesResponse(payload) {
   return Object.freeze({
     sources: Object.freeze(payload.sources.map((source) => {
@@ -341,6 +360,20 @@ function sanitizeCaptureSourcesResponse(payload) {
       return Object.freeze(output);
     })),
   });
+}
+
+function sanitizeOcrResult(payload) {
+  const output = {
+    text: payload.text,
+    normalizedText: payload.normalizedText,
+    confidence: payload.confidence,
+    durationMs: payload.durationMs,
+    accepted: payload.accepted,
+  };
+  if (payload.rejectionReason !== undefined) {
+    output.rejectionReason = payload.rejectionReason;
+  }
+  return Object.freeze(output);
 }
 
 function decodePathSegment(segment) {
@@ -423,9 +456,11 @@ function statusCodeForContractError(error) {
   ) {
     return 400;
   }
+  if (code === 'ROI_MISSING') return 400;
   if (code === 'DB_UNAVAILABLE') return 503;
   if (code === 'KEYCHAIN_UNAVAILABLE') return 503;
   if (code === 'CAPTURE_ENUM_FAILED') return 500;
+  if (code === 'OCR_ENGINE_ERROR') return 500;
   if (code === 'DB_READ_FAILED') return 500;
   return 500;
 }
@@ -507,6 +542,7 @@ function createLocalApiServer(options = {}) {
   const profileRepository = options.profileRepository;
   const providerKeyStore = options.providerKeyStore;
   const captureSourceProvider = options.captureSourceProvider;
+  const ocrTestProvider = options.ocrTestProvider;
   let selectedPort = null;
   let upgradeAttached = false;
 
@@ -674,6 +710,52 @@ function createLocalApiServer(options = {}) {
     return sanitizeCaptureSourcesResponse(payload);
   }
 
+  function resolveOcrTestRoi(payload, profile) {
+    if (payload.roi !== undefined) return payload.roi;
+    const roi = isObject(profile) ? profile.roi : undefined;
+    if (validateRoiRect(roi, 'roi').length === 0) return roi;
+    throw new ContractError('ROI_MISSING', 'OCR ROI is required before running a manual test', {
+      fieldErrors: [
+        fieldError(
+          'roi',
+          'ROI_MISSING',
+          'roi must be supplied in the request or saved on the profile',
+        ),
+      ],
+    });
+  }
+
+  async function runManualOcrTest(payload) {
+    assertOcrTestRequest(payload);
+    const repository = getProfileRepository(profileRepository, ['getProfile']);
+    const profile = repository.getProfile(payload.profileId);
+    const roi = resolveOcrTestRoi(payload, profile);
+    const provider = getOcrTestProvider(ocrTestProvider);
+
+    let result;
+    try {
+      result = await provider.runOcrTest({ profile, roi });
+    } catch (_) {
+      throw new ContractError('OCR_ENGINE_ERROR', 'OCR engine failed');
+    }
+
+    try {
+      assertOcrResult(result);
+    } catch (error) {
+      const details = error instanceof ContractError &&
+        isObject(error.details) &&
+        Array.isArray(error.details.fieldErrors)
+        ? { fieldErrors: error.details.fieldErrors }
+        : undefined;
+      throw new ContractError(
+        'OCR_ENGINE_ERROR',
+        'OCR engine returned an invalid result',
+        details,
+      );
+    }
+    return sanitizeOcrResult(result);
+  }
+
   async function handleCaptureRoute(pathname, req, res) {
     const segments = pathname.split('/').filter(Boolean);
     if (segments[0] !== 'api' || segments[1] !== 'capture') return false;
@@ -685,6 +767,28 @@ function createLocalApiServer(options = {}) {
           return true;
         }
         writeJson(res, 200, await enumerateCaptureSources());
+        return true;
+      }
+    } catch (error) {
+      writeContractError(res, error);
+      return true;
+    }
+
+    return false;
+  }
+
+  async function handleOcrRoute(pathname, req, res) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'api' || segments[1] !== 'ocr') return false;
+
+    try {
+      if (segments.length === 3 && segments[2] === 'test') {
+        if (req.method !== 'POST') {
+          writeMethodNotAllowed(res, ['POST']);
+          return true;
+        }
+        const payload = await readJsonBody(req);
+        writeJson(res, 200, await runManualOcrTest(payload));
         return true;
       }
     } catch (error) {
@@ -986,6 +1090,7 @@ function createLocalApiServer(options = {}) {
 
     if (await handleProfileRoute(pathname, req, res)) return;
     if (await handleCaptureRoute(pathname, req, res)) return;
+    if (await handleOcrRoute(pathname, req, res)) return;
     if (await handleThemeRoute(pathname, req, res)) return;
     if (await handleSettingsRoute(pathname, req, res)) return;
     if (await handleProviderKeyRoute(pathname, req, res)) return;
