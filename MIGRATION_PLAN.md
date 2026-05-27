@@ -29,6 +29,7 @@
 - 2026-05-28 T-006-003: Overlay WebSocket replay and broadcast state is in-memory only. It introduces no SQLite tables, no durable client sessions, no profile export schema changes, no cache persistence, and no key storage movement.
 - 2026-05-28 T-006-004: `/ws/app` app status stream and runtime error mapping are in-memory only. They introduce no SQLite tables, no durable status store, no profile export schema changes, no cache persistence, and no key storage movement. Connected clients receive sanitized `AppStatus` snapshots derived from `OverlayState` and process-level runtime status; no migration is needed.
 - 2026-05-28 T-006-005: `npm run smoke:server` and the server smoke runbook add no runtime persistence. The smoke uses in-memory fixtures and an ephemeral localhost port only; no SQLite migration, key storage migration, profile export migration, or cache migration is needed.
+- 2026-05-28 T-007-001: Profile/settings contract validation is a pure validator slice in `src/contracts/`. It introduces no SQLite tables, no key storage movement, no cache persistence, and no profile export schema bump (`PROFILE_EXPORT_SCHEMA_VERSION` stays at `1`). `DEFAULT_PRIVACY_SETTINGS` is documented as the privacy-first seed that the future first-run/T-007 persistence slice must write on a fresh database; no migration is needed because there is no prior persisted PrivacySettings shape.
 
 ## Migration Steps
 1. Pre-checks: confirm current `app_meta.schema_version`, backup DB, verify disk write access, verify app is not actively capturing.

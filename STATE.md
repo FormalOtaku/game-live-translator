@@ -45,24 +45,24 @@
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: (none)
-- current_slice_id: (none)
-- current_slice_goal: (none)
-- current_slice_status: (none)
-- completed_slices: 0
-- total_slices: 0
-- progress_pct: 0
-- next_slice_id: (none)
-- next_slice_goal: (none)
-- last_checkpoint: 2026-05-27T18:50:36.708Z
+- current_slice_prefix: T-007
+- current_slice_id: T-007-002
+- current_slice_goal: SQLite schema and repository boundary
+- current_slice_status: doing
+- completed_slices: 1
+- total_slices: 6
+- progress_pct: 17
+- next_slice_id: T-007-003
+- next_slice_goal: Profile CRUD active profile and safe export API
+- last_checkpoint: 2026-05-27T19:20:40.519Z
 ## Session Flow
-- current_session_role: supervisor
-- recommended_next_session_role: spec
-- checkpoint_status: satisfied
-- checkpoint_reason: T-006 all child slices complete with deterministic local/Docker verification, smoke evidence, and imported full-diff Claude review.
-- last_completed_slice: T-006-005
-- handoff_summary: T-006 parent complete: localhost-only API/OBS overlay server core now has /health, /api/status, /overlay, /ws/overlay, /ws/app, provider retryability mapping, repeatable npm run smoke:server, SERVER_SMOKE_RUNBOOK_JA.md, and parent closeout evidence. Local and Docker npm test/build/lint/smoke pass with 130 tests; git diff --check pass; Claude T-006-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0. Next work should start a spec session to choose/decompose the next parent task toward the Windows/Electron/FastAPI product surface.
-- next_action: start_spec_session
-- updated_at: 2026-05-27T18:50:36.705Z
+- current_session_role: execution
+- recommended_next_session_role: execution
+- checkpoint_status: none
+- checkpoint_reason: T-007 parent still in progress; no major checkpoint required until parent closeout.
+- last_completed_slice: T-007-001
+- handoff_summary: T-007-001 complete: profile/settings validation boundary added for ProfileCreateRequest, ProfileUpdateRequest, ProfileExport, PrivacySettings, and ProviderKey write requests. Local and Docker npm test/build/lint pass with 160 tests; git diff --check pass; Claude T-007-001-r2 module review clean with must_fix=0 and unresolved P1/P2=0. T-007-002 is active next for SQLite schema and repository boundary.
+- next_action: continue T-007-002
+- updated_at: 2026-05-27T19:20:40.517Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

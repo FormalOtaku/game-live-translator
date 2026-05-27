@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T18:51:47.993Z",
+  "migrated_at": "2026-05-27T19:20:40.520Z",
   "source_path": "TASKS.md",
-  "source_sha256": "9fedc304b238152a83bf88c3801f565fbb78bcb22bd827f985efd38ffb162101",
-  "task_count": 16,
+  "source_sha256": "217e5005243491434a09bd3ace6a1acf03b2b10f42cb15955c6af6274d0fd8b2",
+  "task_count": 23,
   "counts": {
-    "todo": 0,
-    "doing": 0,
+    "todo": 5,
+    "doing": 1,
     "blocked": 0,
-    "done": 16
+    "done": 17
   },
   "tasks": [
     {
@@ -123,6 +123,55 @@
       "status": "done",
       "owner": "codex",
       "notes": "Added dependency-free scripts/smoke-local-api.js, test/server-smoke.test.js, npm run smoke:server, SERVER_SMOKE_RUNBOOK_JA.md, and closeout spec/decision updates; local and Docker npm test/build/lint/smoke pass with 130 tests; Claude T-006-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
+    },
+    {
+      "id": "T-007",
+      "title": "Implement persisted profile configuration API core",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "Parent goal: add production-grade v1 contracts and local API surface for profiles, overlay themes, glossary import/export, privacy settings, and write-only provider keys, with SQLite/secure-storage boundaries preserved and profile exports rejecting API keys/OCR text/translation text/images/logs. DB/API/UI impact: DB schema_version=1 planning and persistence boundary; API profile/config endpoints; UI first-run/Home/Status configuration dependencies."
+    },
+    {
+      "id": "T-007-001",
+      "title": "Profile and settings contract validation",
+      "status": "done",
+      "owner": "codex",
+      "notes": "Added executable validators for ProfileCreateRequest, ProfileUpdateRequest, ProfileExport, PrivacySettings, and ProviderKey write requests; locked privacy-first defaults, forbidden export-field scan with cycle guard, path/body provider mismatch rejection, import schema codes, and 30 additional focused contract checks; local and Docker npm test/build/lint pass with 160 tests; git diff --check pass; Claude T-007-001-r2 module review clean with must_fix=0 and unresolved P1/P2=0."
+    },
+    {
+      "id": "T-007-002",
+      "title": "SQLite schema and repository boundary",
+      "status": "doing",
+      "owner": "codex",
+      "notes": "Next active slice: implement the schema_version=1 SQLite/repository boundary that consumes T-007-001 validators before persistence writes, seeds DEFAULT_PRIVACY_SETTINGS, and keeps provider keys outside SQLite."
+    },
+    {
+      "id": "T-007-003",
+      "title": "Profile CRUD active profile and safe export API",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-007-004",
+      "title": "Theme and glossary API contracts",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-007-005",
+      "title": "Privacy settings and write-only key API",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-007-006",
+      "title": "Configuration API smoke runbook and parent closeout",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
     }
   ]
 }

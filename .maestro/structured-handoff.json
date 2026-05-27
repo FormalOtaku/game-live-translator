@@ -1,11 +1,11 @@
 {
   "completed_items": [
-    "T-006,T-006-005"
+    "T-007-001"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-011"
+    "DEC-012"
   ],
   "open_questions": [],
-  "summary": "T-006 parent complete: localhost-only API/OBS overlay server core now has /health, /api/status, /overlay, /ws/overlay, /ws/app, provider retryability mapping, repeatable npm run smoke:server, SERVER_SMOKE_RUNBOOK_JA.md, and parent closeout evidence. Local and Docker npm test/build/lint/smoke pass with 130 tests; git diff --check pass; Claude T-006-005-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0. Next work should start a spec session to choose/decompose the next parent task toward the Windows/Electron/FastAPI product surface."
+  "summary": "T-007-001 complete: profile/settings validation boundary added for ProfileCreateRequest, ProfileUpdateRequest, ProfileExport, PrivacySettings, and ProviderKey write requests. Local and Docker npm test/build/lint pass with 160 tests; git diff --check pass; Claude T-007-001-r2 module review clean with must_fix=0 and unresolved P1/P2=0. T-007-002 is active next for SQLite schema and repository boundary."
 }

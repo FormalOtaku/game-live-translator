@@ -32,6 +32,20 @@ const BUILTIN_THEME_IDS = Object.freeze([
   'minimal',
 ]);
 
+// Privacy-first defaults for PrivacySettings. The v1 invariant from
+// PRODUCT_SPEC.md is that default settings persist no OCR text, no translated
+// text, and no captured screenshots. Limits/retention are zeroed so that
+// callers cannot inadvertently re-enable persistence by toggling the boolean
+// alone without an explicit numeric budget.
+const DEFAULT_PRIVACY_SETTINGS = Object.freeze({
+  saveRecentOcrText: false,
+  recentOcrLimit: 0,
+  saveRecentTranslations: false,
+  recentTranslationLimit: 0,
+  saveDebugScreenshots: false,
+  debugRetentionDays: 0,
+});
+
 class ContractError extends Error {
   constructor(code, message, details) {
     super(message);
@@ -56,13 +70,15 @@ function assertLocalhostBind(address) {
   return ALLOWED_BIND_ADDRESS;
 }
 
-function findForbiddenExportFields(value, path = '') {
+function findForbiddenExportFields(value, path = '', seen = new WeakSet()) {
   const hits = [];
   if (value === null || typeof value !== 'object') return hits;
+  if (seen.has(value)) return hits;
+  seen.add(value);
 
   if (Array.isArray(value)) {
     for (let i = 0; i < value.length; i += 1) {
-      hits.push(...findForbiddenExportFields(value[i], `${path}[${i}]`));
+      hits.push(...findForbiddenExportFields(value[i], `${path}[${i}]`, seen));
     }
     return hits;
   }
@@ -72,7 +88,7 @@ function findForbiddenExportFields(value, path = '') {
     if (FORBIDDEN_PROFILE_EXPORT_FIELDS.includes(key)) {
       hits.push(nextPath);
     }
-    hits.push(...findForbiddenExportFields(value[key], nextPath));
+    hits.push(...findForbiddenExportFields(value[key], nextPath, seen));
   }
 
   return hits;
@@ -169,6 +185,7 @@ module.exports = {
   ALLOWED_BIND_ADDRESS,
   FORBIDDEN_PROFILE_EXPORT_FIELDS,
   BUILTIN_THEME_IDS,
+  DEFAULT_PRIVACY_SETTINGS,
   ContractError,
   isLocalhostBind,
   assertLocalhostBind,

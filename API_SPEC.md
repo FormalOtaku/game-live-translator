@@ -304,6 +304,73 @@ type DiagnosticBundle = {
 - Provider ids are controlled vocabulary values registered by the backend; v1 required ids are `deepl` and `echo`.
 - Built-in theme ids are `classic_subtitle`, `stream_box`, and `minimal`; built-in themes are read-only and can only be duplicated into custom themes.
 
+### T-007-001 Contract Validation Boundary
+- `src/contracts/validation.js` is the single executable contract surface that the
+  upcoming profile/settings persistence and HTTP routes must call before
+  touching SQLite, OS secure storage, or the runtime pipeline. All validators
+  emit `ContractError` envelopes with `code: "VALIDATION_ERROR"` and
+  `details.fieldErrors: { field, code, message }[]` so the API layer can
+  render the canonical `ApiError` shape without parsing message text.
+- `validateProfileCreateRequest` enforces required fields `name`, `ocrPreset`,
+  `ocrConfidenceFloor`, `captureHz`, `translationProvider`, `targetLang`,
+  `overlayThemeId`, and `glossary`. Optional fields are `gameTitle`,
+  `captureSource`, and `roi`; when present they are validated with the same
+  rules. Unknown writable fields produce `UNKNOWN_PROFILE_FIELD`, matching the
+  update validator, so `apiKey`, OCR text, translated text, screenshot, and log
+  field names cannot be smuggled into create requests.
+  - `ocrPreset` is a v1 controlled vocabulary: `default_dialogue`,
+    `pixel_font_dark_bg`, `pixel_font_light_bg`, `high_contrast`,
+    `adv_textbox`, `menu_text`. Unknown presets produce
+    `OCR_PRESET_INVALID`.
+  - `captureSource.kind` must be `monitor` or `window`; `id` and `label`
+    must be non-empty strings; `bounds`, when present, follows the
+    `RoiRect` contract.
+  - `glossary` is required as an array, may be empty, and each entry must
+    have non-empty `id`, `sourceTerm`, and `targetTerm` strings (`note` is
+    optional).
+  - `overlayThemeId` must be a non-empty string. Built-in theme ids
+    (`classic_subtitle`, `stream_box`, `minimal`) remain a controlled
+    vocabulary at the persistence layer; custom theme ids are accepted but
+    must reference an existing theme row at the API layer.
+- `validateProfileUpdateRequest` accepts any non-empty subset of the
+  `ProfileCreateRequest` fields. Unknown writable fields produce
+  `UNKNOWN_PROFILE_FIELD`; an empty body produces `VALIDATION_ERROR`. The
+  validator is the only place where API key, OCR text, translated text,
+  screenshots, and log field names are explicitly not writable through
+  profile updates.
+- `validateProfileExport` combines schema validation with the forbidden-field
+  scan. `schemaVersion` must be `1`, `forbiddenFieldsPolicy` must equal
+  `"reject_api_keys_ocr_text_translation_text_images_logs"`, `exportedAt`
+  must be a non-empty string, and `profile` must be a full `Profile` with
+  non-empty `id`/`createdAt`/`updatedAt` plus a valid create-request body;
+  export shape errors use `IMPORT_SCHEMA_INVALID` field codes. Any forbidden
+  field anywhere in the payload surfaces as
+  `IMPORT_CONTAINS_FORBIDDEN_FIELD` field errors inside the same
+  `VALIDATION_ERROR` envelope, so API keys, OCR text history, translated
+  text history, screenshots, and log payloads cannot round-trip through
+  import/export.
+- `validatePrivacySettings` enforces booleans for `saveRecentOcrText`,
+  `saveRecentTranslations`, and `saveDebugScreenshots`; non-negative
+  integers for `recentOcrLimit`, `recentTranslationLimit`, and
+  `debugRetentionDays`; and an optional non-empty string for
+  `debugScreenshotDirectory`. The exported `DEFAULT_PRIVACY_SETTINGS`
+  constant (`saveRecentOcrText: false`, `recentOcrLimit: 0`,
+  `saveRecentTranslations: false`, `recentTranslationLimit: 0`,
+  `saveDebugScreenshots: false`, `debugRetentionDays: 0`) is the
+  privacy-first default that the persistence layer must seed on first run;
+  the validator accepts those defaults and rejects attempts to enable OCR text,
+  translation text, or screenshot persistence unless the matching limit or
+  retention field is a positive integer.
+- `validateProviderKeyWriteRequest({ apiKey }, { provider })` is the only
+  validation surface for `PUT /api/keys/{provider}`. `provider` (either from
+  the path parameter or, for adapter callers, from the body) must be one
+  of the controlled vocabulary providers (`deepl`, `echo`) or the validator
+  emits `PROVIDER_UNKNOWN`. If both the path parameter and request body include
+  a provider, they must match or the validator emits `PROVIDER_PATH_MISMATCH`.
+  `apiKey` must be a non-empty non-whitespace string. The response stays
+  `{ ok: true }` via `apiKeyWriteResponse()`; the validator must never persist,
+  echo, log, or return the supplied key value under any failure path.
+
 ## OCR Text Normalization And Filtering
 - Runtime OCR candidates pass through a deterministic normalize -> filter -> duplicate-suppress sequence before translation.
 - `normalizeOcrText` applies Unicode `NFKC`, strips control and zero-width characters, collapses Unicode whitespace to one ASCII space, and trims edges.
