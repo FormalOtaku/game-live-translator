@@ -1,0 +1,20 @@
+{
+  "schema_version": "maestro.pending-review-evidence.v1",
+  "task_id": "T-009-001",
+  "evidence": [
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-009-001-r1/claude/review/review.json; receive=.maestro/agent-pass/T-009-001-r1/claude/review/receive-report.json",
+    "review.json; reviewed_files=9; findings=2; must_fix=0",
+    "unresolved P1/P2=0"
+  ],
+  "sources": [
+    {
+      "slice_id": "T-009-001-r1",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-009-001-r1/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-009-001-r1/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T23:19:51.312Z"
+    }
+  ],
+  "updated_at": "2026-05-27T23:19:51.312Z"
+}

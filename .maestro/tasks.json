@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T23:08:14.573Z",
+  "migrated_at": "2026-05-27T23:20:18.763Z",
   "source_path": "TASKS.md",
-  "source_sha256": "700841f702a28ab260742b55904f47c05eb037102dc8c8209c306b6afe6ba5f5",
-  "task_count": 29,
+  "source_sha256": "aff6b44766ccbe2de23f3b1b8055dcb81245bdde4ae107fe90d7b5cf98f6cc19",
+  "task_count": 34,
   "counts": {
-    "todo": 0,
-    "doing": 0,
+    "todo": 2,
+    "doing": 2,
     "blocked": 0,
-    "done": 29
+    "done": 30
   },
   "tasks": [
     {
@@ -214,6 +214,41 @@
       "status": "done",
       "owner": "codex",
       "notes": "Added npm run smoke:capture-ocr, scripts/smoke-capture-ocr-api.js, test/capture-ocr-api-smoke.test.js, CAPTURE_OCR_SMOKE_RUNBOOK_JA.md, and closeout spec/decision/runbook updates covering source enumeration, manual OCR, capture start/stop status, conflicts, and privacy invariants. Local and Docker npm test/build/lint/smoke:capture-ocr pass with 261 tests; git diff --check pass; Claude T-008-005-r3 full-diff review clean with findings=3 P3, must_fix=0, unresolved P1/P2=0."
+    },
+    {
+      "id": "T-009",
+      "title": "Implement translation test API core",
+      "status": "doing",
+      "owner": "codex",
+      "notes": "Parent goal: add production-grade v1 translation test API support for First-Run and Translation Settings, including request/response validation, provider factory seam, glossary/cache preparation, provider error/runtime status mapping, privacy-safe no-key/no-raw-debug behavior, and repeatable smoke evidence. DB/API/UI impact: no schema bump expected; API /api/translate/test endpoint; UI First-Run/Translation Settings/Home status readiness."
+    },
+    {
+      "id": "T-009-001",
+      "title": "Translation test contract validation",
+      "status": "done",
+      "owner": "codex",
+      "notes": "Added TranslateTestRequest and TranslationResult validators/assert wrappers with value-free field errors, unknown-field rejection, provider vocabulary reuse, and focused privacy-safe contract tests. Local and Docker npm test/build/lint pass with 265 tests; git diff --check pass; Claude T-009-001-r1 module review clean with must_fix=0 and unresolved P1/P2=0."
+    },
+    {
+      "id": "T-009-002",
+      "title": "Translation test endpoint provider seam",
+      "status": "doing",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-009-003",
+      "title": "Translation runtime status broadcast",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-009-004",
+      "title": "Translation API smoke runbook and parent closeout",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
     }
   ]
 }

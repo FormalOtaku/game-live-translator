@@ -1,9 +1,11 @@
 {
   "completed_items": [
-    "T-008"
+    "TranslateTestRequest validator,TranslationResult validator,privacy-safe contract tests,T-009 specs and decision notes"
   ],
   "blockers": [],
-  "decisions_made": [],
+  "decisions_made": [
+    "DEC-023 translation test validator boundary"
+  ],
   "open_questions": [],
-  "summary": "T-008 parent complete: capture/OCR API core now has executable validators, GET /api/capture/sources, POST /api/ocr/test, POST /api/capture/start, POST /api/capture/stop, privacy-safe runtime status, and npm run smoke:capture-ocr parent closeout evidence. Verification: local npm test 261 pass, build/lint pass, smoke:capture-ocr pass, git diff --check pass; Docker game-live-translator-dev npm test 261 pass, build/lint pass, smoke:capture-ocr pass; Claude T-008-005-r3 full-diff review clean with unresolved P1/P2=0."
+  "summary": "T-009-001 complete: translation test contract boundary is executable with validate/assert helpers for TranslateTestRequest and TranslationResult, privacy-safe focused tests, and specs/decision/migration notes. Verification passed locally and in Docker: node --check files, node --test test/contracts.test.js 69 pass, npm test 265 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-001-r1 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-002 is now doing: implement POST /api/translate/test provider seam."
 }

@@ -293,6 +293,12 @@ type DiagnosticBundle = {
 - `validateOcrResult(OcrResult)` validates OCR engine output before route responses or runtime status mapping. `text` and `normalizedText` must be strings, `confidence` must be finite in `[0, 1]`, `durationMs` must be finite and non-negative, `accepted` must be boolean, accepted results must omit `rejectionReason`, and rejected results must use the controlled `OCR_REJECTION_REASONS` vocabulary from `src/core/ocr-text.js`.
 - Unknown fields are rejected with field-level validation errors, and validation details must not include provider keys, raw OCR text, captured images, screenshots, stack traces, logs, or translated debug payloads.
 
+## Translation Test API Contract Validation
+- T-009-001 adds the executable contract validation boundary for the translation test API surface before endpoint wiring.
+- `validateTranslateTestRequest({ profileId, text })` validates `POST /api/translate/test`; `profileId` and `text` are required non-empty strings and no other request fields are accepted.
+- `validateTranslationResult(TranslationResult)` validates provider output before route responses or runtime status mapping. `sourceText`, `translatedText`, and `provider` must be strings, `provider` must be in `["deepl", "echo"]`, `durationMs` must be finite and non-negative, and `cacheHit` must be boolean.
+- Unknown fields are rejected with field-level validation errors, and validation details must not include provider keys, raw OCR/source text, translated debug text, screenshots, stack traces, logs, provider response bodies, or cache/debug payloads.
+
 ## Capture Source Enumeration Endpoint
 - T-008-002 wires `GET /api/capture/sources` into the localhost API harness with a dependency-injected `captureSourceProvider.enumerateCaptureSources()` boundary. The provider returns `CaptureSourcesResponse` synchronously or asynchronously; the future Electron/Windows adapter owns concrete monitor/window discovery behind this interface.
 - The route must call `assertCaptureSourcesResponse` before writing JSON so only `kind`, `id`, `label`, and optional `bounds` can leave the backend. Invalid provider output, missing provider methods, and thrown provider errors map to canonical `CAPTURE_ENUM_FAILED` `ApiError` responses.

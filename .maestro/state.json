@@ -1,24 +1,26 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T23:08:32.104Z",
+  "migrated_at": "2026-05-27T23:20:32.995Z",
   "source_path": "STATE.md",
-  "source_sha256": "5baf332ba5d1a56da3458615b20abbc404226f2c9b21eeeb9f5f87a7f61d9096",
+  "source_sha256": "6916b3ba03c19fc839cd415b4e728b610c61b09744200840eae2f87e0b0179c2",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": []
+    "active_task_ids": [
+      "T-009"
+    ]
   },
   "slice_progress": {
-    "current_slice_prefix": null,
-    "current_slice_id": null,
-    "current_slice_goal": null,
-    "current_slice_status": null,
-    "completed_slices": 0,
-    "total_slices": 0,
-    "progress_pct": 0,
-    "next_slice_id": null,
-    "next_slice_goal": null,
-    "last_checkpoint": "2026-05-27T23:08:32.104Z",
+    "current_slice_prefix": "T-009",
+    "current_slice_id": "T-009-002",
+    "current_slice_goal": "Translation test endpoint provider seam",
+    "current_slice_status": "doing",
+    "completed_slices": 1,
+    "total_slices": 4,
+    "progress_pct": 25,
+    "next_slice_id": "T-009-003",
+    "next_slice_goal": "Translation runtime status broadcast",
+    "last_checkpoint": "2026-05-27T23:20:32.994Z",
     "done": [],
     "doing": [],
     "todo": []

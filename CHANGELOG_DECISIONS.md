@@ -291,3 +291,16 @@
 - Regression tests added first: `test/capture-ocr-api-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no provider key/source/screenshot sentinel in stdout.
 - Migration needed: None.
 - Rollback plan: Remove `npm run smoke:capture-ocr`, the smoke script, runbook, focused smoke test, and spec/decision entries. Existing capture/OCR route behavior remains covered by unit tests.
+
+### CHG-20260528-023
+- Date: 2026-05-28
+- Summary: Started T-009 with translation test API contract validation.
+- Reason: First-Run and Translation Settings need a stable `/api/translate/test` request/result contract before provider-backed route wiring lands.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The slice is a pure validator/docs/test boundary and introduces no translation cache rows, key storage movement, OCR/translation text persistence, or profile export schema bump.
+  - API: Adds validators and assert wrappers for `TranslateTestRequest` and `TranslationResult`, including provider vocabulary, non-negative duration, cache-hit typing, unknown-field rejection, and value-free field errors.
+  - UI: First-Run and Translation Settings can map one canonical field-error shape for missing profile id, empty test text, malformed provider output, invalid provider ids, and timing/cache shape failures without parsing provider exception text.
+- Risk: `/api/translate/test` is not wired in this slice. T-009-002 must use these validators at the route boundary and preserve provider-key redaction.
+- Regression tests added first: `test/contracts.test.js` covers valid request/result shapes, unknown-field rejection, invalid provider/duration/cache fields, and no secret/raw text leakage from validation errors.
+- Migration needed: None.
+- Rollback plan: Revert the translation test validators, focused tests, and spec/decision entries. Existing capture/OCR/config/server contracts remain unchanged.

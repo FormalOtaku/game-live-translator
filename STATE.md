@@ -41,28 +41,28 @@
 
 ## Current Focus
 - milestone:
-- active_task_ids: (none)
+- active_task_ids: T-009
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: (none)
-- current_slice_id: (none)
-- current_slice_goal: (none)
-- current_slice_status: (none)
-- completed_slices: 0
-- total_slices: 0
-- progress_pct: 0
-- next_slice_id: (none)
-- next_slice_goal: (none)
-- last_checkpoint: 2026-05-27T23:08:32.104Z
+- current_slice_prefix: T-009
+- current_slice_id: T-009-002
+- current_slice_goal: Translation test endpoint provider seam
+- current_slice_status: doing
+- completed_slices: 1
+- total_slices: 4
+- progress_pct: 25
+- next_slice_id: T-009-003
+- next_slice_goal: Translation runtime status broadcast
+- last_checkpoint: 2026-05-27T23:20:32.994Z
 ## Session Flow
-- current_session_role: execution
-- recommended_next_session_role: spec
+- current_session_role: supervisor
+- recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-008 deterministic closeout evidence is satisfied; no human visual/device validation required for this dependency-free API contract parent.
-- last_completed_slice: T-008-005
-- handoff_summary: T-008 parent complete: capture/OCR API core now has executable validators, GET /api/capture/sources, POST /api/ocr/test, POST /api/capture/start, POST /api/capture/stop, privacy-safe runtime status, and npm run smoke:capture-ocr parent closeout evidence. Verification: local npm test 261 pass, build/lint pass, smoke:capture-ocr pass, git diff --check pass; Docker game-live-translator-dev npm test 261 pass, build/lint pass, smoke:capture-ocr pass; Claude T-008-005-r3 full-diff review clean with unresolved P1/P2=0.
-- next_action: Start a spec session to define the next parent task, likely concrete Windows capture/OCR adapter integration and product-level smoke, before editing new implementation files.
-- updated_at: 2026-05-27T23:08:32.101Z
+- checkpoint_reason: Deterministic validation and imported Claude review evidence satisfied for T-009-001; no human validation required.
+- last_completed_slice: T-009-001
+- handoff_summary: T-009-001 complete: translation test contract boundary is executable with validate/assert helpers for TranslateTestRequest and TranslationResult, privacy-safe focused tests, and specs/decision/migration notes. Verification passed locally and in Docker: node --check files, node --test test/contracts.test.js 69 pass, npm test 265 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-001-r1 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-002 is now doing: implement POST /api/translate/test provider seam.
+- next_action: start T-009-002 endpoint provider seam implementation
+- updated_at: 2026-05-27T23:20:32.991Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

@@ -189,3 +189,11 @@
 - Decision: Add `npm run smoke:capture-ocr` and protect it with `test/capture-ocr-api-smoke.test.js`. The smoke starts `createLocalApiServer` on an ephemeral `127.0.0.1` port, verifies capture source enumeration, manual OCR success and controlled failures, capture start/stop status transitions, conflict behavior, and redaction/no-persistence invariants.
 - Consequences: T-008 parent closeout can be reproduced locally and in Docker/devcontainer workflows without OBS, Windows desktop-capture APIs, PaddleOCR, screenshots, or provider credentials. Future Electron/FastAPI integration must preserve the same observable capture/OCR API behavior or update this smoke/runbook in the same slice.
 - Follow-up: When concrete Windows capture and PaddleOCR adapters land, add a product-level smoke against those real adapters while keeping this dependency-free contract smoke as the fast regression fixture.
+
+### DEC-023
+- Date: 2026-05-28
+- Context: T-009 starts the translation test API core. First-Run and Translation Settings need `POST /api/translate/test`, but provider adapters, glossary/cache preparation, route mapping, and status broadcasting should share one executable validation boundary before endpoint wiring.
+- Options: validate translation test payloads only inside the future route; trust provider output directly; add dependency-free validators for request and result shapes now.
+- Decision: Extend `src/contracts/validation.js` with `validateTranslateTestRequest`, `assertTranslateTestRequest`, `validateTranslationResult`, and `assertTranslationResult`. The request validator accepts only non-empty `profileId` and `text`. The result validator accepts only `sourceText`, `translatedText`, `provider`, `durationMs`, and `cacheHit`, verifies provider vocabulary and timing/cache types, and keeps validation details value-free.
+- Consequences: The future `/api/translate/test` route and FastAPI port can reject malformed UI/provider payloads before any key, translated debug text, provider response body, or stack trace reaches an API error. UI forms can display field errors without parsing provider exceptions.
+- Follow-up: T-009-002 must route `/api/translate/test` through profile lookup, glossary/cache preparation, provider factory injection, these validators, and provider error mapping.

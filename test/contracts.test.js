@@ -47,8 +47,12 @@ const {
   assertCaptureStartRequest,
   validateOcrTestRequest,
   assertOcrTestRequest,
+  validateTranslateTestRequest,
+  assertTranslateTestRequest,
   validateOcrResult,
   assertOcrResult,
+  validateTranslationResult,
+  assertTranslationResult,
   validateThemeCssJson,
   validateOverlayThemeCreateRequest,
   assertOverlayThemeCreateRequest,
@@ -563,6 +567,40 @@ test('OcrTestRequest: rejects unknown fields and invalid ROI without leaking raw
   assert.equal(JSON.stringify(errors).includes(rawOcrText), false);
 });
 
+test('TranslateTestRequest: requires only profileId and text', () => {
+  const payload = { profileId: 'profile_main', text: '勇者が来た' };
+  assert.deepEqual(validateTranslateTestRequest(payload), []);
+  assert.strictEqual(assertTranslateTestRequest(payload), payload);
+
+  const errors = validateTranslateTestRequest({
+    profileId: '',
+    text: '',
+    targetLang: 'en',
+  });
+  const byField = Object.fromEntries(errors.map((error) => [error.field, error.code]));
+  assert.equal(byField.profileId, 'VALIDATION_ERROR');
+  assert.equal(byField.text, 'VALIDATION_ERROR');
+  assert.equal(byField.targetLang, 'UNKNOWN_TRANSLATE_TEST_FIELD');
+  assert.throws(
+    () => assertTranslateTestRequest(null),
+    (error) => error instanceof ContractError && error.code === 'VALIDATION_ERROR',
+  );
+});
+
+test('TranslateTestRequest: keeps field errors value-free', () => {
+  const secret = 'sk-ABCDEFGHIJKLMNOP1234';
+  const rawText = '秘密の原文';
+  const errors = validateTranslateTestRequest({
+    profileId: secret,
+    text: rawText,
+    debugPayload: { sourceText: rawText, apiKey: secret },
+  });
+  const byField = Object.fromEntries(errors.map((error) => [error.field, error.code]));
+  assert.equal(byField.debugPayload, 'UNKNOWN_TRANSLATE_TEST_FIELD');
+  assert.equal(JSON.stringify(errors).includes(secret), false);
+  assert.equal(JSON.stringify(errors).includes(rawText), false);
+});
+
 test('ProfileCreateRequest: glossary entries require id/sourceTerm/targetTerm', () => {
   const errors = validateProfileCreateRequest(
     makeValidProfileCreateRequest({
@@ -984,6 +1022,61 @@ test('OcrResult: rejects malformed results and keeps diagnostics value-free', ()
     ),
   );
   assert.equal(JSON.stringify(missingAccepted).includes(rawOcrText), false);
+});
+
+test('TranslationResult: accepts provider result shape', () => {
+  const payload = {
+    sourceText: '勇者が来た',
+    translatedText: 'The hero has arrived',
+    provider: 'deepl',
+    durationMs: 123.4,
+    cacheHit: false,
+  };
+  assert.deepEqual(validateTranslationResult(payload), []);
+  assert.strictEqual(assertTranslationResult(payload), payload);
+
+  assert.deepEqual(
+    validateTranslationResult({
+      sourceText: '',
+      translatedText: '',
+      provider: 'echo',
+      durationMs: 0,
+      cacheHit: true,
+    }),
+    [],
+  );
+});
+
+test('TranslationResult: rejects malformed results and keeps diagnostics value-free', () => {
+  const secret = 'sk-ABCDEFGHIJKLMNOP1234';
+  const rawText = '秘密の原文';
+  const translatedDebug = 'Secret translated debug';
+  const errors = validateTranslationResult({
+    sourceText: 123,
+    translatedText: null,
+    provider: 'google',
+    durationMs: -1,
+    cacheHit: 'yes',
+    apiKey: secret,
+    rawText,
+    translatedDebug,
+  });
+  const byField = Object.fromEntries(errors.map((error) => [error.field, error.code]));
+  assert.equal(byField.sourceText, 'TRANSLATION_RESULT_TEXT_INVALID');
+  assert.equal(byField.translatedText, 'TRANSLATION_RESULT_TEXT_INVALID');
+  assert.equal(byField.provider, 'PROVIDER_UNKNOWN');
+  assert.equal(byField.durationMs, 'TRANSLATION_RESULT_DURATION_INVALID');
+  assert.equal(byField.cacheHit, 'TRANSLATION_RESULT_CACHE_HIT_INVALID');
+  assert.equal(byField.apiKey, 'UNKNOWN_TRANSLATION_RESULT_FIELD');
+  assert.equal(byField.rawText, 'UNKNOWN_TRANSLATION_RESULT_FIELD');
+  assert.equal(byField.translatedDebug, 'UNKNOWN_TRANSLATION_RESULT_FIELD');
+  assert.equal(JSON.stringify(errors).includes(secret), false);
+  assert.equal(JSON.stringify(errors).includes(rawText), false);
+  assert.equal(JSON.stringify(errors).includes(translatedDebug), false);
+  assert.throws(
+    () => assertTranslationResult(null),
+    (error) => error instanceof ContractError && error.code === 'VALIDATION_ERROR',
+  );
 });
 
 test('ALLOWED_OCR_PRESETS exposes the v1 controlled vocabulary', () => {

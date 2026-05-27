@@ -274,6 +274,7 @@ function validateCaptureSource(captureSource, basePath = 'captureSource') {
 const CAPTURE_SOURCES_RESPONSE_FIELDS = Object.freeze(['sources']);
 const CAPTURE_START_REQUEST_FIELDS = Object.freeze(['profileId']);
 const OCR_TEST_REQUEST_FIELDS = Object.freeze(['profileId', 'roi']);
+const TRANSLATE_TEST_REQUEST_FIELDS = Object.freeze(['profileId', 'text']);
 const OCR_RESULT_FIELDS = Object.freeze([
   'text',
   'normalizedText',
@@ -281,6 +282,13 @@ const OCR_RESULT_FIELDS = Object.freeze([
   'durationMs',
   'accepted',
   'rejectionReason',
+]);
+const TRANSLATION_RESULT_FIELDS = Object.freeze([
+  'sourceText',
+  'translatedText',
+  'provider',
+  'durationMs',
+  'cacheHit',
 ]);
 
 function validateCaptureSourcesResponse(payload) {
@@ -376,6 +384,35 @@ function assertOcrTestRequest(payload) {
   return payload;
 }
 
+function validateTranslateTestRequest(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'TranslateTestRequest must be an object'),
+    ];
+  }
+
+  const errors = [];
+  for (const field of Object.keys(payload)) {
+    if (!TRANSLATE_TEST_REQUEST_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_TRANSLATE_TEST_FIELD',
+          `${field} is not a translate test request field`,
+        ),
+      );
+    }
+  }
+  errors.push(...validateNonEmptyString(payload.profileId, 'profileId'));
+  errors.push(...validateNonEmptyString(payload.text, 'text'));
+  return errors;
+}
+
+function assertTranslateTestRequest(payload) {
+  throwIfErrors(validateTranslateTestRequest(payload));
+  return payload;
+}
+
 function validateOcrResult(payload) {
   if (!isPlainObject(payload)) {
     return [
@@ -456,6 +493,76 @@ function validateOcrResult(payload) {
 
 function assertOcrResult(payload) {
   throwIfErrors(validateOcrResult(payload));
+  return payload;
+}
+
+function validateTranslationResult(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'TranslationResult must be an object'),
+    ];
+  }
+
+  const errors = [];
+  for (const field of Object.keys(payload)) {
+    if (!TRANSLATION_RESULT_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_TRANSLATION_RESULT_FIELD',
+          `${field} is not a translation result field`,
+        ),
+      );
+    }
+  }
+
+  if (typeof payload.sourceText !== 'string') {
+    errors.push(
+      fieldError('sourceText', 'TRANSLATION_RESULT_TEXT_INVALID', 'sourceText must be a string'),
+    );
+  }
+  if (typeof payload.translatedText !== 'string') {
+    errors.push(
+      fieldError(
+        'translatedText',
+        'TRANSLATION_RESULT_TEXT_INVALID',
+        'translatedText must be a string',
+      ),
+    );
+  }
+  if (!ALLOWED_PROVIDERS.includes(payload.provider)) {
+    errors.push(
+      fieldError(
+        'provider',
+        'PROVIDER_UNKNOWN',
+        `provider must be one of ${ALLOWED_PROVIDERS.join(', ')}`,
+      ),
+    );
+  }
+  if (!isFiniteNumber(payload.durationMs) || payload.durationMs < 0) {
+    errors.push(
+      fieldError(
+        'durationMs',
+        'TRANSLATION_RESULT_DURATION_INVALID',
+        'durationMs must be a finite non-negative number',
+      ),
+    );
+  }
+  if (typeof payload.cacheHit !== 'boolean') {
+    errors.push(
+      fieldError(
+        'cacheHit',
+        'TRANSLATION_RESULT_CACHE_HIT_INVALID',
+        'cacheHit must be a boolean',
+      ),
+    );
+  }
+
+  return errors;
+}
+
+function assertTranslationResult(payload) {
+  throwIfErrors(validateTranslationResult(payload));
   return payload;
 }
 
@@ -1064,8 +1171,12 @@ module.exports = {
   assertCaptureStartRequest,
   validateOcrTestRequest,
   assertOcrTestRequest,
+  validateTranslateTestRequest,
+  assertTranslateTestRequest,
   validateOcrResult,
   assertOcrResult,
+  validateTranslationResult,
+  assertTranslationResult,
   validateGlossaryTerm,
   validateGlossary,
   validateThemeCssJson,
