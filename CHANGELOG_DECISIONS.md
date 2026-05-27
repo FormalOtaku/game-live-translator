@@ -239,3 +239,16 @@
 - Regression tests added first: `test/contracts.test.js` covers valid monitor/window source responses, capture-source unknown-field rejection, capture start request shape, OCR test request ROI overrides, accepted/rejected OCR results, malformed OCR results, controlled rejection reason vocabulary, and no secret/raw OCR sentinel leakage from validation errors.
 - Migration needed: None.
 - Rollback plan: Revert the capture/OCR validators, focused tests, and spec/decision entries. Existing profile/config/server contracts remain unchanged.
+
+### CHG-20260528-019
+- Date: 2026-05-28
+- Summary: Wired the capture source enumeration endpoint for T-008-002.
+- Reason: Capture Setup and First-Run need a stable live HTTP route for monitor/window choices before capture start, ROI preview, and OCR test endpoints are wired. The repo still avoids native desktop dependencies in core slices, so concrete Windows enumeration remains behind an injected adapter.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The route is process-local and does not persist source lists, window titles, screenshots, OCR text, provider keys, logs, or diagnostics.
+  - API: Adds `GET /api/capture/sources` to `createLocalApiServer` using `captureSourceProvider.enumerateCaptureSources()`. Responses are validated with `assertCaptureSourcesResponse`; missing provider methods, provider failures, and invalid provider output map to privacy-safe `CAPTURE_ENUM_FAILED`; unsupported methods return `METHOD_NOT_ALLOWED`.
+  - UI: First-Run and Capture Setup can fetch a validated list of monitor/window entries and handle one canonical failure code without parsing raw provider exceptions.
+- Risk: This is the HTTP contract and adapter seam only. The future Electron/Windows provider must preserve the same response shape, no-leak errors, and no-persistence behavior when it calls actual desktop capture APIs.
+- Regression tests added first: `test/local-api-server.test.js` covers successful async enumeration, 405 method guard, missing-provider failure, thrown provider failure redaction, and invalid provider output redaction.
+- Migration needed: None.
+- Rollback plan: Remove the capture route, injected provider handling, focused tests, and spec entries. Existing status/config/profile routes remain unchanged.

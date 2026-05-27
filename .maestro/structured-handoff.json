@@ -1,9 +1,9 @@
 {
   "completed_items": [
-    "T-008-001"
+    "T-008-002"
   ],
   "blockers": [],
   "decisions_made": [],
   "open_questions": [],
-  "summary": "T-008-001 complete: added capture/OCR API contract validators for CaptureSourcesResponse, CaptureStartRequest, OcrTestRequest, and OcrResult with per-CaptureSource unknown-field rejection, controlled OCR rejection reasons from src/core/ocr-text.js, value-free fieldErrors, and 65 focused contract tests. Local and Docker npm test/build/lint pass with 238 tests; git diff --check pass; Claude T-008-001-r3 module review clean with must_fix=0 and unresolved P1/P2=0."
+  "summary": "T-008-002 complete: wired GET /api/capture/sources through injected captureSourceProvider.enumerateCaptureSources(), validates with assertCaptureSourcesResponse, sanitizes only CaptureSource fields before JSON, maps missing/thrown/non-Error/invalid provider output to privacy-safe CAPTURE_ENUM_FAILED, and covers GET-only/CORS behavior with 46 local-api-server tests. Local and Docker npm test/build/lint pass with 242 tests; git diff --check pass; Claude T-008-002-r2 module review clean with findings=0, must_fix=0, unresolved P1/P2=0."
 }

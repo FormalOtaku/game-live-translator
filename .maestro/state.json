@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T21:47:11.154Z",
+  "migrated_at": "2026-05-27T22:03:33.262Z",
   "source_path": "STATE.md",
-  "source_sha256": "9396f4e20a3f9902e2fc1938cef788bd415d3e4afb853b71408351a20b3dad67",
+  "source_sha256": "07c52273ea0b6d44a164de2a1a30473208bb52f485e638cade2986a94addc77a",
   "current_focus": {
     "milestone": null,
     "active_task_ids": [
@@ -12,15 +12,15 @@
   },
   "slice_progress": {
     "current_slice_prefix": "T-008",
-    "current_slice_id": "T-008-002",
-    "current_slice_goal": "Capture source enumeration endpoint",
+    "current_slice_id": "T-008-003",
+    "current_slice_goal": "Manual OCR test endpoint",
     "current_slice_status": "doing",
-    "completed_slices": 1,
+    "completed_slices": 2,
     "total_slices": 5,
-    "progress_pct": 20,
-    "next_slice_id": "T-008-003",
-    "next_slice_goal": "Manual OCR test endpoint",
-    "last_checkpoint": "2026-05-27T21:47:11.153Z",
+    "progress_pct": 40,
+    "next_slice_id": "T-008-004",
+    "next_slice_goal": "Capture start stop runtime status",
+    "last_checkpoint": "2026-05-27T22:03:33.262Z",
     "done": [],
     "doing": [],
     "todo": []

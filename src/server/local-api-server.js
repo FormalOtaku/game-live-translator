@@ -7,6 +7,7 @@ const {
   assertLocalhostBind,
   redactSecrets,
 } = require('../contracts/security');
+const { assertCaptureSourcesResponse } = require('../contracts/validation');
 const { sanitizeSubtitleForOverlay } = require('../core/subtitle-state');
 const { OVERLAY_CSP, renderOverlayHtml } = require('./overlay-renderer');
 const {
@@ -291,6 +292,13 @@ function providerKeyStoreUnavailable() {
   );
 }
 
+function captureSourceProviderUnavailable() {
+  return new ContractError(
+    'CAPTURE_ENUM_FAILED',
+    'Capture source enumeration is not available',
+  );
+}
+
 function getProfileRepository(repository, methods) {
   if (!isObject(repository)) throw profileRepositoryUnavailable();
   for (const method of methods) {
@@ -305,6 +313,34 @@ function getProviderKeyStore(store, methods) {
     if (typeof store[method] !== 'function') throw providerKeyStoreUnavailable();
   }
   return store;
+}
+
+function getCaptureSourceProvider(provider) {
+  if (!isObject(provider) || typeof provider.enumerateCaptureSources !== 'function') {
+    throw captureSourceProviderUnavailable();
+  }
+  return provider;
+}
+
+function sanitizeCaptureSourcesResponse(payload) {
+  return Object.freeze({
+    sources: Object.freeze(payload.sources.map((source) => {
+      const output = {
+        kind: source.kind,
+        id: source.id,
+        label: source.label,
+      };
+      if (source.bounds !== undefined) {
+        output.bounds = {
+          x: source.bounds.x,
+          y: source.bounds.y,
+          width: source.bounds.width,
+          height: source.bounds.height,
+        };
+      }
+      return Object.freeze(output);
+    })),
+  });
 }
 
 function decodePathSegment(segment) {
@@ -389,6 +425,7 @@ function statusCodeForContractError(error) {
   }
   if (code === 'DB_UNAVAILABLE') return 503;
   if (code === 'KEYCHAIN_UNAVAILABLE') return 503;
+  if (code === 'CAPTURE_ENUM_FAILED') return 500;
   if (code === 'DB_READ_FAILED') return 500;
   return 500;
 }
@@ -469,6 +506,7 @@ function createLocalApiServer(options = {}) {
   const allowSamePortLocalhostOrigin = options.allowSamePortLocalhostOrigin !== false;
   const profileRepository = options.profileRepository;
   const providerKeyStore = options.providerKeyStore;
+  const captureSourceProvider = options.captureSourceProvider;
   let selectedPort = null;
   let upgradeAttached = false;
 
@@ -609,6 +647,53 @@ function createLocalApiServer(options = {}) {
   attachUpgradeDispatcher();
   overlayWebSocket.start();
   appStatusWebSocket.start();
+
+  async function enumerateCaptureSources() {
+    const provider = getCaptureSourceProvider(captureSourceProvider);
+    let payload;
+    try {
+      payload = await provider.enumerateCaptureSources();
+    } catch (_) {
+      throw new ContractError('CAPTURE_ENUM_FAILED', 'Capture source enumeration failed');
+    }
+
+    try {
+      assertCaptureSourcesResponse(payload);
+    } catch (error) {
+      const details = error instanceof ContractError &&
+        isObject(error.details) &&
+        Array.isArray(error.details.fieldErrors)
+        ? { fieldErrors: error.details.fieldErrors }
+        : undefined;
+      throw new ContractError(
+        'CAPTURE_ENUM_FAILED',
+        'Capture source enumeration returned an invalid response',
+        details,
+      );
+    }
+    return sanitizeCaptureSourcesResponse(payload);
+  }
+
+  async function handleCaptureRoute(pathname, req, res) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'api' || segments[1] !== 'capture') return false;
+
+    try {
+      if (segments.length === 3 && segments[2] === 'sources') {
+        if (req.method !== 'GET') {
+          writeMethodNotAllowed(res, ['GET']);
+          return true;
+        }
+        writeJson(res, 200, await enumerateCaptureSources());
+        return true;
+      }
+    } catch (error) {
+      writeContractError(res, error);
+      return true;
+    }
+
+    return false;
+  }
 
   async function handleProfileRoute(pathname, req, res) {
     const segments = pathname.split('/').filter(Boolean);
@@ -900,6 +985,7 @@ function createLocalApiServer(options = {}) {
     }
 
     if (await handleProfileRoute(pathname, req, res)) return;
+    if (await handleCaptureRoute(pathname, req, res)) return;
     if (await handleThemeRoute(pathname, req, res)) return;
     if (await handleSettingsRoute(pathname, req, res)) return;
     if (await handleProviderKeyRoute(pathname, req, res)) return;

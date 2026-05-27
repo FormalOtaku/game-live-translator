@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T21:45:19.134Z",
+  "migrated_at": "2026-05-27T22:03:14.640Z",
   "source_path": "TASKS.md",
-  "source_sha256": "6cfdd43661dfee71a2928394ee66c9aaf5e74ca53aa362a4346cafbecc2aff1e",
+  "source_sha256": "934c2dc327772c5d8cc567b1daaccfdacc6fe65ba117bac533082147aa3f6193",
   "task_count": 29,
   "counts": {
-    "todo": 3,
+    "todo": 2,
     "doing": 2,
     "blocked": 0,
-    "done": 24
+    "done": 25
   },
   "tasks": [
     {
@@ -190,14 +190,14 @@
     {
       "id": "T-008-002",
       "title": "Capture source enumeration endpoint",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+      "notes": "Wired GET /api/capture/sources through injected captureSourceProvider.enumerateCaptureSources(), validated responses with assertCaptureSourcesResponse, sanitized only CaptureSource fields before JSON, mapped missing/thrown/non-Error/invalid provider output to privacy-safe CAPTURE_ENUM_FAILED, and added route/CORS/redaction tests. Local and Docker npm test/build/lint pass with 242 tests; git diff --check pass; Claude T-008-002-r2 module review clean with findings=0, must_fix=0, unresolved P1/P2=0."
     },
     {
       "id": "T-008-003",
       "title": "Manual OCR test endpoint",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-008. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
     },

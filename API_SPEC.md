@@ -293,6 +293,12 @@ type DiagnosticBundle = {
 - `validateOcrResult(OcrResult)` validates OCR engine output before route responses or runtime status mapping. `text` and `normalizedText` must be strings, `confidence` must be finite in `[0, 1]`, `durationMs` must be finite and non-negative, `accepted` must be boolean, accepted results must omit `rejectionReason`, and rejected results must use the controlled `OCR_REJECTION_REASONS` vocabulary from `src/core/ocr-text.js`.
 - Unknown fields are rejected with field-level validation errors, and validation details must not include provider keys, raw OCR text, captured images, screenshots, stack traces, logs, or translated debug payloads.
 
+## Capture Source Enumeration Endpoint
+- T-008-002 wires `GET /api/capture/sources` into the localhost API harness with a dependency-injected `captureSourceProvider.enumerateCaptureSources()` boundary. The provider returns `CaptureSourcesResponse` synchronously or asynchronously; the future Electron/Windows adapter owns concrete monitor/window discovery behind this interface.
+- The route must call `assertCaptureSourcesResponse` before writing JSON so only `kind`, `id`, `label`, and optional `bounds` can leave the backend. Invalid provider output, missing provider methods, and thrown provider errors map to canonical `CAPTURE_ENUM_FAILED` `ApiError` responses.
+- `CAPTURE_ENUM_FAILED` responses must be privacy-safe: they may include validator field names/codes for invalid provider output, but must not include provider keys, raw OCR text, captured images, screenshots, stack traces, debug logs, or raw provider exception text.
+- Only `GET` is allowed on `/api/capture/sources`; other methods return `METHOD_NOT_ALLOWED` with `Allow: GET`. The endpoint preserves the existing localhost bind, CORS, no-store-free JSON, and no-persistence behavior.
+
 ### `/ws/overlay` Wire Contract
 - T-006-003 implements `/ws/overlay` in the dependency-free localhost server core. The production FastAPI sidecar must preserve the same observable behavior.
 - Upgrade behavior:

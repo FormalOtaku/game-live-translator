@@ -442,6 +442,217 @@ test('unsupported routes and methods return canonical ApiError envelopes', async
   }
 });
 
+test('capture source API enumerates sources through the injected provider', async () => {
+  const calls = [];
+  const sources = [
+    {
+      kind: 'monitor',
+      id: 'monitor:primary',
+      label: 'Display 1',
+      bounds: { x: 0, y: 0, width: 1920, height: 1080 },
+    },
+    {
+      kind: 'window',
+      id: 'window:game',
+      label: 'Game Window',
+    },
+  ];
+  const captureSourceProvider = {
+    async enumerateCaptureSources() {
+      calls.push(['enumerateCaptureSources']);
+      return { sources };
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    captureSourceProvider,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({ port: started.port, path: '/api/capture/sources' });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.parsed, { sources });
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/capture/sources',
+      method: 'POST',
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'GET');
+    assert.equal(wrongMethod.parsed.error.code, 'METHOD_NOT_ALLOWED');
+    assert.deepEqual(calls, [['enumerateCaptureSources']]);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('capture source API maps missing and failed providers to redacted CAPTURE_ENUM_FAILED', async () => {
+  const missingApi = createLocalApiServer({ preferredPort: 0 });
+  const missingStarted = await missingApi.start();
+
+  try {
+    const missing = await requestJson({
+      port: missingStarted.port,
+      path: '/api/capture/sources',
+    });
+    assert.equal(missing.statusCode, 500);
+    assert.equal(missing.parsed.error.code, 'CAPTURE_ENUM_FAILED');
+    assert.equal(missing.parsed.error.retryable, false);
+    assert.equal(Object.hasOwn(missing.parsed.error, 'stack'), false);
+  } finally {
+    await missingApi.stop();
+  }
+
+  const leakedKey = 'sk-ABCDEFGHIJKLMNOP1234';
+  const failingApi = createLocalApiServer({
+    preferredPort: 0,
+    captureSourceProvider: {
+      enumerateCaptureSources() {
+        throw new Error(`capture enumeration failed for ${leakedKey}`);
+      },
+    },
+  });
+  const failingStarted = await failingApi.start();
+
+  try {
+    const failed = await requestJson({
+      port: failingStarted.port,
+      path: '/api/capture/sources',
+    });
+    assert.equal(failed.statusCode, 500);
+    assert.equal(failed.parsed.error.code, 'CAPTURE_ENUM_FAILED');
+    assert.equal(failed.parsed.error.message, 'Capture source enumeration failed');
+    assert.equal(JSON.stringify(failed.parsed).includes(leakedKey), false);
+    assert.equal(Object.hasOwn(failed.parsed.error, 'stack'), false);
+  } finally {
+    await failingApi.stop();
+  }
+
+  const nonErrorThrowApi = createLocalApiServer({
+    preferredPort: 0,
+    captureSourceProvider: {
+      enumerateCaptureSources() {
+        throw `capture enumeration failed for ${leakedKey}`;
+      },
+    },
+  });
+  const nonErrorStarted = await nonErrorThrowApi.start();
+
+  try {
+    const failed = await requestJson({
+      port: nonErrorStarted.port,
+      path: '/api/capture/sources',
+    });
+    assert.equal(failed.statusCode, 500);
+    assert.equal(failed.parsed.error.code, 'CAPTURE_ENUM_FAILED');
+    assert.equal(failed.parsed.error.message, 'Capture source enumeration failed');
+    assert.equal(JSON.stringify(failed.parsed).includes(leakedKey), false);
+  } finally {
+    await nonErrorThrowApi.stop();
+  }
+});
+
+test('capture source API rejects invalid provider output without leaking source values', async () => {
+  const providerSecret = 'secret-provider-token';
+  const rawOcrSentinel = '秘密のOCR本文';
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    captureSourceProvider: {
+      enumerateCaptureSources() {
+        return {
+          sources: [
+            {
+              kind: 'game',
+              id: '',
+              label: 'Game Window',
+              apiKey: providerSecret,
+              bounds: { x: 0, y: 0, width: 0, height: 720 },
+            },
+          ],
+          rawOcrText: rawOcrSentinel,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({ port: started.port, path: '/api/capture/sources' });
+    assert.equal(response.statusCode, 500);
+    assert.equal(response.parsed.error.code, 'CAPTURE_ENUM_FAILED');
+    assert.equal(response.parsed.error.message, 'Capture source enumeration returned an invalid response');
+    assert.equal(Array.isArray(response.parsed.error.details.fieldErrors), true);
+
+    const byField = Object.fromEntries(
+      response.parsed.error.details.fieldErrors.map((error) => [error.field, error.code]),
+    );
+    assert.equal(byField.rawOcrText, 'UNKNOWN_CAPTURE_SOURCES_FIELD');
+    assert.equal(byField['sources[0].apiKey'], 'UNKNOWN_CAPTURE_SOURCE_FIELD');
+    assert.equal(byField['sources[0].kind'], 'CAPTURE_SOURCE_KIND_INVALID');
+    assert.equal(byField['sources[0].id'], 'VALIDATION_ERROR');
+    assert.equal(byField['sources[0].bounds.width'], 'ROI_INVALID');
+
+    const serialized = JSON.stringify(response.parsed);
+    assert.equal(serialized.includes(providerSecret), false);
+    assert.equal(serialized.includes(rawOcrSentinel), false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('capture source API inherits local CORS policy without preflight enumeration', async () => {
+  const calls = [];
+  const captureSourceProvider = {
+    enumerateCaptureSources() {
+      calls.push(['enumerateCaptureSources']);
+      return {
+        sources: [
+          { kind: 'monitor', id: 'monitor:primary', label: 'Display 1' },
+        ],
+      };
+    },
+  };
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    captureSourceProvider,
+  });
+  const started = await api.start();
+
+  try {
+    const allowedOrigin = `http://127.0.0.1:${started.port}`;
+    const preflight = await requestJson({
+      port: started.port,
+      path: '/api/capture/sources',
+      method: 'OPTIONS',
+      headers: { Origin: allowedOrigin },
+    });
+    assert.equal(preflight.statusCode, 204);
+    assert.equal(preflight.headers['access-control-allow-origin'], allowedOrigin);
+    assert.equal(preflight.headers['access-control-allow-methods'], 'GET, POST, PUT, DELETE, OPTIONS');
+    assert.equal(preflight.headers['access-control-allow-headers'], 'Content-Type');
+    assert.deepEqual(calls, []);
+
+    const disallowed = await requestJson({
+      port: started.port,
+      path: '/api/capture/sources',
+      headers: { Origin: 'https://evil.example.com' },
+    });
+    assert.equal(disallowed.statusCode, 200);
+    assert.equal(disallowed.headers['access-control-allow-origin'], undefined);
+    assert.equal(disallowed.headers.vary, 'Origin');
+    assert.deepEqual(disallowed.parsed, {
+      sources: [
+        { kind: 'monitor', id: 'monitor:primary', label: 'Display 1' },
+      ],
+    });
+    assert.deepEqual(calls, [['enumerateCaptureSources']]);
+  } finally {
+    await api.stop();
+  }
+});
+
 test('profile API lists and creates profiles through the injected repository', async () => {
   const calls = [];
   const createdProfile = makeApiProfile({ id: 'profile_created', name: 'Created Profile' });
