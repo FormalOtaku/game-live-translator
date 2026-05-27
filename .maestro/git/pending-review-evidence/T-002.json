@@ -1,0 +1,35 @@
+{
+  "schema_version": "maestro.pending-review-evidence.v1",
+  "task_id": "T-002",
+  "evidence": [
+    "agent-pass claude review completed; scope=full_diff; status=findings; artifact=.maestro/agent-pass/T-002/claude/review/review.json; receive=.maestro/agent-pass/T-002/claude/review/receive-report.json",
+    "review.json; reviewed_files=12; findings=9; must_fix=1",
+    "unresolved P1/P2=0; must_fix=1",
+    "agent-pass review limitation: Whether a single cloud translation provider is pre-selected for v1, or whether provider choice is deferred to a later slice (affects F-008 and the API error-code mapping).",
+    "agent-pass review limitation: Whether telemetry will be in v1 at all (affects F-005 and the Privacy Settings screen contract).",
+    "agent-pass review limitation: Whether users can create/delete overlay themes in v1 or only edit built-ins (affects F-006 and any theme CRUD tests).",
+    "agent-pass claude review completed; scope=full_diff; status=clean; artifact=.maestro/agent-pass/T-002-review2/claude/review/review.json; receive=.maestro/agent-pass/T-002-review2/claude/review/receive-report.json",
+    "review.json; reviewed_files=13; findings=3; must_fix=0",
+    "unresolved P1/P2=0",
+    "full_diff_review=clean"
+  ],
+  "sources": [
+    {
+      "slice_id": "T-002",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-002/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-002/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T12:27:44.840Z"
+    },
+    {
+      "slice_id": "T-002-review2",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-002-review2/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-002-review2/claude/review/receive-report.json",
+      "recorded_at": "2026-05-27T12:33:28.926Z"
+    }
+  ],
+  "updated_at": "2026-05-27T12:33:28.926Z"
+}

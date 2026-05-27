@@ -3,13 +3,13 @@
   "source_of_truth": "structured",
   "migrated_at": "2026-05-27T11:43:37.252Z",
   "source_path": "TASKS.md",
-  "source_sha256": "6a2ac7b65eada8a585b502d55d571a330cd941f629940fb0bbe4dc7bd1986a7b",
+  "source_sha256": "1ff4e55d37090cb5bc0a501f31ebd3c28d9369e0819c9d234bf424500753abfc",
   "task_count": 4,
   "counts": {
-    "todo": 3,
+    "todo": 2,
     "doing": 0,
     "blocked": 0,
-    "done": 1
+    "done": 2
   },
   "tasks": [
     {
@@ -22,9 +22,9 @@
     {
       "id": "T-002",
       "title": "Align PRODUCT/UI/API specs with kickoff scope",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
-      "notes": ""
+      "notes": "PRODUCT/UI/API specs aligned; Claude sidecar re-review clean with unresolved P1/P2=0 and must_fix=0; npm test/build/lint passed"
     },
     {
       "id": "T-003",

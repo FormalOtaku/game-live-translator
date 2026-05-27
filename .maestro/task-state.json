@@ -3,5 +3,5 @@
   "queue_policy": "forward_only",
   "kickoff_task_id": "T-002",
   "active_task_id": null,
-  "updated_at": "2026-05-27T12:09:00+09:00"
+  "updated_at": "2026-05-27T12:34:00+09:00"
 }

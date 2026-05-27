@@ -1,46 +1,144 @@
 # PRODUCT_SPEC
 
 ## Product Overview
-- name: Game_Live_Translator
-- type: node
-- owner:
-- status: draft
+- name: Game Live Translator
+- type: desktop streaming utility
+- delivery shape: Electron + React + TypeScript desktop app with Python 3.11 FastAPI sidecar
+- owner: codex
+- status: v1 core scope aligned from kickoff docs
 
 ## Goal
-- Primary problem:
-- Success metric:
+- Primary problem: Japanese-only games are difficult to stream to English-speaking audiences because viewers cannot follow story, dialog, choices, or tutorials from the game screen.
+- Product promise: read only visible Japanese text from the user's screen, translate it to English, and render stream-ready subtitles in OBS Studio without modifying the game.
+- Success metric: a first-time Windows 10/11 OBS user can complete setup, add the Browser Source URL, select an OCR region, and see an English subtitle from a Japanese test scene within 5 minutes.
 
-## Quality Bar
-- Target outcome: production-grade v1 for the selected scope, not a throwaway MVP.
-- Scope rule: narrow feature breadth when needed, but keep reliability, error handling, UX states, accessibility basics, and regression coverage complete for included flows.
-- Release posture: user-facing behavior should be explainable, testable, and operable without hidden manual steps.
+## Scope
+### In Scope For v1 Core
+- Windows 10/11 desktop app.
+- OBS Studio Browser Source overlay served from localhost.
+- Japanese horizontal OCR to English subtitles.
+- Capture source selection and one rectangular ROI per active profile.
+- OCR preprocessing presets for common game text styles.
+- Translation provider adapter architecture with user-supplied API keys.
+- DeepL as the v1 baseline cloud provider adapter plus a deterministic local `echo` debug provider for tests.
+- Game-specific profiles for capture ROI, OCR preset, translation provider selection, overlay theme, and glossary.
+- Overlay theme editor with live preview and 1-3 line subtitle modes.
+- Translation cache and duplicate OCR suppression to reduce API cost and flicker.
+- Privacy-first defaults, diagnostics, and recoverable error states.
+- GitHub Releases distribution target: Windows installer and portable ZIP.
+
+### Out Of Scope For v1 Core
+- Game modification, memory reading, process injection, DRM bypass, ROM/ISO/game-file parsing, or asset extraction.
+- Distribution of game scripts, translated scripts, game screenshots, or game text corpora.
+- Claiming official localization quality or publisher endorsement.
+- macOS/Linux production packaging.
+- Guaranteed vertical Japanese OCR.
+- Full offline machine translation.
+- OBS WebSocket automatic source creation; manual Browser Source setup is the supported path.
+- Community preset marketplace, cloud sync, chat integration, TTS, and SRT/VTT export.
+- Telemetry or analytics collection.
 
 ## Users
-- Persona 1:
-- Persona 2:
+- Primary persona: streamer using Windows + OBS who plays Japanese-only retro games, JRPGs, ADV, visual novels, indie, or doujin games for an English-speaking audience.
+- Secondary persona: bilingual VTuber or curator who wants better subtitle presentation, glossary control, and clear privacy boundaries.
+- Contributor persona: OSS maintainer who needs explicit contracts for OCR, translation, overlay, storage, privacy, and test fixtures.
+
+## Product Principles
+- OBS-first: the primary output is an OBS Browser Source, not a generic translation window.
+- No game modification: the app only reads visible pixels from user-selected screen regions.
+- Privacy-first: OCR images, OCR full text, and translated full text are not persisted by default.
+- User-owned provider keys: users bring their own translation API keys; keys are never logged, exported, or stored in plaintext files.
+- Stream-ready UX: latency, readability, duplicate suppression, recovery, and diagnostics matter as much as OCR accuracy.
+- Core open source: core features remain open source; monetization must focus on donations, support, setup help, or custom themes.
 
 ## Functional Requirements
-- FR-001:
-- FR-002:
-- FR-003:
+### FR-001 Capture And ROI
+- The user can select a screen or window capture source.
+- The user can draw and save one rectangular OCR ROI per profile.
+- The active ROI is previewed before capture starts.
+- Capture frequency is profile-configurable as 0, 1, 2, 3, or 4 Hz; `0` means manual-only capture for setup/testing.
+- Capture failures are shown as recoverable errors and do not crash the app.
+
+### FR-002 OCR Pipeline
+- The default OCR path recognizes Japanese horizontal text from the active ROI.
+- OCR preprocessing presets include at least: `default_dialogue`, `pixel_font_dark_bg`, `pixel_font_light_bg`, `high_contrast`, `adv_textbox`, and `menu_text`.
+- OCR output includes raw text, normalized text, confidence, source profile id, and timing.
+- Low-confidence, empty, or noise-like OCR results are filtered before translation.
+- Duplicate suppression prevents repeated translations of the same normalized text.
+
+### FR-003 Translation Pipeline
+- Translation is Japanese to English for v1.
+- Translation providers are accessed through a common adapter interface; DeepL is the v1 baseline cloud adapter and `echo` is the local deterministic debug adapter.
+- Provider API keys are stored only through OS secure storage.
+- Missing, invalid, rate-limited, quota-exceeded, and network-failed provider states have distinct user-facing errors.
+- Translation cache keys include provider, normalized source text hash, target language, and glossary revision.
+- Per-profile glossary terms stabilize proper nouns and game terms.
+
+### FR-004 OBS Overlay
+- The backend serves `GET /overlay` from `http://127.0.0.1:<port>/overlay`.
+- The overlay has a transparent background and renders subtitles suitable for OBS Browser Source.
+- Subtitle updates arrive through a local WebSocket or equivalent stream.
+- Incoming subtitle text is escaped and rendered as text, never interpreted as HTML.
+- The overlay reconnects automatically and restores the latest subtitle state after reconnect.
+
+### FR-005 Profiles And Themes
+- Users can create, rename, duplicate, delete, import, export, and activate profiles.
+- Profile exports include ROI, OCR preset, provider id, target language, theme, glossary, and capture settings.
+- Profile exports never include API keys, OCR text, translated text, images, or logs.
+- Users can edit font family, size, weight, colors, stroke, shadow, background box, line height, max width, position, fade, and visible line count.
+- Built-in themes include at least `classic_subtitle`, `stream_box`, and `minimal`.
+- Built-in themes are read-only templates; users save edits as custom themes that can be renamed, duplicated, updated, deleted, imported, and exported.
+
+### FR-006 First-Run And Diagnostics
+- First-run setup covers privacy explanation, provider choice, key entry, OBS URL copy, capture source, ROI draw, test OCR, and test translation.
+- Home/Status shows backend health, active profile, port, overlay URL, capture state, last OCR status, last translation status, provider, and overlay client connection count.
+- Logs/Diagnostics shows redacted operational logs and can produce a redacted diagnostic bundle.
+- Backend sidecar crashes and port conflicts are recoverable through UI actions.
 
 ## Non-Functional Requirements
-- Performance:
-- Reliability:
-- Security:
-- Accessibility:
-- Observability:
+- Performance: typical 1-3 line dialog reaches the overlay within 1.5-2.0 seconds p50 on a reference Windows machine when the provider is healthy; cache hits should be faster.
+- Reliability: a synthetic 30-minute streaming session completes without unrecovered app, backend, OCR, translation, or overlay failure.
+- Security: the server binds only to `127.0.0.1`; CORS is minimal; subtitle payloads are escaped; profile import validates schema; arbitrary filesystem paths are not accepted through APIs.
+- Privacy: default settings persist no OCR images, no OCR full text, and no translated full text; debug persistence requires explicit opt-in and visible warnings.
+- Accessibility: all desktop UI controls are keyboard reachable, focus is visible, and UI color contrast meets WCAG AA for body text.
+- Observability: logs include component, event, severity, timestamps, durations, and error codes, but never secrets or full game text by default.
+
+## Data Requirements
+- SQLite stores profiles, profile settings, glossary terms, translation cache, overlay themes, and app metadata.
+- SQLite must not store provider API keys.
+- `app_meta.schema_version` tracks migrations.
+- Debug persistence, if implemented, is gated by explicit privacy settings and stored separately from normal operational data.
+
+## API Impact
+- v1 introduces a localhost-only internal API between Electron UI, Python sidecar, and OBS overlay.
+- Stable contracts are defined in `API_SPEC.md` and include REST status/config/profile operations plus WebSocket app and overlay streams.
+- Error responses use a canonical envelope and retryability classification.
+
+## UI Impact
+- v1 introduces desktop screens documented in `UI_SPEC.md`: First-Run Wizard, Home/Status, Capture Setup, OCR Preview, Translation Settings, Glossary, Overlay Theme Editor, OBS Setup Guide, Profiles, Privacy Settings, Logs/Diagnostics, and About/Support.
+- The OBS overlay is a separate minimal HTML surface, optimized for transparency and legibility rather than app navigation.
 
 ## Acceptance Criteria
-- [ ] Main user flow is executable end-to-end
-- [ ] API/UI behavior matches this spec
-- [ ] Regression tests cover core flows
-- [ ] Error/empty/loading/recovery states are defined for user-facing flows
-- [ ] Operational evidence exists: tests, build/lint where configured, review evidence, and runbook notes
+- [ ] First-run setup can produce a visible English subtitle in OBS from a synthetic Japanese test scene within 5 minutes.
+- [ ] OCR, translation, cache, glossary, duplicate suppression, and overlay update work end-to-end with deterministic fixtures.
+- [ ] API keys do not appear in SQLite, exported profiles, logs, diagnostics bundles, or error messages.
+- [ ] Default settings create no OCR image files, OCR full-text logs, or translation full-text logs.
+- [ ] The local server refuses non-localhost bind configuration.
+- [ ] Overlay escaping is verified with malicious OCR payload fixtures.
+- [ ] Capture, translation, overlay reconnect, backend restart, and port conflict have recoverable UI states.
+- [ ] 1280x720, 1920x1080, and 2560x1440 overlay layouts do not clip or overlap subtitle text.
+- [ ] `npm test`, `npm run build`, `npm run lint`, and Claude sidecar review evidence pass for each completed slice.
+
+## Regression Test Strategy
+- Unit: OCR normalization, confidence filtering, duplicate suppression, glossary replacement, translation cache keying, profile schema validation, redaction, HTML escaping.
+- Backend integration: localhost bind, health/status, capture start/stop, OCR test, translation test, profile CRUD/import/export, privacy settings, diagnostics bundle, WebSocket streams.
+- UI: first-run happy path, missing key error, provider failure, ROI save, profile CRUD, theme editing, privacy warnings, keyboard traversal.
+- Overlay: frame rendering, reconnect, line count limits, transparent background, escaping, responsive safe area at required OBS resolutions.
+- Manual release: 30-minute synthetic stream, OBS Browser Source setup, Windows installer and portable ZIP smoke tests.
 
 ## Product Mode Priorities
-- 選択したスコープはMVPではなくproduction-grade v1として完成させる
-- 保守性・信頼性・運用性を優先
-- エラー状態・空状態・回復導線・テスト・運用証跡を初期実装から含める
-- 仕様変更時の後方互換性を考慮
-
+- 選択したスコープはMVPではなくproduction-grade v1として完成させる。
+- 保守性・信頼性・運用性を優先する。
+- エラー状態・空状態・回復導線・テスト・運用証跡を初期実装から含める。
+- 仕様変更時の後方互換性を考慮する。
+- プライバシーと権利リスク低減を機能要件と同等に扱う。

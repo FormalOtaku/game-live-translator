@@ -45,24 +45,24 @@
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-001
-- current_slice_id: T-001
-- current_slice_goal: Bootstrap project workflow
+- current_slice_prefix: T-002
+- current_slice_id: T-002
+- current_slice_goal: Align PRODUCT/UI/API specs with kickoff scope
 - current_slice_status: done
-- completed_slices: 1
-- total_slices: 1
-- progress_pct: 100
-- next_slice_id: T-002
-- next_slice_goal: Align PRODUCT/UI/API specs with kickoff scope
-- last_checkpoint: 2026-05-27T12:07:44+09:00
+- completed_slices: 2
+- total_slices: 4
+- progress_pct: 50
+- next_slice_id: T-003
+- next_slice_goal: Add/maintain regression tests first
+- last_checkpoint: 2026-05-27T12:33:28+09:00
 ## Session Flow
 - current_session_role: 
 - recommended_next_session_role: spec
 - checkpoint_status: ok
-- checkpoint_reason: T-001 bootstrap verified with clean Claude sidecar review and passing npm test/build/lint.
-- last_completed_slice: T-001
-- handoff_summary: Repository remote, kickoff docs, ignore rules, and Maestro/Claude review path are ready for product spec alignment.
-- next_action: start T-002 spec alignment slice
-- updated_at: 2026-05-27T12:09:00+09:00
+- checkpoint_reason: T-002 spec alignment verified with passing tests/build/lint and clean Claude sidecar re-review.
+- last_completed_slice: T-002
+- handoff_summary: Authoritative v1 core specs now define scope, UI states, API contracts, DB impact, privacy/security invariants, DeepL baseline provider, theme/glossary APIs, and regression test strategy.
+- next_action: start T-003 regression tests for localhost bind, secret redaction, profile export safety, overlay escaping, and API contract validation
+- updated_at: 2026-05-27T12:34:00+09:00
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.
