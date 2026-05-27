@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-007
-- current_slice_id: T-007-002
-- current_slice_goal: SQLite schema and repository boundary
+- current_slice_id: T-007-003
+- current_slice_goal: Profile CRUD active profile and safe export API
 - current_slice_status: doing
-- completed_slices: 1
+- completed_slices: 2
 - total_slices: 6
-- progress_pct: 17
-- next_slice_id: T-007-003
-- next_slice_goal: Profile CRUD active profile and safe export API
-- last_checkpoint: 2026-05-27T19:20:40.519Z
+- progress_pct: 33
+- next_slice_id: T-007-004
+- next_slice_goal: Theme and glossary API contracts
+- last_checkpoint: 2026-05-27T19:47:15.777Z
 ## Session Flow
 - current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: none
 - checkpoint_reason: T-007 parent still in progress; no major checkpoint required until parent closeout.
-- last_completed_slice: T-007-001
-- handoff_summary: T-007-001 complete: profile/settings validation boundary added for ProfileCreateRequest, ProfileUpdateRequest, ProfileExport, PrivacySettings, and ProviderKey write requests. Local and Docker npm test/build/lint pass with 160 tests; git diff --check pass; Claude T-007-001-r2 module review clean with must_fix=0 and unresolved P1/P2=0. T-007-002 is active next for SQLite schema and repository boundary.
-- next_action: continue T-007-002
-- updated_at: 2026-05-27T19:20:40.517Z
+- last_completed_slice: T-007-002
+- handoff_summary: T-007-002 complete: SQLite schema_version=1 configuration repository boundary added with injected exec/run adapter, guarded schema_version seed, transactional default seeds, profile/privacy validator-before-write persistence, provider-key exclusion, and 15 focused storage tests. Local and Docker npm test/build/lint pass with 175 tests; git diff --check pass; Claude T-007-002-r2 module review clean with findings=0, must_fix=0, unresolved P1/P2=0. T-007-003 is active next for profile CRUD active profile and safe export API.
+- next_action: continue T-007-003
+- updated_at: 2026-05-27T19:47:15.775Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

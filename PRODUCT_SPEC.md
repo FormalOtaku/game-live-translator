@@ -109,6 +109,7 @@
 - SQLite must not store provider API keys.
 - `app_meta.schema_version` tracks migrations.
 - Debug persistence, if implemented, is gated by explicit privacy settings and stored separately from normal operational data.
+- T-007-002 locks `schema_version=1` as an executable SQLite SQL/repository boundary. The schema stores profile configuration, glossary terms, built-in/custom overlay theme metadata, privacy settings, app metadata, and translation-cache metadata only; provider keys remain OS-secure-storage-only and raw OCR text, translated text, images, screenshots, and logs are not normal SQLite payloads.
 
 ## API Impact
 - v1 introduces a localhost-only internal API between Electron UI, Python sidecar, and OBS overlay.
@@ -119,6 +120,7 @@
 - T-006-004 adds the executable `/ws/app` app status stream: Electron Home/Status clients receive a sanitized `AppStatus` snapshot on connect and a fresh sanitized snapshot whenever runtime status (capture/OCR/translation) or overlay state (latest subtitle, overlay client count) changes, without exposing provider keys, raw OCR/source text, stack traces, or other debug payloads. Provider `ContractError` codes are mapped into `RuntimeStatus.state/code/message/retryable` and `ApiError.retryable` without parsing message text.
 - T-006-005 adds `npm run smoke:server` as a parent-closeout smoke for the localhost API/OBS overlay server core, covering live HTTP, AppStatus WebSocket, overlay WebSocket replay/broadcast, and privacy invariants.
 - T-007-001 adds the executable profile/settings contract validation boundary in `src/contracts/validation.js` and `src/contracts/security.js`. `ProfileCreateRequest`, `ProfileUpdateRequest`, `ProfileExport`, `PrivacySettings`, and `ProviderKey` write requests must pass this validator before SQLite persistence and HTTP route handlers run. `DEFAULT_PRIVACY_SETTINGS` is the privacy-first seed used by the first-run wizard and the persistence layer.
+- T-007-002 adds the executable configuration repository boundary in `src/storage/sqlite-config-store.js`. It consumes the T-007-001 validators before writes, seeds `DEFAULT_PRIVACY_SETTINGS`, seeds built-in overlay themes, and exposes dependency-injected SQLite adapter calls so the future Python FastAPI sidecar can preserve the same table/parameter contract.
 
 ## UI Impact
 - v1 introduces desktop screens documented in `UI_SPEC.md`: First-Run Wizard, Home/Status, Capture Setup, OCR Preview, Translation Settings, Glossary, Overlay Theme Editor, OBS Setup Guide, Profiles, Privacy Settings, Logs/Diagnostics, and About/Support.
@@ -137,7 +139,7 @@
 - [ ] `npm test`, `npm run build`, `npm run lint`, and Claude sidecar review evidence pass for each completed slice.
 
 ## Regression Test Strategy
-- Unit: OCR normalization, confidence filtering, duplicate suppression, glossary replacement, translation cache keying, profile schema validation, redaction, HTML escaping.
+- Unit: OCR normalization, confidence filtering, duplicate suppression, glossary replacement, translation cache keying, profile schema validation, SQLite configuration repository contract, redaction, HTML escaping.
 - Backend integration: localhost bind, health/status, capture start/stop, OCR test, translation test, profile CRUD/import/export, privacy settings, diagnostics bundle, WebSocket streams.
 - UI: first-run happy path, missing key error, provider failure, ROI save, profile CRUD, theme editing, privacy warnings, keyboard traversal.
 - Overlay: frame rendering, reconnect, line count limits, transparent background, escaping, responsive safe area at required OBS resolutions.

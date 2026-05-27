@@ -506,6 +506,29 @@ type DiagnosticBundle = {
 - Translation cache may be cleared without losing profile configuration.
 - Provider API keys are write-only through API; there is no endpoint that reads back a key value.
 - Diagnostics bundles are generated on demand and redacted before return.
+- T-007-002 defines the dependency-free SQLite repository boundary that profile/configuration routes must use before the production FastAPI storage adapter lands. The repository accepts an injected SQLite-like adapter with `exec(sql)` and `run(sql, params)` and is responsible for applying schema version 1, seeding defaults, and validating request envelopes before writes.
+
+### T-007-002 SQLite Configuration Repository Boundary
+- `src/storage/sqlite-config-store.js` exposes:
+  - `SQLITE_SCHEMA_VERSION = 1`
+  - `SQLITE_SCHEMA_STATEMENTS`
+  - `getSqliteSchemaSql()`
+  - `getBuiltInThemeSeedRows()`
+  - `createSqliteConfigRepository({ database, clock?, idFactory? })`
+- The schema version 1 tables are:
+  - `app_meta`: app metadata, including `schema_version = "1"`.
+  - `profiles`: profile identity, name, optional game title, and timestamps.
+  - `profile_settings`: one row per profile for capture source JSON, ROI JSON, OCR preset, OCR confidence floor, capture Hz, translation provider id, target language, overlay theme id, and glossary revision.
+  - `glossary_terms`: per-profile source/target terms and optional notes.
+  - `overlay_themes`: built-in/custom theme records with CSS/token JSON and a `built_in` guard.
+  - `privacy_settings`: singleton row seeded from `DEFAULT_PRIVACY_SETTINGS`.
+  - `translation_cache`: metadata-only cache rows keyed by provider, target language, source text hash, glossary revision, and cache key.
+- `initialize()` executes all schema statements, upserts `app_meta.schema_version = "1"`, inserts the singleton default privacy row with `ON CONFLICT DO NOTHING`, and inserts the built-in theme rows with `ON CONFLICT DO NOTHING` so existing user settings are not overwritten.
+- `initialize()` must not silently downgrade or overwrite a non-`1` `schema_version`. The SQL upsert is guarded against mismatched existing values, and adapters that expose `changes=0` surface `DB_SCHEMA_INCOMPATIBLE`.
+- `createProfile(ProfileCreateRequest)` must call `assertProfileCreateRequest` and compute glossary revision before any SQLite write. It writes `profiles`, `profile_settings`, and `glossary_terms`, then returns a `Profile` object with `id`, `createdAt`, and `updatedAt`.
+- `savePrivacySettings(PrivacySettings)` must call `assertPrivacySettings` before any SQLite write and persists boolean values as `0`/`1`.
+- Provider API key writes are intentionally out of scope for this repository. There is no `saveProviderKey`/read-key method because `PUT /api/keys/{provider}` must use OS secure storage and return only `{ ok: true }`.
+- Privacy invariant: schema statements and repository write parameters must not introduce provider API keys, raw OCR text/source text, translated text, image/screenshot blobs, log payloads, stack traces, or diagnostic bundles. The only source-text-like field in normal SQLite is `source_text_hash`.
 
 ## Versioning
 - Strategy: v1 local API is versioned by app release and `app_meta.schema_version`.

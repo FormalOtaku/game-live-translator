@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T19:20:40.520Z",
+  "migrated_at": "2026-05-27T19:47:15.778Z",
   "source_path": "STATE.md",
-  "source_sha256": "428acb44213cacf23b6cb972309c25353fd0211f5cc5eb56a871c70cbe9f5350",
+  "source_sha256": "93b3ec096069185a6a65077909ced9e244387d521c6f0a150b2dab69db31f35d",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
     "current_slice_prefix": "T-007",
-    "current_slice_id": "T-007-002",
-    "current_slice_goal": "SQLite schema and repository boundary",
+    "current_slice_id": "T-007-003",
+    "current_slice_goal": "Profile CRUD active profile and safe export API",
     "current_slice_status": "doing",
-    "completed_slices": 1,
+    "completed_slices": 2,
     "total_slices": 6,
-    "progress_pct": 17,
-    "next_slice_id": "T-007-003",
-    "next_slice_goal": "Profile CRUD active profile and safe export API",
-    "last_checkpoint": "2026-05-27T19:20:40.519Z",
+    "progress_pct": 33,
+    "next_slice_id": "T-007-004",
+    "next_slice_goal": "Theme and glossary API contracts",
+    "last_checkpoint": "2026-05-27T19:47:15.777Z",
     "done": [],
     "doing": [],
     "todo": []

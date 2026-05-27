@@ -1,9 +1,10 @@
 # MIGRATION_PLAN
 
 ## Current Baseline
-- Runtime schema version: not implemented yet.
-- Planned first schema: `app_meta.schema_version = 1`.
+- Runtime schema version: `1` at the executable SQL/repository boundary.
+- First schema seed: `app_meta.schema_version = 1`.
 - v1 persistence target: SQLite in the user's app data directory.
+- Current implementation note: T-007-002 defines schema SQL and repository adapter calls without binding to a concrete Node SQLite driver. The production Python FastAPI sidecar must preserve the same schema/parameter contract when it owns the real SQLite connection.
 
 ## Trigger
 - What change requires migration: any change after schema implementation that alters profile, settings, glossary, translation cache, overlay theme, app metadata, profile export, or API contract compatibility.
@@ -18,9 +19,19 @@
 1. `profiles`: profile identity, display name, optional game title, timestamps.
 2. `profile_settings`: capture source, ROI JSON, OCR preset, provider id, target language, theme id, capture frequency, confidence floor.
 3. `glossary_terms`: per-profile source term, target term, note.
-4. `translation_cache`: provider/source hash/glossary revision cache entries.
+4. `translation_cache`: provider/source hash/glossary revision metadata entries; no raw source text or translated text payloads in the default schema.
 5. `overlay_themes`: theme display name and CSS/token JSON.
-6. `app_meta`: schema version and feature flags.
+6. `privacy_settings`: singleton privacy settings row seeded from `DEFAULT_PRIVACY_SETTINGS`.
+7. `app_meta`: schema version and feature flags.
+
+## Schema Version 1 Boundary
+- `src/storage/sqlite-config-store.js` is the executable schema/repository contract for T-007. It accepts an injected SQLite-like adapter and does not add a Node SQLite dependency.
+- Fresh databases run all schema statements, set `app_meta.schema_version` to `"1"`, insert built-in overlay themes, and insert the default privacy settings row without overwriting later user changes.
+- Initialization must not overwrite a non-`1` `app_meta.schema_version`; future migrations own forward movement from version 1.
+- `privacy_settings` is a singleton row with `id = 1`; profile/configuration tables persist ISO timestamp columns so update ordering and migration audits remain observable.
+- Profile writes validate `ProfileCreateRequest` and compute glossary revision before any SQL write, then persist `profiles`, `profile_settings`, and `glossary_terms`.
+- Privacy settings writes validate `PrivacySettings` before any SQL write and store booleans as integer `0`/`1`.
+- Provider API keys are excluded from all SQLite schema and repository methods. Key migrations must remain an OS secure storage concern.
 
 ## No-Migration Runtime Slices
 - 2026-05-28 T-005-005: OCR-to-overlay runtime pipeline is in-memory only. It introduces no SQLite tables, no profile export schema changes, no cache persistence, and no key storage movement. Future persistence slices must decide explicitly which sanitized pipeline fields, if any, are durable.

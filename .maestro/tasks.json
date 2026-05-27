@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T19:20:40.520Z",
+  "migrated_at": "2026-05-27T19:46:12.474Z",
   "source_path": "TASKS.md",
-  "source_sha256": "217e5005243491434a09bd3ace6a1acf03b2b10f42cb15955c6af6274d0fd8b2",
+  "source_sha256": "11beff6cc8cfd515b29a407eb2a065f694aa30c303838b248442fb4738786fac",
   "task_count": 23,
   "counts": {
-    "todo": 5,
+    "todo": 4,
     "doing": 1,
     "blocked": 0,
-    "done": 17
+    "done": 18
   },
   "tasks": [
     {
@@ -141,14 +141,14 @@
     {
       "id": "T-007-002",
       "title": "SQLite schema and repository boundary",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "Next active slice: implement the schema_version=1 SQLite/repository boundary that consumes T-007-001 validators before persistence writes, seeds DEFAULT_PRIVACY_SETTINGS, and keeps provider keys outside SQLite."
+      "notes": "Added dependency-free SQLite schema_version=1 configuration repository boundary with injected exec/run adapter, guarded schema_version seeding, transactional DEFAULT_PRIVACY_SETTINGS and built-in theme seeds, validator-before-write profile/privacy persistence, duplicate glossary-id rejection, provider-key exclusion, and 15 focused storage tests; local and Docker npm test/build/lint pass with 175 tests; git diff --check pass; Claude T-007-002-r2 module review clean with findings=0, must_fix=0, unresolved P1/P2=0."
     },
     {
       "id": "T-007-003",
       "title": "Profile CRUD active profile and safe export API",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-007. Keep exactly one child doing. Each slice must update specs first, then implementation/tests/docs, run npm test/build/lint, and attempt Claude sidecar review evidence before completion."
     },
