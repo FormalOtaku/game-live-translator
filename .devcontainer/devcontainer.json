@@ -1,0 +1,30 @@
+{
+  "name": "Game_Live_Translator devcontainer",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "args": {
+      "APT_PACKAGES": "git curl ca-certificates"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": ["formalotaku.maestro-vscode-extension"]
+    }
+  },
+  "remoteEnv": {
+    "PATH": "/workspace/.maestro/tools/bin:/workspace/.maestro/tools/node_modules/.bin:/home/node/.local/bin:/usr/local/share/npm-global/bin:${containerEnv:PATH}",
+    "MAESTRO_BIN": "/home/node/.local/bin/maestro",
+    "MAESTRO_TOOL_ROOT": "/workspace/.maestro/tools",
+    "MAESTRO_AUTH_ROOT": "/workspace/.maestro/auth",
+    "CODEX_HOME": "/workspace/.maestro/auth/codex",
+    "CLAUDE_CONFIG_DIR": "/workspace/.maestro/auth/config/claude"
+  },
+  "postCreateCommand": "bash .devcontainer/bootstrap-maestro.sh && bash .devcontainer/bootstrap-vscode-extension.sh",
+  "postStartCommand": "bash .devcontainer/bootstrap-maestro.sh && bash .devcontainer/bootstrap-vscode-extension.sh",
+  "remoteUser": "node"
+}

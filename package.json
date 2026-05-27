@@ -1,0 +1,10 @@
+{
+  "name": "game_live_translator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "build": "echo build:ok",
+    "lint": "echo lint:ok"
+  }
+}

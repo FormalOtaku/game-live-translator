@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "source_of_truth": "structured",
+  "migrated_at": "2026-05-27T11:43:53.689Z",
+  "source_path": "STATE.md",
+  "source_sha256": "fa55d9f5e0f97c87ea9ca3a74abc5e028e404c646d0cbd50d527ce1f551b55c7",
+  "current_focus": {
+    "milestone": null,
+    "active_task_ids": []
+  },
+  "slice_progress": {
+    "current_slice_prefix": "T-001",
+    "current_slice_id": "T-001",
+    "current_slice_goal": "Bootstrap project workflow",
+    "current_slice_status": "todo",
+    "completed_slices": 0,
+    "total_slices": 1,
+    "progress_pct": 0,
+    "next_slice_id": "T-001",
+    "next_slice_goal": "Bootstrap project workflow",
+    "last_checkpoint": "2026-05-27T11:43:53.688Z",
+    "done": [],
+    "doing": [],
+    "todo": []
+  }
+}

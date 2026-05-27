@@ -1,0 +1,249 @@
+{
+  "project_type": "node",
+  "project_mode": "product",
+  "repo_path": "/home/murasaki01/Projects/Game_Live_Translator",
+  "repo_name": "Game_Live_Translator",
+  "created_at": "2026-05-27T11:43:37.247Z",
+  "assumptions": [
+    "maestro_* tools are available from Codex via MCP",
+    "Codex should execute patch -> apply -> test -> fix -> review by default",
+    "partial=true results are not final-merge decisions"
+  ],
+  "commands": {
+    "build": "npm run build",
+    "test": "npm test",
+    "lint": "npm run lint"
+  },
+  "session_policy": {
+    "surface": "cli_vscode",
+    "automation": "semi_auto",
+    "roles": [
+      "spec",
+      "execution",
+      "supervisor"
+    ],
+    "launch": "generate_and_launch",
+    "checkpoint_gate": "major_only",
+    "context_persistence": "structured_handoff",
+    "slices_per_checkpoint": 3
+  },
+  "session_flow": {
+    "current_session_role": null,
+    "recommended_next_session_role": "spec",
+    "checkpoint_status": "none",
+    "checkpoint_reason": null,
+    "last_completed_slice": null,
+    "handoff_summary": null,
+    "next_action": "start_spec_session",
+    "updated_at": "2026-05-27T11:43:37.247Z"
+  },
+  "ui_design_policy": {
+    "surface_priority": [
+      "cli",
+      "vscode",
+      "desktop"
+    ],
+    "artifact_mode": "cli_first",
+    "require_visual_refs": true,
+    "default_ref_files": [
+      "UI_SPEC.md",
+      "PRODUCT_SPEC.md"
+    ],
+    "checkpoint_gate": "user_facing_change"
+  },
+  "night_run_policy": {
+    "target_runtime_minutes": 480,
+    "minimum_expected_runtime_minutes": 360,
+    "adaptive_cycle_budget": true,
+    "fail_fast_on_rapid_failures": true,
+    "rapid_failure_consecutive_cycles": 4,
+    "rapid_failure_max_cycle_minutes": 5
+  },
+  "git_policy": {
+    "branch_strategy": "branch_per_task",
+    "worktree_strategy": "worktree_per_task",
+    "commit_granularity": "slice",
+    "auto_commit": "checkpoint_only",
+    "allow_direct_push": false,
+    "require_checkpoint_before_push": true,
+    "protected_branches": [
+      "master",
+      "main"
+    ]
+  },
+  "git_safety_mode": {
+    "enabled": true,
+    "agent_handoff": "auto_checkpoint",
+    "resume_guard": "required",
+    "ui_pass_mode": "worktree",
+    "dirty_tree_policy": "block_next_slice",
+    "checkpoint_commit_prefix": "checkpoint",
+    "auto_push_on_checkpoint": false
+  },
+  "github_policy": {
+    "pr_mode": "draft_first",
+    "auto_update_pr_body": true,
+    "required_evidence": [
+      "tests",
+      "review",
+      "screenshots"
+    ],
+    "allow_auto_merge": false
+  },
+  "pr_automation": {
+    "enabled": true,
+    "mode": "draft",
+    "require_test_pass": true,
+    "require_module_review": true,
+    "require_full_diff_on_parent_complete": true,
+    "block_on_unresolved_p1_p2": true,
+    "auto_sync_pr_body": true
+  },
+  "codex_launch_policy": {
+    "preferred_profile": "trusted_auto",
+    "fallback_profile": "workspace_write",
+    "run_preflight_probe": true,
+    "auto_retry_on_permission_denied": 1,
+    "stop_on_permission_denied": true
+  },
+  "control_policy": {
+    "allow_task_mutation": true,
+    "allow_session_launch": true,
+    "allow_night_run_control": true,
+    "allow_checkpoint_updates": true,
+    "allow_handoff_updates": true,
+    "allow_design_packet_actions": true,
+    "allow_git_workflow": false,
+    "allow_github_workflow": false,
+    "allow_repo_code_edits": false,
+    "safe_action_mode": "execute_immediately"
+  },
+  "claude_sidecar_policy": {
+    "external_repo_context_allowed": true,
+    "allowed_operations": [
+      "review",
+      "patch",
+      "fix",
+      "design"
+    ],
+    "granted_at": "2026-05-27T11:43:56.158Z",
+    "permission_mode_by_mode": {
+      "review": "auto",
+      "patch": "auto",
+      "fix": "auto",
+      "design": "auto"
+    },
+    "allowed_tools_by_mode": {
+      "review": [
+        "Read",
+        "Glob",
+        "Grep",
+        "LS",
+        "Bash(pwd)",
+        "Bash(ls)",
+        "Bash(ls *)",
+        "Bash(find *)",
+        "Bash(rg *)",
+        "Bash(sed *)",
+        "Bash(cat *)",
+        "Bash(git diff*)",
+        "Bash(git status*)",
+        "Bash(git log*)",
+        "Bash(git show*)",
+        "Bash(git rev-parse*)",
+        "Bash(npm test*)",
+        "Bash(npm run test*)",
+        "Bash(npm run build*)",
+        "Bash(npm run lint*)",
+        "Bash(npm run check*)",
+        "Bash(node --test*)",
+        "Bash(node src/cli.js --help*)"
+      ],
+      "patch": [
+        "Edit",
+        "MultiEdit",
+        "Write",
+        "Read",
+        "Glob",
+        "Grep",
+        "LS",
+        "Bash(pwd)",
+        "Bash(ls)",
+        "Bash(ls *)",
+        "Bash(find *)",
+        "Bash(rg *)",
+        "Bash(sed *)",
+        "Bash(cat *)",
+        "Bash(git diff*)",
+        "Bash(git status*)",
+        "Bash(git log*)",
+        "Bash(git show*)",
+        "Bash(git rev-parse*)",
+        "Bash(npm test*)",
+        "Bash(npm run test*)",
+        "Bash(npm run build*)",
+        "Bash(npm run lint*)",
+        "Bash(npm run check*)",
+        "Bash(node --test*)",
+        "Bash(node src/cli.js --help*)"
+      ],
+      "fix": [
+        "Edit",
+        "MultiEdit",
+        "Write",
+        "Read",
+        "Glob",
+        "Grep",
+        "LS",
+        "Bash(pwd)",
+        "Bash(ls)",
+        "Bash(ls *)",
+        "Bash(find *)",
+        "Bash(rg *)",
+        "Bash(sed *)",
+        "Bash(cat *)",
+        "Bash(git diff*)",
+        "Bash(git status*)",
+        "Bash(git log*)",
+        "Bash(git show*)",
+        "Bash(git rev-parse*)",
+        "Bash(npm test*)",
+        "Bash(npm run test*)",
+        "Bash(npm run build*)",
+        "Bash(npm run lint*)",
+        "Bash(npm run check*)",
+        "Bash(node --test*)",
+        "Bash(node src/cli.js --help*)"
+      ],
+      "design": [
+        "Edit",
+        "MultiEdit",
+        "Write",
+        "Read",
+        "Glob",
+        "Grep",
+        "LS",
+        "Bash(pwd)",
+        "Bash(ls)",
+        "Bash(ls *)",
+        "Bash(find *)",
+        "Bash(rg *)",
+        "Bash(sed *)",
+        "Bash(cat *)",
+        "Bash(git diff*)",
+        "Bash(git status*)",
+        "Bash(git log*)",
+        "Bash(git show*)",
+        "Bash(git rev-parse*)",
+        "Bash(npm test*)",
+        "Bash(npm run test*)",
+        "Bash(npm run build*)",
+        "Bash(npm run lint*)",
+        "Bash(npm run check*)",
+        "Bash(node --test*)",
+        "Bash(node src/cli.js --help*)"
+      ]
+    },
+    "note": "When true, Maestro may send repository context, diffs, prompts, and logs from this repo to interactive Claude Code sidecar sessions for review/patch/fix/design automation."
+  }
+}

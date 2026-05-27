@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_of_truth": "structured",
+  "migrated_at": "2026-05-27T11:43:37.252Z",
+  "source_path": "TASKS.md",
+  "source_sha256": "998053a5c34479b56cd34f13fb6f83397b7c24b31996c76ed4ff64e5e7cac196",
+  "task_count": 4,
+  "counts": {
+    "todo": 4,
+    "doing": 0,
+    "blocked": 0,
+    "done": 0
+  },
+  "tasks": [
+    {
+      "id": "T-001",
+      "title": "Bootstrap project workflow",
+      "status": "todo",
+      "owner": "codex",
+      "notes": ""
+    },
+    {
+      "id": "T-002",
+      "title": "Align PRODUCT/UI/API specs with kickoff scope",
+      "status": "todo",
+      "owner": "codex",
+      "notes": ""
+    },
+    {
+      "id": "T-003",
+      "title": "Add/maintain regression tests first",
+      "status": "todo",
+      "owner": "codex",
+      "notes": ""
+    },
+    {
+      "id": "T-004",
+      "title": "Stabilize build/test in devcontainer",
+      "status": "todo",
+      "owner": "codex",
+      "notes": ""
+    }
+  ]
+}

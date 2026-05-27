@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:;">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maestro Project Report</title>
+  <style>
+    :root { color-scheme: light; --ink:#17211b; --muted:#66736c; --paper:#f5f0e6; --card:#fffaf0; --line:#d8cbb8; --accent:#0f6b4f; --warn:#b56b18; --done:#3b715f; }
+    body { margin:0; font:16px/1.55 Georgia, "Yu Mincho", "Hiragino Mincho ProN", serif; color:var(--ink); background:radial-gradient(circle at top left,#fff7df 0,#f3efe5 38%,#e8efe9 100%); }
+    main { max-width:1180px; margin:0 auto; padding:40px 22px 64px; }
+    header { display:grid; gap:10px; margin-bottom:28px; }
+    h1 { font-size:clamp(34px,6vw,76px); line-height:.92; margin:0; letter-spacing:-.05em; }
+    h2 { font-size:28px; margin:34px 0 14px; }
+    .meta, .muted { color:var(--muted); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+    .card, .decision { background:color-mix(in srgb, var(--card) 88%, white); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 14px 38px rgba(29,37,31,.08); }
+    .metric { font-size:34px; font-weight:700; display:block; }
+    table { width:100%; border-collapse:collapse; background:rgba(255,250,240,.78); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+    th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { background:#efe2c9; font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
+    .pill { border-radius:999px; padding:3px 9px; font-size:13px; background:#e8dfcf; }
+    .pill.doing { background:#dbece4; color:var(--accent); }
+    .pill.done { background:#d9eadf; color:var(--done); }
+    .pill.blocked { background:#f4ddc2; color:var(--warn); }
+    .decision p { margin-bottom:0; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="meta">Generated from structured Maestro state at 2026-05-27T11:43:53.690Z</p>
+      <h1>Maestro<br>Project Report</h1>
+      <p class="meta">/home/murasaki01/Projects/Game_Live_Translator</p>
+    </header>
+    <section class="grid">
+      <div class="card"><span class="metric">4</span><span class="muted">tasks</span></div>
+      <div class="card"><span class="metric">0</span><span class="muted">doing</span></div>
+      <div class="card"><span class="metric">4</span><span class="muted">todo</span></div>
+      <div class="card"><span class="metric">0</span><span class="muted">done</span></div>
+      <div class="card"><span class="metric">0</span><span class="muted">decisions</span></div>
+    </section>
+    <section>
+      <h2>Current Focus</h2>
+      <div class="card">
+        <p><strong>Milestone:</strong> (none)</p>
+        <p><strong>Current slice:</strong> T-001</p>
+        <p><strong>Goal:</strong> Bootstrap project workflow</p>
+        <p><strong>Progress:</strong> 0%</p>
+      </div>
+    </section>
+    <section>
+      <h2>Tasks</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Owner</th><th>Notes</th></tr></thead>
+        <tbody><tr><td>T-001</td><td>Bootstrap project workflow</td><td><span class="pill todo">todo</span></td><td>codex</td><td></td></tr>
+<tr><td>T-002</td><td>Align PRODUCT/UI/API specs with kickoff scope</td><td><span class="pill todo">todo</span></td><td>codex</td><td></td></tr>
+<tr><td>T-003</td><td>Add/maintain regression tests first</td><td><span class="pill todo">todo</span></td><td>codex</td><td></td></tr>
+<tr><td>T-004</td><td>Stabilize build/test in devcontainer</td><td><span class="pill todo">todo</span></td><td>codex</td><td></td></tr></tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Recent Decisions</h2>
+      <p class="muted">No decisions.</p>
+    </section>
+  </main>
+</body>
+</html>
