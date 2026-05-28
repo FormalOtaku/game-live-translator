@@ -1,26 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T05:04:46.127Z",
+  "migrated_at": "2026-05-28T05:15:25.455Z",
   "source_path": "STATE.md",
-  "source_sha256": "b02be23eff10f075e2e311d7defd871f9eaaeaa11e535f6f2c58e7393b4c9274",
+  "source_sha256": "72062fe422ef6f35928f64526bfc05dbc0a26f11c6f63c893cb69b94d265b8ec",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": [
-      "T-011"
-    ]
+    "active_task_ids": []
   },
   "slice_progress": {
-    "current_slice_prefix": "T-011",
-    "current_slice_id": "T-011-001",
-    "current_slice_goal": "Desktop shell route and state contract",
-    "current_slice_status": "done",
-    "completed_slices": 5,
-    "total_slices": 5,
-    "progress_pct": 100,
+    "current_slice_prefix": null,
+    "current_slice_id": null,
+    "current_slice_goal": null,
+    "current_slice_status": null,
+    "completed_slices": 0,
+    "total_slices": 0,
+    "progress_pct": 0,
     "next_slice_id": null,
     "next_slice_goal": null,
-    "last_checkpoint": "2026-05-28T05:04:46.127Z",
+    "last_checkpoint": "2026-05-28T05:15:25.454Z",
     "done": [],
     "doing": [],
     "todo": []

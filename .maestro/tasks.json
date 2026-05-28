@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T05:03:49.765Z",
+  "migrated_at": "2026-05-28T05:12:40.011Z",
   "source_path": "TASKS.md",
-  "source_sha256": "b692d5d1dd00c308dbbf73af7c7d545a105c1894cb758713aa77e20f98379da1",
+  "source_sha256": "951550647828e6617da255d6a7ddc83ab46b34d6c47e091be204aab5ede19ca7",
   "task_count": 44,
   "counts": {
     "todo": 0,
-    "doing": 1,
+    "doing": 0,
     "blocked": 0,
-    "done": 43
+    "done": 44
   },
   "tasks": [
     {
@@ -281,7 +281,7 @@
     {
       "id": "T-011",
       "title": "Implement desktop app shell and first-run UX core",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
       "notes": "Production-grade v1 desktop UI foundation after T-010 backend/API core. Build Electron/React-ready renderer contracts in small PR slices: shell/navigation, first-run provider/profile flow, home/status recovery, OBS guide/theme preview, diagnostics/privacy UI smoke. Keep exactly one child doing; specs first; tests/build/lint; Claude sidecar evidence before slice completion."
     },

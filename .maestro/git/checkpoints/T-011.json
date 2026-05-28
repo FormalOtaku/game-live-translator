@@ -1,0 +1,31 @@
+{
+  "task_id": "T-011",
+  "branch": "task/T-011-005",
+  "worktree_path": null,
+  "head_sha": "5ded780ef39e91b4f57c0c0c934396a6d7c66b4d",
+  "implementation_head_sha": "5ded780ef39e91b4f57c0c0c934396a6d7c66b4d",
+  "published_branch_head_sha": null,
+  "pr_body_generated_at_sha": null,
+  "commit_subject": "task(T-011): T-011 parent complete: dependency-free renderer contracts for desktop shell, first-run setup, home/status, setup screens, and closeout overlay/privacy/diagnostics surfaces. Verification: npm test 364 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude T-011-full-diff-r1 full-diff review clean with must_fix=0 and unresolved P1/P2=0.",
+  "changed_files": [
+    ".maestro/project.json",
+    ".maestro/state.json",
+    ".maestro/task-state.json",
+    ".maestro/tasks.json",
+    "STATE.md",
+    "TASKS.md"
+  ],
+  "design_packet_id": null,
+  "checkpoint_status": "satisfied",
+  "test_summary": "unknown",
+  "review_evidence": [
+    "agent-pass claude review completed; scope=full_diff; status=clean; artifact=.maestro/agent-pass/T-011-full-diff-r1/claude/review/review.json; receive=.maestro/agent-pass/T-011-full-diff-r1/claude/review/receive-report.json",
+    "review.json; reviewed_files=18; findings=4; must_fix=0",
+    "unresolved P1/P2=0",
+    "full_diff_review=clean"
+  ],
+  "screenshots": [],
+  "design_evidence": null,
+  "committed_at": "2026-05-28T05:13:13.027Z",
+  "published_at": null
+}
