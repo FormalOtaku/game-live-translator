@@ -143,6 +143,7 @@
 - Empty: no logs yet.
 - Error: log file unavailable.
 - Recovery: restart backend, copy minimal diagnostics.
+- Backing API readiness: `npm run smoke:diagnostics` verifies that copy diagnostic bundle works when no provider/log state exists and that provider logs are redacted before the bundle preview can display them.
 
 ### Screen: About / Support
 - Purpose: version, license, links, support/donation, setup restart.

@@ -41,28 +41,28 @@
 
 ## Current Focus
 - milestone:
-- active_task_ids: T-010
+- active_task_ids: (none)
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-010
-- current_slice_id: T-010-003
-- current_slice_goal: Diagnostics smoke runbook and parent closeout
-- current_slice_status: doing
-- completed_slices: 2
-- total_slices: 3
-- progress_pct: 67
-- next_slice_id:
-- next_slice_goal:
-- last_checkpoint: 2026-05-28T01:46:32.788Z
+- current_slice_prefix: (none)
+- current_slice_id: (none)
+- current_slice_goal: (none)
+- current_slice_status: (none)
+- completed_slices: 0
+- total_slices: 0
+- progress_pct: 0
+- next_slice_id: (none)
+- next_slice_goal: (none)
+- last_checkpoint: 2026-05-28T02:09:17.510Z
 ## Session Flow
 - current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-010-002 deterministic local/Docker validation passed and Claude sidecar review evidence imported clean; no human validation required.
-- last_completed_slice: T-010-002
-- handoff_summary: T-010-002 complete: wired GET /api/diagnostics/bundle into createLocalApiServer through optional diagnosticsProvider.collectDiagnostics(), with no-provider minimal bundle, provider metadata defaults, strict provider activeProfileId normalization, buildDiagnosticBundle/assertDiagnosticBundle validation, privacy-safe DIAGNOSTICS_FAILED mapping, method/CORS coverage, and docs/decisions/migration updates. Verification: local node checks, node --test test/local-api-server.test.js 82 pass, npm test 289 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 289 pass and build/lint pass. Claude sidecar T-010-002-r2 module review imported clean with findings=2 P3, must_fix=0, unresolved P1/P2=0.
-- next_action: start_execution_session
-- updated_at: 2026-05-28T01:46:32.786Z
+- checkpoint_reason: T-010 diagnostics API core deterministic local/Docker validation and imported Claude sidecar full-diff review evidence are complete; no human validation required for dependency-free contract smoke.
+- last_completed_slice: T-010-003
+- handoff_summary: T-010 parent complete: diagnostics bundle contract/redaction, GET /api/diagnostics/bundle route, and npm run smoke:diagnostics plus JA runbook are in place. Final slice T-010-003 added scripts/smoke-diagnostics-api.js, test/diagnostics-api-smoke.test.js, DIAGNOSTICS_API_SMOKE_RUNBOOK_JA.md, package script, and spec/decision/migration/runbook updates. Verification local and Docker Node 20 test/build/lint/smoke:diagnostics pass; Claude sidecar T-010-003-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: start_next_parent_or_goal_slice
+- updated_at: 2026-05-28T02:09:17.507Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.
