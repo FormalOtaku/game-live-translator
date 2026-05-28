@@ -1,24 +1,26 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T02:10:01.828Z",
+  "migrated_at": "2026-05-28T02:49:17.053Z",
   "source_path": "STATE.md",
-  "source_sha256": "01f16d295f82898f9702fb12aee28da93d2cc7124d0b12254f9f86402efc314d",
+  "source_sha256": "bfc5c03b1e38d3464685f4e05bbc9f140a37d86d7c5f1edfe5af81b7e77ccc81",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": []
+    "active_task_ids": [
+      "T-011"
+    ]
   },
   "slice_progress": {
-    "current_slice_prefix": null,
-    "current_slice_id": null,
-    "current_slice_goal": null,
-    "current_slice_status": null,
-    "completed_slices": 0,
-    "total_slices": 0,
-    "progress_pct": 0,
-    "next_slice_id": null,
-    "next_slice_goal": null,
-    "last_checkpoint": "2026-05-28T02:09:17.510Z",
+    "current_slice_prefix": "T-011",
+    "current_slice_id": "T-011-002",
+    "current_slice_goal": "First-run provider profile setup flow",
+    "current_slice_status": "todo",
+    "completed_slices": 1,
+    "total_slices": 5,
+    "progress_pct": 20,
+    "next_slice_id": "T-011-002",
+    "next_slice_goal": "First-run provider profile setup flow",
+    "last_checkpoint": "2026-05-28T02:42:43.808Z",
     "done": [],
     "doing": [],
     "todo": []

@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T02:10:01.828Z",
+  "migrated_at": "2026-05-28T02:49:17.053Z",
   "source_path": "TASKS.md",
-  "source_sha256": "6a8e2563f46ac178e67c67186d48a317ae04f2e555ad2aa7f924190dd0c4c271",
-  "task_count": 38,
+  "source_sha256": "163d2688429707be152482de4dd45c70e713a2a4b44b1c53c1cb8a6c22184203",
+  "task_count": 44,
   "counts": {
-    "todo": 0,
-    "doing": 0,
+    "todo": 4,
+    "doing": 1,
     "blocked": 0,
-    "done": 38
+    "done": 39
   },
   "tasks": [
     {
@@ -277,6 +277,48 @@
       "status": "done",
       "owner": "codex",
       "notes": "Added npm run smoke:diagnostics, scripts/smoke-diagnostics-api.js, test/diagnostics-api-smoke.test.js, DIAGNOSTICS_API_SMOKE_RUNBOOK_JA.md, and spec/decision/migration/runbook updates covering /health, no-provider minimal bundles, provider metadata/log redaction, method/CORS no-collection guards, and DIAGNOSTICS_FAILED no-leak failures. Local and Docker Node 20 npm test/build/lint/smoke:diagnostics pass with 290 tests; git diff --check pass; Claude T-010-003-r3 full-diff review clean with findings=3 info, must_fix=0, unresolved P1/P2=0."
+    },
+    {
+      "id": "T-011",
+      "title": "Implement desktop app shell and first-run UX core",
+      "status": "doing",
+      "owner": "codex",
+      "notes": "Production-grade v1 desktop UI foundation after T-010 backend/API core. Build Electron/React-ready renderer contracts in small PR slices: shell/navigation, first-run provider/profile flow, home/status recovery, OBS guide/theme preview, diagnostics/privacy UI smoke. Keep exactly one child doing; specs first; tests/build/lint; Claude sidecar evidence before slice completion."
+    },
+    {
+      "id": "T-011-001",
+      "title": "Desktop shell route and state contract",
+      "status": "done",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-011-002",
+      "title": "First-run provider profile setup flow",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-011-003",
+      "title": "Home status recovery and OBS URL actions",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-011-004",
+      "title": "Capture OCR translation setup screens",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-011-005",
+      "title": "Overlay theme diagnostics privacy UI closeout",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     }
   ]
 }
