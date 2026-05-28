@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T03:31:04.791Z",
+  "migrated_at": "2026-05-28T03:53:48.116Z",
   "source_path": "STATE.md",
-  "source_sha256": "824e79634d2738b0fde4ec2f2b105115d34d8745347bc0fa305d793b1c77650c",
+  "source_sha256": "d4e0375b7b45d23f8a99dc9bfd56af7200bba82c9677e30c40ee9747af180286",
   "current_focus": {
     "milestone": null,
     "active_task_ids": [
@@ -12,15 +12,15 @@
   },
   "slice_progress": {
     "current_slice_prefix": "T-011",
-    "current_slice_id": "T-011-003",
-    "current_slice_goal": "Home status recovery and OBS URL actions",
+    "current_slice_id": "T-011-004",
+    "current_slice_goal": "Capture OCR translation setup screens",
     "current_slice_status": "todo",
-    "completed_slices": 2,
+    "completed_slices": 3,
     "total_slices": 5,
-    "progress_pct": 40,
-    "next_slice_id": "T-011-003",
-    "next_slice_goal": "Home status recovery and OBS URL actions",
-    "last_checkpoint": "2026-05-28T03:30:55.026Z",
+    "progress_pct": 60,
+    "next_slice_id": "T-011-004",
+    "next_slice_goal": "Capture OCR translation setup screens",
+    "last_checkpoint": "2026-05-28T03:53:33.783Z",
     "done": [],
     "doing": [],
     "todo": []

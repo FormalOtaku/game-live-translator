@@ -237,15 +237,22 @@ function isFirstClassRoute(routeId) {
 function normalizeRoute(routeId, options = {}) {
   const setupKnown = hasOwn(options, 'setup');
   const setupComplete = setupKnown ? isSetupComplete(options.setup) : null;
+  const backendRecovery = options.backendRecovery === true;
 
   if (isFirstClassRoute(routeId)) {
     const route = ROUTE_REGISTRY[routeId];
-    if (route.requiresSetup && setupKnown && !setupComplete) {
+    if (
+      route.requiresSetup &&
+      setupKnown &&
+      !setupComplete &&
+      !(backendRecovery && route.id === 'home')
+    ) {
       return ENTRY_ROUTE_WHEN_INCOMPLETE;
     }
     return routeId;
   }
 
+  if (backendRecovery) return ENTRY_ROUTE_WHEN_COMPLETE;
   if (setupKnown && !setupComplete) {
     return ENTRY_ROUTE_WHEN_INCOMPLETE;
   }
@@ -355,11 +362,18 @@ function buildViewModel(input = {}) {
   let resolvedRouteId;
 
   if (input.route === undefined || input.route === null) {
-    resolvedRouteId = setupComplete
-      ? ENTRY_ROUTE_WHEN_COMPLETE
-      : ENTRY_ROUTE_WHEN_INCOMPLETE;
+    if (input.backendRecovery === true) {
+      resolvedRouteId = ENTRY_ROUTE_WHEN_COMPLETE;
+    } else {
+      resolvedRouteId = setupComplete
+        ? ENTRY_ROUTE_WHEN_COMPLETE
+        : ENTRY_ROUTE_WHEN_INCOMPLETE;
+    }
   } else {
-    resolvedRouteId = normalizeRoute(input.route, { setup });
+    resolvedRouteId = normalizeRoute(input.route, {
+      setup,
+      backendRecovery: input.backendRecovery === true,
+    });
   }
 
   const route = ROUTE_REGISTRY[resolvedRouteId] || ROUTE_REGISTRY[FALLBACK_ROUTE_ID];

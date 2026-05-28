@@ -408,3 +408,16 @@
 - Regression tests added first: `test/first-run-flow.test.js` covers frozen step registry, privacy-first defaults, allow-listed/prototype-safe draft updates, echo vs DeepL provider readiness, sequential step availability, ProfileCreateRequest intent validation, write-only provider-key intent redaction, capture/OCR/translation/active-profile API intent paths, progress application without retaining OCR/source/translated text, desktop setup derivation, sanitized error recovery, and code/retryable-only recovery derivation.
 - Migration needed: None.
 - Rollback plan: Remove `src/ui/first-run-flow.js`, `test/first-run-flow.test.js`, and the T-011-002 spec/decision entries. Existing T-011-001 shell contract and prior API route contracts remain unchanged.
+
+### CHG-20260528-032
+- Date: 2026-05-28
+- Summary: Added the dependency-free Home/Status action contract for T-011-003.
+- Reason: The future Electron/React Home screen needs one executable boundary for streamer-ready readiness cards, trusted OBS URL copy, status refresh/stream connection, capture controls, and recovery actions before concrete components are built.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The contract is pure in-process renderer logic and adds no SQLite tables, no profile export schema bump, no key storage movement, no cache persistence, no logs/diagnostics persistence, and no screenshot/image persistence.
+  - API: Adds `src/ui/home-status-actions.js` with HTTP/WebSocket/clipboard/host-command intent descriptors for existing routes and renderer actions only. No server routes are added or changed.
+  - UI: Home/Status gains a frozen view-model boundary for backend, overlay, capture, OCR, translation, last-subtitle, visible copy/action feedback, trusted OBS URL copy availability, `/api/status` refresh, `/ws/app` connection, `POST /api/capture/start`, `POST /api/capture/stop`, and code-driven recovery navigation/host commands.
+- Risk: This remains a renderer contract, not concrete React or Electron host wiring. Future host bindings must keep backend restart, clipboard, WebSocket, and navigation side effects outside this pure module and preserve the localhost overlay trust gate.
+- Regression tests added first: `test/home-status-actions.test.js` covers readiness/card derivation, trusted and untrusted overlay copy behavior, redacted feedback, status refresh and `/ws/app` intents, capture start/stop intent bodies, recovery-action-to-navigation/host-command mapping, no runtime-message parsing, immutable snapshots, and no serialization of provider keys, raw OCR/source text, translated text, stack traces, screenshots, debug payloads, or untrusted URLs.
+- Migration needed: None.
+- Rollback plan: Remove `src/ui/home-status-actions.js`, `test/home-status-actions.test.js`, and the T-011-003 spec/decision entries. Existing T-011-001 shell and T-011-002 First-Run contracts remain unchanged.
