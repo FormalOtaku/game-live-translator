@@ -1,11 +1,11 @@
 {
   "completed_items": [
-    "POST /api/translate/test route,translateTestProvider seam,prepareTranslationInput route boundary,provider result mismatch guard,provider/profile error mapping,privacy-safe route tests,T-009-002 specs and migration note"
+    "T-009-004 translation API smoke runbook,T-009 parent closeout"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-024 translation test endpoint provider seam"
+    "DEC-026 npm run smoke:translation is the required translation API smoke evidence"
   ],
   "open_questions": [],
-  "summary": "T-009-002 complete: POST /api/translate/test is wired through translateTestProvider.runTranslateTest with assertTranslateTestRequest, profile lookup, prepareTranslationInput, TranslationResult validation, provider/profile match enforcement, canonical TranslationResult serialization, provider/profile error mapping, privacy-safe redaction, and method/CORS coverage. Verification passed locally and in Docker: node --check files, node --test test/local-api-server.test.js 75 pass, npm test 276 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-002-r2 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-003 is now doing: translation runtime status broadcast."
+  "summary": "T-009/T-009-004 complete: added repeatable translation API smoke command and JA runbook, locked smoke behavior in child-process regression test, and updated PRODUCT/API/decision/migration/runbook closeout docs. Verification passed: local npm test 280 pass, npm run build/lint pass, npm run smoke:translation pass; Docker npm test 280 pass, Docker build/lint/smoke:translation pass; git diff --check pass. Claude sidecar T-009-004-r2 full-diff review imported clean with must_fix=0 and unresolved P1/P2=0."
 }

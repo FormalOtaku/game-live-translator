@@ -729,6 +729,7 @@ function createLocalApiServer(options = {}) {
   let captureSession = null;
   let captureActiveProfileId = null;
   let captureOperation = Promise.resolve();
+  let translationRuntimeStatus = null;
 
   const server = http.createServer((req, res) => {
     Promise.resolve(handleRequest(req, res)).catch((error) => {
@@ -775,11 +776,11 @@ function createLocalApiServer(options = {}) {
     let backendState = options.backendState;
     let activeProfileId = options.activeProfileId;
     try {
-      runtimeStatus = mergeCaptureRuntimeStatus(valueFromOption(options.runtimeStatus));
+      runtimeStatus = mergeRuntimeStatusOverrides(valueFromOption(options.runtimeStatus));
       backendState = valueFromOption(options.backendState);
       activeProfileId = resolveActiveProfileId(valueFromOption(options.activeProfileId));
     } catch (error) {
-      runtimeStatus = mergeCaptureRuntimeStatus(runtimeStatusSourceFailure(error));
+      runtimeStatus = mergeRuntimeStatusOverrides(runtimeStatusSourceFailure(error));
       backendState = 'error';
       activeProfileId = resolveActiveProfileId(null);
     }
@@ -799,7 +800,7 @@ function createLocalApiServer(options = {}) {
           port: selectedPort,
           bindAddress,
           overlayState,
-          runtimeStatus: mergeCaptureRuntimeStatus(runtimeStatusSourceFailure(error)),
+          runtimeStatus: mergeRuntimeStatusOverrides(runtimeStatusSourceFailure(error)),
           backendState: 'error',
           activeProfileId: resolveActiveProfileId(null),
           clock: options.clock,
@@ -810,13 +811,19 @@ function createLocalApiServer(options = {}) {
     }
   }
 
-  function mergeCaptureRuntimeStatus(runtimeStatus) {
-    if (captureRuntimeStatus === null) return runtimeStatus;
+  function mergeRuntimeStatusOverrides(runtimeStatus) {
+    if (captureRuntimeStatus === null && translationRuntimeStatus === null) {
+      return runtimeStatus;
+    }
     const base = isObject(runtimeStatus) ? runtimeStatus : {};
-    return Object.freeze({
-      ...base,
-      capture: captureRuntimeStatus,
-    });
+    const merged = { ...base };
+    if (captureRuntimeStatus !== null) {
+      merged.capture = captureRuntimeStatus;
+    }
+    if (translationRuntimeStatus !== null) {
+      merged.translation = translationRuntimeStatus;
+    }
+    return Object.freeze(merged);
   }
 
   function resolveActiveProfileId(activeProfileId) {
@@ -859,6 +866,55 @@ function createLocalApiServer(options = {}) {
     setCaptureRuntimeStatus(buildCaptureRuntimeStatus('error', {
       code,
       message: captureRuntimeMessageForCode(code),
+      retryable: providerErrorRetryable(error) || RETRYABLE_API_ERROR_CODES.includes(code),
+    }));
+  }
+
+  function buildTranslationRuntimeStatus(state, statusOptions = {}) {
+    const status = {
+      state,
+      updatedAt: toIsoTimestamp(undefined, options.clock),
+    };
+    if (typeof statusOptions.code === 'string' && statusOptions.code.trim().length > 0) {
+      status.code = statusOptions.code.trim();
+    }
+    if (typeof statusOptions.message === 'string' && statusOptions.message.trim().length > 0) {
+      status.message = redactSecrets(statusOptions.message);
+    }
+    if (typeof statusOptions.retryable === 'boolean') {
+      status.retryable = statusOptions.retryable;
+    }
+    return Object.freeze(status);
+  }
+
+  function setTranslationRuntimeStatus(status) {
+    translationRuntimeStatus = status;
+    if (selectedPort !== null) {
+      appStatusWebSocket.publish();
+    }
+  }
+
+  function setTranslationProviderErrorStatus(error) {
+    setTranslationRuntimeStatus(providerErrorToRuntimeStatus(error, { clock: options.clock }));
+  }
+
+  function translationFallbackMessageForCode(code) {
+    if (code === 'PROFILE_NOT_FOUND') return 'Profile not found';
+    if (code === 'DB_UNAVAILABLE') return 'Profile repository is not available';
+    if (code === 'VALIDATION_ERROR') return 'Translate test request is invalid';
+    if (code === 'PROVIDER_RESPONSE_INVALID') {
+      return PROVIDER_ERROR_SAFE_MESSAGES.PROVIDER_RESPONSE_INVALID;
+    }
+    return 'Translate test failed';
+  }
+
+  function setTranslationFallbackErrorStatus(error) {
+    const code = error instanceof ContractError && typeof error.code === 'string' && error.code.trim().length > 0
+      ? error.code
+      : 'TRANSLATE_TEST_FAILED';
+    setTranslationRuntimeStatus(buildTranslationRuntimeStatus('error', {
+      code,
+      message: translationFallbackMessageForCode(code),
       retryable: providerErrorRetryable(error) || RETRYABLE_API_ERROR_CODES.includes(code),
     }));
   }
@@ -1086,8 +1142,20 @@ function createLocalApiServer(options = {}) {
 
   async function runManualTranslateTest(payload) {
     assertTranslateTestRequest(payload);
-    const repository = getProfileRepository(profileRepository, ['getProfile']);
-    const profile = repository.getProfile(payload.profileId);
+    setTranslationRuntimeStatus(buildTranslationRuntimeStatus('running', {
+      code: 'TRANSLATE_TEST_RUNNING',
+      message: 'Translate test running',
+      retryable: false,
+    }));
+
+    let profile;
+    try {
+      const repository = getProfileRepository(profileRepository, ['getProfile']);
+      profile = repository.getProfile(payload.profileId);
+    } catch (error) {
+      setTranslationFallbackErrorStatus(error);
+      throw error;
+    }
 
     const glossary = isObject(profile) && Array.isArray(profile.glossary)
       ? profile.glossary
@@ -1104,16 +1172,32 @@ function createLocalApiServer(options = {}) {
         targetLang,
       });
     } catch (error) {
-      throw mapTranslateInputPreparationError(error);
+      const mapped = mapTranslateInputPreparationError(error);
+      if (mapped instanceof ContractError &&
+        Object.prototype.hasOwnProperty.call(PROVIDER_ERROR_SAFE_MESSAGES, mapped.code)) {
+        setTranslationProviderErrorStatus(mapped);
+      } else {
+        setTranslationFallbackErrorStatus(mapped);
+      }
+      throw mapped;
     }
 
-    const provider = getTranslateTestProvider(translateTestProvider);
+    let provider;
+    try {
+      provider = getTranslateTestProvider(translateTestProvider);
+    } catch (error) {
+      const mapped = mapTranslateProviderError(error);
+      setTranslationProviderErrorStatus(mapped);
+      throw mapped;
+    }
 
     let result;
     try {
       result = await provider.runTranslateTest({ profile, input });
     } catch (error) {
-      throw mapTranslateProviderError(error);
+      const mapped = mapTranslateProviderError(error);
+      setTranslationProviderErrorStatus(mapped);
+      throw mapped;
     }
 
     try {
@@ -1125,12 +1209,21 @@ function createLocalApiServer(options = {}) {
         Array.isArray(error.details.fieldErrors)
         ? { fieldErrors: error.details.fieldErrors }
         : undefined;
-      throw new ContractError(
+      const wrapped = new ContractError(
         'PROVIDER_RESPONSE_INVALID',
         PROVIDER_ERROR_SAFE_MESSAGES.PROVIDER_RESPONSE_INVALID,
         details,
       );
+      setTranslationFallbackErrorStatus(wrapped);
+      throw wrapped;
     }
+
+    setTranslationRuntimeStatus(buildTranslationRuntimeStatus('ok', {
+      code: 'TRANSLATE_TEST_OK',
+      message: 'Translate test succeeded',
+      retryable: false,
+    }));
+
     return sanitizeTranslationResult(result);
   }
 

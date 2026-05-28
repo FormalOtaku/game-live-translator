@@ -317,3 +317,29 @@
 - Regression tests added first: `test/local-api-server.test.js` adds focused tests for happy-path translation, request validation, profile-lookup error propagation, provider failure mapping (key-missing, rate-limited, network), redaction, invalid provider output, missing provider, method/CORS behavior, and serialization to canonical `TranslationResult` fields.
 - Migration needed: None.
 - Rollback plan: Revert the `/api/translate/test` route, `translateTestProvider` option, status mapping additions, focused tests, and spec/decision entries. The T-009-001 validation boundary remains intact.
+
+### CHG-20260528-025
+- Date: 2026-05-28
+- Summary: Wired T-009-003 translation runtime status broadcast into `createLocalApiServer` so `/api/translate/test` activity is reflected by `GET /api/status` and `/ws/app` without changing the route response shape.
+- Reason: Home/Status, First-Run, and Translation Settings need a live signal for `running`, `ok`, and `error` translate-test transitions, and T-009-002 explicitly deferred the runtime status broadcast while locking the `TranslationResult` response shape and `ApiError` mapping.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The translation runtime status is in-memory only; no supplied text, translated text, glossary entries, cache entries, provider keys, or diagnostics are persisted.
+  - API: Adds an in-memory `translationRuntimeStatus` override inside `createLocalApiServer` alongside the existing capture override, merges it through `buildAppStatus`, and publishes via the existing `appStatusWebSocket`. Valid translate-test attempts publish `running` (`code: "TRANSLATE_TEST_RUNNING"`) before provider work, `ok` (`code: "TRANSLATE_TEST_OK"`) on success, and `error` on provider/input/result/profile failures. Provider-vocabulary errors (provider invocation, input-prep `PROVIDER_UNKNOWN`/`TARGET_LANG_INVALID`, missing-provider) use `providerErrorToRuntimeStatus`; profile/DB/validation/provider-response failures use a redacted fallback whose `retryable` is derived from `providerErrorRetryable`/`RETRYABLE_API_ERROR_CODES`. The `/api/translate/test` response shape and HTTP status mapping are unchanged.
+  - UI: Status surfaces can render live translation transitions without polling `/api/translate/test` and without parsing provider exception text.
+- Risk: Existing clients that already trusted the `translation` field of `AppStatus` now observe `TRANSLATE_TEST_RUNNING`/`TRANSLATE_TEST_OK` codes during test runs. Concrete provider adapters must continue to throw `ContractError` with the documented provider vocabulary so the broadcast classification stays exhaustive. The parent-closeout smoke for `/api/translate/test` remains T-009-004.
+- Regression tests added first: `test/local-api-server.test.js` adds focused tests for `/api/status` and `/ws/app` running→ok broadcast on success, `/api/status` and `/ws/app` running→error broadcast on provider failure with redacted code/message, and a no-status-change assertion for malformed body, `OPTIONS` preflight, and disallowed HTTP method on `/api/translate/test`.
+- Migration needed: None.
+- Rollback plan: Revert the translation runtime status override, `runManualTranslateTest` publish/error paths, focused tests, and spec/decision entries. The T-009-002 route response shape, validators, and provider error mapping remain intact.
+
+### CHG-20260528-026
+- Date: 2026-05-28
+- Summary: Added the T-009 translation API smoke command and parent-closeout runbook.
+- Reason: The translation test API parent needs one reproducible live HTTP/WebSocket smoke that proves `/api/translate/test`, provider input preparation, `/api/status`, `/ws/app`, and privacy invariants work together with injected adapters.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The smoke uses injected profile/provider dependencies, an ephemeral localhost port, and in-memory runtime status only.
+  - API: Adds `npm run smoke:translation`, `scripts/smoke-translation-api.js`, `test/translation-api-smoke.test.js`, and `TRANSLATION_API_SMOKE_RUNBOOK_JA.md`. The smoke covers preflight/method/malformed no-mutation behavior, translation success, glossary/cache-prepared input, provider failure retryability, status broadcasts, and redaction/no-persistence invariants.
+  - UI: First-Run, Translation Settings, and Home/Status gain parent-closeout evidence that their backing translation test route and status stream are available as one coherent API.
+- Risk: This remains a dependency-free contract smoke over injected adapters, not a real DeepL or Windows/Electron/FastAPI smoke. Real-adapter smoke should be added when those adapters land.
+- Regression tests added first: `test/translation-api-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no provider key/source/translated/glossary/cache sentinel in stdout.
+- Migration needed: None.
+- Rollback plan: Remove `npm run smoke:translation`, the smoke script, runbook, focused smoke test, and spec/decision entries. Existing translation route behavior remains covered by unit tests.

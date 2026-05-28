@@ -8,6 +8,7 @@
     "smoke:server": "node scripts/smoke-local-api.js",
     "smoke:config": "node scripts/smoke-config-api.js",
     "smoke:capture-ocr": "node scripts/smoke-capture-ocr-api.js",
+    "smoke:translation": "node scripts/smoke-translation-api.js",
     "check:syntax": "node scripts/check-syntax.js",
     "build": "npm run check:syntax",
     "lint": "npm run check:syntax"

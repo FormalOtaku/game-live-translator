@@ -2001,9 +2001,11 @@ test('translate test API rejects malformed requests before repository and provid
 });
 
 test('translate test API preserves PROFILE_NOT_FOUND and DB_UNAVAILABLE before provider calls', async () => {
+  const rawText = '秘密の失敗テキスト';
   const missingCalls = [];
   const missingApi = createLocalApiServer({
     preferredPort: 0,
+    clock: fixedClock,
     profileRepository: {
       getProfile(profileId) {
         missingCalls.push(['getProfile', profileId]);
@@ -2020,23 +2022,50 @@ test('translate test API preserves PROFILE_NOT_FOUND and DB_UNAVAILABLE before p
     },
   });
   const missingStarted = await missingApi.start();
+  let missingClient;
   try {
+    missingClient = await connectWebSocketClient({ port: missingStarted.port });
+    await missingClient.waitForJson((m) => m.type === 'status');
+
     const response = await requestJson({
       port: missingStarted.port,
       path: '/api/translate/test',
       method: 'POST',
-      body: { profileId: 'missing', text: 'hi' },
+      body: { profileId: 'missing', text: rawText },
     });
     assert.equal(response.statusCode, 404);
     assert.equal(response.parsed.error.code, 'PROFILE_NOT_FOUND');
     assert.deepEqual(missingCalls, [['getProfile', 'missing']]);
+
+    const running = await missingClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'running',
+    );
+    assert.equal(running.status.translation.code, 'TRANSLATE_TEST_RUNNING');
+    assert.equal(JSON.stringify(running.status).includes(rawText), false);
+
+    const errorFrame = await missingClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'error',
+    );
+    assert.equal(errorFrame.status.translation.code, 'PROFILE_NOT_FOUND');
+    assert.equal(errorFrame.status.translation.message, 'Profile not found');
+    assert.equal(errorFrame.status.translation.retryable, false);
+    assert.equal(errorFrame.status.translation.updatedAt, FIXED_TIME);
+    assert.equal(JSON.stringify(errorFrame.status).includes(rawText), false);
+
+    const status = await requestJson({ port: missingStarted.port, path: '/api/status' });
+    assert.equal(status.parsed.translation.state, 'error');
+    assert.equal(status.parsed.translation.code, 'PROFILE_NOT_FOUND');
+    assert.equal(JSON.stringify(status.parsed).includes(rawText), false);
   } finally {
+    if (missingClient !== undefined && !missingClient.socket.destroyed) await missingClient.close();
     await missingApi.stop();
   }
 
   const unavailableCalls = [];
+  const unavailableRawText = 'DB未接続時の翻訳本文';
   const unavailableApi = createLocalApiServer({
     preferredPort: 0,
+    clock: fixedClock,
     translateTestProvider: {
       runTranslateTest(args) {
         unavailableCalls.push(['runTranslateTest', args]);
@@ -2047,24 +2076,50 @@ test('translate test API preserves PROFILE_NOT_FOUND and DB_UNAVAILABLE before p
     },
   });
   const unavailableStarted = await unavailableApi.start();
+  let unavailableClient;
   try {
+    unavailableClient = await connectWebSocketClient({ port: unavailableStarted.port });
+    await unavailableClient.waitForJson((m) => m.type === 'status');
+
     const response = await requestJson({
       port: unavailableStarted.port,
       path: '/api/translate/test',
       method: 'POST',
-      body: { profileId: 'p1', text: 'hi' },
+      body: { profileId: 'p1', text: unavailableRawText },
     });
     assert.equal(response.statusCode, 503);
     assert.equal(response.parsed.error.code, 'DB_UNAVAILABLE');
     assert.deepEqual(unavailableCalls, []);
+
+    await unavailableClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'running',
+    );
+    const errorFrame = await unavailableClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'error',
+    );
+    assert.equal(errorFrame.status.translation.code, 'DB_UNAVAILABLE');
+    assert.equal(errorFrame.status.translation.message, 'Profile repository is not available');
+    assert.equal(errorFrame.status.translation.retryable, false);
+    assert.equal(errorFrame.status.translation.updatedAt, FIXED_TIME);
+    assert.equal(JSON.stringify(errorFrame.status).includes(unavailableRawText), false);
+
+    const status = await requestJson({ port: unavailableStarted.port, path: '/api/status' });
+    assert.equal(status.parsed.translation.state, 'error');
+    assert.equal(status.parsed.translation.code, 'DB_UNAVAILABLE');
+    assert.equal(JSON.stringify(status.parsed).includes(unavailableRawText), false);
   } finally {
+    if (unavailableClient !== undefined && !unavailableClient.socket.destroyed) {
+      await unavailableClient.close();
+    }
     await unavailableApi.stop();
   }
 });
 
 test('translate test API reports PROVIDER_UNKNOWN when no translate provider is installed', async () => {
+  const rawText = '翻訳provider未設定の本文';
   const api = createLocalApiServer({
     preferredPort: 0,
+    clock: fixedClock,
     profileRepository: {
       getProfile(profileId) {
         return makeApiProfile({ id: profileId, translationProvider: 'echo' });
@@ -2072,17 +2127,34 @@ test('translate test API reports PROVIDER_UNKNOWN when no translate provider is 
     },
   });
   const started = await api.start();
+  let appClient;
   try {
+    appClient = await connectWebSocketClient({ port: started.port });
+    await appClient.waitForJson((m) => m.type === 'status');
+
     const response = await requestJson({
       port: started.port,
       path: '/api/translate/test',
       method: 'POST',
-      body: { profileId: 'profile_translate', text: 'hi' },
+      body: { profileId: 'profile_translate', text: rawText },
     });
     assert.equal(response.statusCode, 400);
     assert.equal(response.parsed.error.code, 'PROVIDER_UNKNOWN');
     assert.equal(response.parsed.error.retryable, false);
+
+    await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'running',
+    );
+    const errorFrame = await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'error',
+    );
+    assert.equal(errorFrame.status.translation.code, 'PROVIDER_UNKNOWN');
+    assert.equal(errorFrame.status.translation.message, 'Translation provider failed');
+    assert.equal(errorFrame.status.translation.retryable, false);
+    assert.equal(errorFrame.status.translation.updatedAt, FIXED_TIME);
+    assert.equal(JSON.stringify(errorFrame.status).includes(rawText), false);
   } finally {
+    if (appClient !== undefined && !appClient.socket.destroyed) await appClient.close();
     await api.stop();
   }
 });
@@ -2092,19 +2164,22 @@ test('translate test API maps invalid profile provider and target language befor
   const cases = [
     {
       profile: makeApiProfile({ id: 'profile_bad_provider', translationProvider: 'google' }),
-      body: { profileId: 'profile_bad_provider', text: 'hi' },
+      body: { profileId: 'profile_bad_provider', text: '未対応providerの本文' },
       code: 'PROVIDER_UNKNOWN',
+      message: 'Translation provider failed',
     },
     {
       profile: makeApiProfile({ id: 'profile_bad_lang', targetLang: 'fr' }),
-      body: { profileId: 'profile_bad_lang', text: 'hi' },
+      body: { profileId: 'profile_bad_lang', text: '未対応target languageの本文' },
       code: 'TARGET_LANG_INVALID',
+      message: 'Translation target language is invalid',
     },
   ];
 
   for (const testCase of cases) {
     const api = createLocalApiServer({
       preferredPort: 0,
+      clock: fixedClock,
       profileRepository: {
         getProfile(profileId) {
           calls.push(['getProfile', profileId]);
@@ -2125,7 +2200,11 @@ test('translate test API maps invalid profile provider and target language befor
       },
     });
     const started = await api.start();
+    let appClient;
     try {
+      appClient = await connectWebSocketClient({ port: started.port });
+      await appClient.waitForJson((m) => m.type === 'status');
+
       const response = await requestJson({
         port: started.port,
         path: '/api/translate/test',
@@ -2134,7 +2213,19 @@ test('translate test API maps invalid profile provider and target language befor
       });
       assert.equal(response.statusCode, 400);
       assert.equal(response.parsed.error.code, testCase.code);
+
+      await appClient.waitForJson(
+        (m) => m.type === 'status' && m.status.translation.state === 'running',
+      );
+      const errorFrame = await appClient.waitForJson(
+        (m) => m.type === 'status' && m.status.translation.state === 'error',
+      );
+      assert.equal(errorFrame.status.translation.code, testCase.code);
+      assert.equal(errorFrame.status.translation.message, testCase.message);
+      assert.equal(errorFrame.status.translation.retryable, false);
+      assert.equal(JSON.stringify(errorFrame.status).includes(testCase.body.text), false);
     } finally {
+      if (appClient !== undefined && !appClient.socket.destroyed) await appClient.close();
       await api.stop();
     }
   }
@@ -2227,6 +2318,7 @@ test('translate test API rejects invalid provider output without leaking transla
   const rawText = '秘密の翻訳本文';
   const api = createLocalApiServer({
     preferredPort: 0,
+    clock: fixedClock,
     profileRepository: { getProfile: () => profile },
     translateTestProvider: {
       runTranslateTest() {
@@ -2242,7 +2334,11 @@ test('translate test API rejects invalid provider output without leaking transla
     },
   });
   const started = await api.start();
+  let appClient;
   try {
+    appClient = await connectWebSocketClient({ port: started.port });
+    await appClient.waitForJson((m) => m.type === 'status');
+
     const response = await requestJson({
       port: started.port,
       path: '/api/translate/test',
@@ -2261,7 +2357,27 @@ test('translate test API rejects invalid provider output without leaking transla
     const serialized = JSON.stringify(response.parsed);
     assert.equal(serialized.includes(rawText), false);
     assert.equal(serialized.includes(leakedKey), false);
+
+    await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'running',
+    );
+    const errorFrame = await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'error',
+    );
+    assert.equal(errorFrame.status.translation.code, 'PROVIDER_RESPONSE_INVALID');
+    assert.equal(errorFrame.status.translation.message, 'Translation provider returned an invalid response');
+    assert.equal(errorFrame.status.translation.retryable, false);
+    assert.equal(errorFrame.status.translation.updatedAt, FIXED_TIME);
+    assert.equal(JSON.stringify(errorFrame.status).includes(rawText), false);
+    assert.equal(JSON.stringify(errorFrame.status).includes(leakedKey), false);
+
+    const status = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(status.parsed.translation.state, 'error');
+    assert.equal(status.parsed.translation.code, 'PROVIDER_RESPONSE_INVALID');
+    assert.equal(JSON.stringify(status.parsed).includes(rawText), false);
+    assert.equal(JSON.stringify(status.parsed).includes(leakedKey), false);
   } finally {
+    if (appClient !== undefined && !appClient.socket.destroyed) await appClient.close();
     await api.stop();
   }
 });
@@ -2298,6 +2414,213 @@ test('translate test API rejects provider mismatch without serializing translati
     assert.equal(response.parsed.error.details.fieldErrors[0].code, 'TRANSLATION_PROVIDER_MISMATCH');
     assert.equal(JSON.stringify(response.parsed).includes(rawText), false);
   } finally {
+    await api.stop();
+  }
+});
+
+test('translate test API publishes running then ok runtime status on success without leaking raw text', async () => {
+  const rawSource = '勇者が現れた';
+  const rawTranslated = 'A hero has appeared';
+  const profile = makeApiProfile({
+    id: 'profile_translate',
+    translationProvider: 'echo',
+    glossary: [{ id: 'g1', sourceTerm: '勇者', targetTerm: 'hero' }],
+  });
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile() {
+        return profile;
+      },
+    },
+    translateTestProvider: {
+      async runTranslateTest() {
+        return {
+          sourceText: rawSource,
+          translatedText: rawTranslated,
+          provider: 'echo',
+          durationMs: 9,
+          cacheHit: false,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+  let appClient;
+
+  try {
+    appClient = await connectWebSocketClient({ port: started.port });
+    const initial = await appClient.waitForJson((m) => m.type === 'status');
+    assert.equal(initial.status.translation.state, 'idle');
+
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'profile_translate', text: rawSource },
+    });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(Object.keys(response.parsed).sort(), [
+      'cacheHit', 'durationMs', 'provider', 'sourceText', 'translatedText',
+    ]);
+
+    const running = await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'running',
+    );
+    assert.equal(running.status.translation.code, 'TRANSLATE_TEST_RUNNING');
+    assert.equal(running.status.translation.message, 'Translate test running');
+    assert.equal(running.status.translation.updatedAt, FIXED_TIME);
+    assert.equal(running.status.translation.retryable, false);
+    assert.equal(JSON.stringify(running.status).includes(rawSource), false);
+    assert.equal(JSON.stringify(running.status).includes(rawTranslated), false);
+    assert.equal(JSON.stringify(running.status).includes('hero'), false);
+
+    const ok = await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'ok',
+    );
+    assert.equal(ok.status.translation.code, 'TRANSLATE_TEST_OK');
+    assert.equal(ok.status.translation.message, 'Translate test succeeded');
+    assert.equal(ok.status.translation.updatedAt, FIXED_TIME);
+    assert.equal(JSON.stringify(ok.status).includes(rawSource), false);
+    assert.equal(JSON.stringify(ok.status).includes(rawTranslated), false);
+    assert.equal(JSON.stringify(ok.status).includes('hero'), false);
+    assert.equal(Object.hasOwn(ok.status.translation, 'cacheKey'), false);
+
+    const status = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(status.parsed.translation.state, 'ok');
+    assert.equal(status.parsed.translation.code, 'TRANSLATE_TEST_OK');
+    assert.equal(JSON.stringify(status.parsed).includes(rawSource), false);
+    assert.equal(JSON.stringify(status.parsed).includes(rawTranslated), false);
+    assert.equal(JSON.stringify(status.parsed).includes('hero'), false);
+  } finally {
+    if (appClient !== undefined && !appClient.socket.destroyed) await appClient.close();
+    await api.stop();
+  }
+});
+
+test('translate test API publishes running then provider error runtime status on provider failure', async () => {
+  const leakedKey = 'sk-TRANSLATESTATUSLEAK1';
+  const rawText = '秘密の翻訳テキスト';
+  const profile = makeApiProfile({ id: 'profile_translate', translationProvider: 'deepl' });
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: { getProfile: () => profile },
+    translateTestProvider: {
+      runTranslateTest() {
+        throw new ContractError('PROVIDER_RATE_LIMITED', `provider failed with ${leakedKey}`);
+      },
+    },
+  });
+  const started = await api.start();
+  let appClient;
+
+  try {
+    appClient = await connectWebSocketClient({ port: started.port });
+    await appClient.waitForJson((m) => m.type === 'status');
+
+    const response = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: 'profile_translate', text: rawText },
+    });
+    assert.equal(response.statusCode, 429);
+    assert.equal(response.parsed.error.code, 'PROVIDER_RATE_LIMITED');
+
+    const running = await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'running',
+    );
+    assert.equal(running.status.translation.code, 'TRANSLATE_TEST_RUNNING');
+
+    const errorFrame = await appClient.waitForJson(
+      (m) => m.type === 'status' && m.status.translation.state === 'error',
+    );
+    assert.equal(errorFrame.status.translation.code, 'PROVIDER_RATE_LIMITED');
+    assert.equal(errorFrame.status.translation.retryable, true);
+    assert.equal(errorFrame.status.translation.updatedAt, FIXED_TIME);
+    assert.equal(JSON.stringify(errorFrame.status).includes(leakedKey), false);
+    assert.equal(JSON.stringify(errorFrame.status).includes(rawText), false);
+
+    const status = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(status.parsed.translation.state, 'error');
+    assert.equal(status.parsed.translation.code, 'PROVIDER_RATE_LIMITED');
+    assert.equal(status.parsed.translation.retryable, true);
+    assert.equal(JSON.stringify(status.parsed).includes(leakedKey), false);
+    assert.equal(JSON.stringify(status.parsed).includes(rawText), false);
+  } finally {
+    if (appClient !== undefined && !appClient.socket.destroyed) await appClient.close();
+    await api.stop();
+  }
+});
+
+test('translate test API does not change runtime status for malformed request, preflight, or wrong method', async () => {
+  const calls = [];
+  const profile = makeApiProfile({ id: 'profile_translate', translationProvider: 'echo' });
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    profileRepository: {
+      getProfile(profileId) {
+        calls.push(['getProfile', profileId]);
+        return profile;
+      },
+    },
+    translateTestProvider: {
+      runTranslateTest(args) {
+        calls.push(['runTranslateTest', args]);
+        return {
+          sourceText: 's', translatedText: 't', provider: 'echo', durationMs: 1, cacheHit: false,
+        };
+      },
+    },
+  });
+  const started = await api.start();
+  let appClient;
+
+  try {
+    appClient = await connectWebSocketClient({ port: started.port });
+    const initial = await appClient.waitForJson((m) => m.type === 'status');
+    assert.equal(initial.status.translation.state, 'idle');
+
+    const allowedOrigin = `http://127.0.0.1:${started.port}`;
+    const preflight = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'OPTIONS',
+      headers: { Origin: allowedOrigin },
+    });
+    assert.equal(preflight.statusCode, 204);
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'GET',
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+
+    const malformed = await requestJson({
+      port: started.port,
+      path: '/api/translate/test',
+      method: 'POST',
+      body: { profileId: '', text: '' },
+    });
+    assert.equal(malformed.statusCode, 400);
+    assert.equal(malformed.parsed.error.code, 'VALIDATION_ERROR');
+
+    await assert.rejects(
+      () => appClient.waitForJson(
+        (m) => m.type === 'status' && m.status.translation.state !== 'idle',
+        150,
+      ),
+    );
+
+    const status = await requestJson({ port: started.port, path: '/api/status' });
+    assert.equal(status.parsed.translation.state, 'idle');
+    assert.deepEqual(calls, []);
+  } finally {
+    if (appClient !== undefined && !appClient.socket.destroyed) await appClient.close();
     await api.stop();
   }
 });

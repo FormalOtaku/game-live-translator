@@ -132,6 +132,8 @@
 - T-008-005 adds `npm run smoke:capture-ocr` as the parent-closeout smoke for the capture/OCR API core, covering live HTTP source enumeration, manual OCR success/failure, capture start/stop status, conflict behavior, and privacy invariants with injected adapters.
 - T-009-001 adds the executable translation test API validation boundary in `src/contracts/validation.js`. `TranslateTestRequest` and `TranslationResult` must pass this validator before the `/api/translate/test` route is wired, so First-Run and Translation Settings share one privacy-safe shape for supplied text, provider output, and field errors.
 - T-009-002 wires `POST /api/translate/test` through a dependency-injected translation provider seam. The route validates the request, loads the profile, prepares the translation input through the shared glossary/cache helper, validates provider output, and maps provider failures to canonical privacy-safe `ApiError` codes with retryability driven by `providerErrorRetryable`. Runtime translation-status broadcast remains scoped to T-009-003.
+- T-009-003 adds an in-memory translation `RuntimeStatus` override inside `createLocalApiServer` so valid `/api/translate/test` attempts publish `running` before provider work, `ok` on success, and `error` on provider/input/result/profile failures via `/api/status` and `/ws/app`. Provider-vocabulary failures use `providerErrorToRuntimeStatus`; profile/DB/validation/provider-response failures fall back to a safe redacted status. The route response shape is unchanged, and supplied text, translated text, glossary entries, cache keys, provider keys, and raw exceptions never appear in the broadcast.
+- T-009-004 adds `npm run smoke:translation` as the parent-closeout smoke for the translation test API core, covering live HTTP translation test success/failure, glossary/cache-prepared provider input, `/api/status` and `/ws/app` translation status transitions, malformed/preflight/wrong-method no-mutation behavior, and privacy invariants with injected adapters.
 
 ## UI Impact
 - v1 introduces desktop screens documented in `UI_SPEC.md`: First-Run Wizard, Home/Status, Capture Setup, OCR Preview, Translation Settings, Glossary, Overlay Theme Editor, OBS Setup Guide, Profiles, Privacy Settings, Logs/Diagnostics, and About/Support.
@@ -146,6 +148,7 @@
 - [x] T-006 localhost API/OBS overlay server core has a repeatable smoke command covering `/health`, `/api/status`, `/overlay`, `/ws/app`, and `/ws/overlay`.
 - [x] T-007 profile/configuration API core has a repeatable smoke command covering profiles, themes, glossary, privacy settings, and write-only provider keys.
 - [x] T-008 capture/OCR API core has a repeatable smoke command covering source enumeration, manual OCR test, capture start/stop status, and no-leak errors.
+- [x] T-009 translation test API core has a repeatable smoke command covering manual translation success/failure, glossary/cache-prepared input, translation status broadcast, and no-leak status/error output.
 - [x] Overlay escaping is verified with malicious OCR/subtitle payload fixtures in core and overlay renderer tests.
 - [ ] Capture, translation, overlay reconnect, backend restart, and port conflict have recoverable UI states.
 - [ ] 1280x720, 1920x1080, and 2560x1440 overlay layouts do not clip or overlap subtitle text.

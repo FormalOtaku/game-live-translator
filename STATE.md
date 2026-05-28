@@ -41,28 +41,28 @@
 
 ## Current Focus
 - milestone:
-- active_task_ids: T-009
+- active_task_ids: (none)
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-009
-- current_slice_id: T-009-003
-- current_slice_goal: Translation runtime status broadcast
-- current_slice_status: doing
-- completed_slices: 2
-- total_slices: 4
-- progress_pct: 50
-- next_slice_id: T-009-004
-- next_slice_goal: Translation API smoke runbook and parent closeout
-- last_checkpoint: 2026-05-27T23:48:10.522Z
+- current_slice_prefix: (none)
+- current_slice_id: (none)
+- current_slice_goal: (none)
+- current_slice_status: (none)
+- completed_slices: 0
+- total_slices: 0
+- progress_pct: 0
+- next_slice_id: (none)
+- next_slice_goal: (none)
+- last_checkpoint: 2026-05-28T00:57:34.804Z
 ## Session Flow
-- current_session_role: supervisor
-- recommended_next_session_role: execution
+- current_session_role: execution
+- recommended_next_session_role: spec
 - checkpoint_status: satisfied
-- checkpoint_reason: Deterministic verification and imported Claude review evidence satisfied for T-009-002; no human validation required.
-- last_completed_slice: T-009-002
-- handoff_summary: T-009-002 complete: POST /api/translate/test is wired through translateTestProvider.runTranslateTest with assertTranslateTestRequest, profile lookup, prepareTranslationInput, TranslationResult validation, provider/profile match enforcement, canonical TranslationResult serialization, provider/profile error mapping, privacy-safe redaction, and method/CORS coverage. Verification passed locally and in Docker: node --check files, node --test test/local-api-server.test.js 75 pass, npm test 276 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-002-r2 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-003 is now doing: translation runtime status broadcast.
-- next_action: start T-009-003 translation runtime status broadcast implementation
-- updated_at: 2026-05-27T23:48:10.519Z
+- checkpoint_reason: T-009 parent closeout satisfied by deterministic local/Docker verification and imported clean full-diff Claude sidecar evidence; no human validation required.
+- last_completed_slice: T-009-004
+- handoff_summary: T-009/T-009-004 complete: added repeatable translation API smoke command and JA runbook, locked smoke behavior in child-process regression test, and updated PRODUCT/API/decision/migration/runbook closeout docs. Verification passed: local npm test 280 pass, npm run build/lint pass, npm run smoke:translation pass; Docker npm test 280 pass, Docker build/lint/smoke:translation pass; git diff --check pass. Claude sidecar T-009-004-r2 full-diff review imported clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: start_spec_session
+- updated_at: 2026-05-28T00:55:32.227Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.
