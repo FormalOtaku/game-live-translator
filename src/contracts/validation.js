@@ -4,6 +4,7 @@ const {
   ContractError,
   FORBIDDEN_PROFILE_EXPORT_FIELDS,
   apiKeyWriteResponse,
+  diagnosticsRedactionSummary,
   findForbiddenExportFields,
 } = require('./security');
 const { OCR_REJECTION_REASONS } = require('../core/ocr-text');
@@ -213,6 +214,22 @@ function validateNonEmptyString(value, field, code = 'VALIDATION_ERROR') {
   return [];
 }
 
+function validateIsoTimestampString(value, field) {
+  const stringErrors = validateNonEmptyString(value, field);
+  if (stringErrors.length > 0) return stringErrors;
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf()) || date.toISOString() !== value) {
+    return [
+      fieldError(
+        field,
+        'VALIDATION_ERROR',
+        `${field} must be an ISO timestamp string`,
+      ),
+    ];
+  }
+  return [];
+}
+
 function validateOptionalString(value, field) {
   if (value === undefined) return [];
   if (typeof value !== 'string') {
@@ -289,6 +306,23 @@ const TRANSLATION_RESULT_FIELDS = Object.freeze([
   'provider',
   'durationMs',
   'cacheHit',
+]);
+
+const DIAGNOSTIC_BUNDLE_FIELDS = Object.freeze([
+  'generatedAt',
+  'appVersion',
+  'backendVersion',
+  'os',
+  'activeProfileId',
+  'redactedLogs',
+  'redactionSummary',
+]);
+
+const DIAGNOSTIC_REDACTION_SUMMARY_FIELDS = Object.freeze([
+  'apiKeysRemoved',
+  'ocrTextIncluded',
+  'translatedTextIncluded',
+  'imagesIncluded',
 ]);
 
 function validateCaptureSourcesResponse(payload) {
@@ -563,6 +597,106 @@ function validateTranslationResult(payload) {
 
 function assertTranslationResult(payload) {
   throwIfErrors(validateTranslationResult(payload));
+  return payload;
+}
+
+function validateDiagnosticBundle(payload) {
+  if (!isPlainObject(payload)) {
+    return [
+      fieldError('', 'VALIDATION_ERROR', 'DiagnosticBundle must be an object'),
+    ];
+  }
+
+  const errors = [];
+  for (const field of Object.keys(payload)) {
+    if (!DIAGNOSTIC_BUNDLE_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          field,
+          'UNKNOWN_DIAGNOSTIC_BUNDLE_FIELD',
+          `${field} is not a diagnostic bundle field`,
+        ),
+      );
+    }
+  }
+
+  errors.push(...validateIsoTimestampString(payload.generatedAt, 'generatedAt'));
+  errors.push(...validateNonEmptyString(payload.appVersion, 'appVersion'));
+  errors.push(...validateNonEmptyString(payload.backendVersion, 'backendVersion'));
+  errors.push(...validateNonEmptyString(payload.os, 'os'));
+
+  if (
+    payload.activeProfileId !== null &&
+    (typeof payload.activeProfileId !== 'string' || payload.activeProfileId.trim().length === 0)
+  ) {
+    errors.push(
+      fieldError(
+        'activeProfileId',
+        'VALIDATION_ERROR',
+        'activeProfileId must be a non-empty string or null',
+      ),
+    );
+  }
+
+  if (!Array.isArray(payload.redactedLogs)) {
+    errors.push(
+      fieldError('redactedLogs', 'VALIDATION_ERROR', 'redactedLogs must be an array'),
+    );
+  } else {
+    for (let i = 0; i < payload.redactedLogs.length; i += 1) {
+      if (typeof payload.redactedLogs[i] !== 'string') {
+        errors.push(
+          fieldError(
+            `redactedLogs[${i}]`,
+            'VALIDATION_ERROR',
+            'redactedLogs entries must be strings',
+          ),
+        );
+      }
+    }
+  }
+
+  if (!isPlainObject(payload.redactionSummary)) {
+    errors.push(
+      fieldError(
+        'redactionSummary',
+        'VALIDATION_ERROR',
+        'redactionSummary must be an object',
+      ),
+    );
+    return errors;
+  }
+
+  for (const field of Object.keys(payload.redactionSummary)) {
+    if (!DIAGNOSTIC_REDACTION_SUMMARY_FIELDS.includes(field)) {
+      errors.push(
+        fieldError(
+          `redactionSummary.${field}`,
+          'UNKNOWN_DIAGNOSTIC_REDACTION_FIELD',
+          `${field} is not a diagnostic redaction summary field`,
+        ),
+      );
+    }
+  }
+
+  const expectedSummary = diagnosticsRedactionSummary();
+  for (const [field, expectedValue] of Object.entries(expectedSummary)) {
+    if (payload.redactionSummary[field] !== expectedValue) {
+      errors.push(
+        fieldError(
+          `redactionSummary.${field}`,
+          'DIAGNOSTIC_REDACTION_SUMMARY_INVALID',
+          `redactionSummary.${field} must be ${String(expectedValue)}`,
+        ),
+      );
+    }
+  }
+
+  return errors;
+}
+
+function assertDiagnosticBundle(payload) {
+  throwIfErrors(validateDiagnosticBundle(payload));
   return payload;
 }
 
@@ -1177,6 +1311,8 @@ module.exports = {
   assertOcrResult,
   validateTranslationResult,
   assertTranslationResult,
+  validateDiagnosticBundle,
+  assertDiagnosticBundle,
   validateGlossaryTerm,
   validateGlossary,
   validateThemeCssJson,

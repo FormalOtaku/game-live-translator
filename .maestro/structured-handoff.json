@@ -1,11 +1,11 @@
 {
   "completed_items": [
-    "T-009-004 translation API smoke runbook,T-009 parent closeout"
+    "T-010-001 diagnostics bundle contract/redaction fixture"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-026 npm run smoke:translation is the required translation API smoke evidence"
+    "DEC-027 records redacted diagnostics bundle contract scope and no DB migration."
   ],
   "open_questions": [],
-  "summary": "T-009/T-009-004 complete: added repeatable translation API smoke command and JA runbook, locked smoke behavior in child-process regression test, and updated PRODUCT/API/decision/migration/runbook closeout docs. Verification passed: local npm test 280 pass, npm run build/lint pass, npm run smoke:translation pass; Docker npm test 280 pass, Docker build/lint/smoke:translation pass; git diff --check pass. Claude sidecar T-009-004-r2 full-diff review imported clean with must_fix=0 and unresolved P1/P2=0."
+  "summary": "T-010-001 complete: added DiagnosticBundle contract/redaction helpers and validators, redacted string/structured diagnostics including Error stack headers, cycles, prototype-like keys, screenshots, provider responses, OCR/source/translated text, and updated PRODUCT/API/decision/migration/change docs. Verification: local node checks, node --test test/contracts.test.js 74 pass, npm test 285 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 285 pass and build/lint pass. Claude sidecar T-010-001-r4 module review imported clean with findings=3 P3, must_fix=0, unresolved P1/P2=0."
 }

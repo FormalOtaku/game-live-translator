@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T00:55:22.796Z",
+  "migrated_at": "2026-05-28T01:28:40.567Z",
   "source_path": "TASKS.md",
-  "source_sha256": "4eabb275e177960e44773fef573243349616e9b13bf35f566cf84590e4eefabd",
-  "task_count": 34,
+  "source_sha256": "7afd1c4cbbef79ce99cb38d57c186f6b1c6784a3246f811d7dd2016e862f87e9",
+  "task_count": 38,
   "counts": {
-    "todo": 0,
-    "doing": 0,
+    "todo": 1,
+    "doing": 2,
     "blocked": 0,
-    "done": 34
+    "done": 35
   },
   "tasks": [
     {
@@ -249,6 +249,34 @@
       "status": "done",
       "owner": "codex",
       "notes": "Added npm run smoke:translation, scripts/smoke-translation-api.js, test/translation-api-smoke.test.js, TRANSLATION_API_SMOKE_RUNBOOK_JA.md, and closeout spec/decision/runbook updates covering /api/translate/test success/failure, /api/status, /ws/app, health, no-mutation, and privacy no-leak invariants. Local and Docker npm test/build/lint/smoke:translation pass with 280 tests; git diff --check pass; Claude T-009-004-r2 full-diff review clean with findings=2 low, must_fix=0, unresolved P1/P2=0."
+    },
+    {
+      "id": "T-010",
+      "title": "Implement redacted diagnostics bundle API core",
+      "status": "doing",
+      "owner": "codex",
+      "notes": "Parent goal: add production-grade v1 diagnostics bundle support for Logs/Diagnostics and privacy acceptance. Scope includes DiagnosticBundle contract validation/redaction, GET /api/diagnostics/bundle route, no API keys/OCR text/translated text/images/stacks in bundle output by default, deterministic tests, smoke command, and runbook. DB/API/UI impact: no schema bump expected; API diagnostics endpoint; UI Logs/Diagnostics copy-bundle readiness."
+    },
+    {
+      "id": "T-010-001",
+      "title": "Diagnostics bundle contract and redaction fixture",
+      "status": "done",
+      "owner": "codex",
+      "notes": "Added DiagnosticBundle contract, redaction helpers, validators, and regression fixtures covering API keys, OCR/source text, translated text, screenshots/images, provider responses, Error stack headers, cycles, and prototype-like keys. Local node checks, node --test test/contracts.test.js 74 pass, npm test 285 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 285 pass and build/lint pass; Claude T-010-001-r4 module review clean with must_fix=0 and unresolved P1/P2=0."
+    },
+    {
+      "id": "T-010-002",
+      "title": "Diagnostics bundle HTTP route",
+      "status": "doing",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-010. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-010-003",
+      "title": "Diagnostics smoke runbook and parent closeout",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-010. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
     }
   ]
 }
