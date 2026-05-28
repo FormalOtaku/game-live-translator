@@ -1,0 +1,38 @@
+{
+  "task_id": "T-009-003",
+  "branch": "task/T-009-003",
+  "worktree_path": "/home/murasaki01/Projects/Game_Live_Translator",
+  "head_sha": "5574367890ec5381cc7063d137a2c0a4c4db4b10",
+  "implementation_head_sha": "5574367890ec5381cc7063d137a2c0a4c4db4b10",
+  "published_branch_head_sha": null,
+  "pr_body_generated_at_sha": null,
+  "commit_subject": "task(T-009-003): T-009-003 translation runtime status broadcast: in-memory translation AppStatus override, running/ok/error publish for /api/translate/test, privacy-safe provider/fallback error mapping, no status mutation for malformed/preflight/wrong-method paths, focused local/Docker tests, Claude r3 review clean.",
+  "changed_files": [
+    ".maestro/project.json",
+    ".maestro/state.json",
+    "API_SPEC.md",
+    "CHANGELOG_DECISIONS.md",
+    "DECISIONS.md",
+    "MIGRATION_PLAN.md",
+    "PRODUCT_SPEC.md",
+    "src/server/local-api-server.js",
+    "STATE.md",
+    "test/local-api-server.test.js"
+  ],
+  "design_packet_id": null,
+  "checkpoint_status": "satisfied",
+  "test_summary": "unknown",
+  "review_evidence": [
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-009-003-r1/claude/review/review.json; receive=.maestro/agent-pass/T-009-003-r1/claude/review/receive-report.json",
+    "review.json; reviewed_files=7; findings=5; must_fix=0",
+    "unresolved P1/P2=0",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-009-003-r2/claude/review/review.json; receive=.maestro/agent-pass/T-009-003-r2/claude/review/receive-report.json",
+    "review.json; reviewed_files=7; findings=2; must_fix=0",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-009-003-r3/claude/review/review.json; receive=.maestro/agent-pass/T-009-003-r3/claude/review/receive-report.json",
+    "review.json; reviewed_files=7; findings=8; must_fix=0"
+  ],
+  "screenshots": [],
+  "design_evidence": null,
+  "committed_at": "2026-05-28T00:25:09.295Z",
+  "published_at": null
+}

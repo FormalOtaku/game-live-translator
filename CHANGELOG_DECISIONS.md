@@ -317,3 +317,16 @@
 - Regression tests added first: `test/local-api-server.test.js` adds focused tests for happy-path translation, request validation, profile-lookup error propagation, provider failure mapping (key-missing, rate-limited, network), redaction, invalid provider output, missing provider, method/CORS behavior, and serialization to canonical `TranslationResult` fields.
 - Migration needed: None.
 - Rollback plan: Revert the `/api/translate/test` route, `translateTestProvider` option, status mapping additions, focused tests, and spec/decision entries. The T-009-001 validation boundary remains intact.
+
+### CHG-20260528-025
+- Date: 2026-05-28
+- Summary: Wired T-009-003 translation runtime status broadcast into `createLocalApiServer` so `/api/translate/test` activity is reflected by `GET /api/status` and `/ws/app` without changing the route response shape.
+- Reason: Home/Status, First-Run, and Translation Settings need a live signal for `running`, `ok`, and `error` translate-test transitions, and T-009-002 explicitly deferred the runtime status broadcast while locking the `TranslationResult` response shape and `ApiError` mapping.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The translation runtime status is in-memory only; no supplied text, translated text, glossary entries, cache entries, provider keys, or diagnostics are persisted.
+  - API: Adds an in-memory `translationRuntimeStatus` override inside `createLocalApiServer` alongside the existing capture override, merges it through `buildAppStatus`, and publishes via the existing `appStatusWebSocket`. Valid translate-test attempts publish `running` (`code: "TRANSLATE_TEST_RUNNING"`) before provider work, `ok` (`code: "TRANSLATE_TEST_OK"`) on success, and `error` on provider/input/result/profile failures. Provider-vocabulary errors (provider invocation, input-prep `PROVIDER_UNKNOWN`/`TARGET_LANG_INVALID`, missing-provider) use `providerErrorToRuntimeStatus`; profile/DB/validation/provider-response failures use a redacted fallback whose `retryable` is derived from `providerErrorRetryable`/`RETRYABLE_API_ERROR_CODES`. The `/api/translate/test` response shape and HTTP status mapping are unchanged.
+  - UI: Status surfaces can render live translation transitions without polling `/api/translate/test` and without parsing provider exception text.
+- Risk: Existing clients that already trusted the `translation` field of `AppStatus` now observe `TRANSLATE_TEST_RUNNING`/`TRANSLATE_TEST_OK` codes during test runs. Concrete provider adapters must continue to throw `ContractError` with the documented provider vocabulary so the broadcast classification stays exhaustive. The parent-closeout smoke for `/api/translate/test` remains T-009-004.
+- Regression tests added first: `test/local-api-server.test.js` adds focused tests for `/api/status` and `/ws/app` running→ok broadcast on success, `/api/status` and `/ws/app` running→error broadcast on provider failure with redacted code/message, and a no-status-change assertion for malformed body, `OPTIONS` preflight, and disallowed HTTP method on `/api/translate/test`.
+- Migration needed: None.
+- Rollback plan: Revert the translation runtime status override, `runManualTranslateTest` publish/error paths, focused tests, and spec/decision entries. The T-009-002 route response shape, validators, and provider error mapping remain intact.

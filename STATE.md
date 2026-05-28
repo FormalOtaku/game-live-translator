@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-009
-- current_slice_id: T-009-003
-- current_slice_goal: Translation runtime status broadcast
+- current_slice_id: T-009-004
+- current_slice_goal: Translation API smoke runbook and parent closeout
 - current_slice_status: doing
-- completed_slices: 2
+- completed_slices: 3
 - total_slices: 4
-- progress_pct: 50
-- next_slice_id: T-009-004
-- next_slice_goal: Translation API smoke runbook and parent closeout
-- last_checkpoint: 2026-05-27T23:48:10.522Z
+- progress_pct: 75
+- next_slice_id:
+- next_slice_goal:
+- last_checkpoint: 2026-05-28T00:28:51.573Z
 ## Session Flow
-- current_session_role: supervisor
+- current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: Deterministic verification and imported Claude review evidence satisfied for T-009-002; no human validation required.
-- last_completed_slice: T-009-002
-- handoff_summary: T-009-002 complete: POST /api/translate/test is wired through translateTestProvider.runTranslateTest with assertTranslateTestRequest, profile lookup, prepareTranslationInput, TranslationResult validation, provider/profile match enforcement, canonical TranslationResult serialization, provider/profile error mapping, privacy-safe redaction, and method/CORS coverage. Verification passed locally and in Docker: node --check files, node --test test/local-api-server.test.js 75 pass, npm test 276 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-002-r2 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-003 is now doing: translation runtime status broadcast.
-- next_action: start T-009-003 translation runtime status broadcast implementation
-- updated_at: 2026-05-27T23:48:10.519Z
+- checkpoint_reason: Deterministic verification and imported Claude review evidence satisfied for T-009-003; no human validation required.
+- last_completed_slice: T-009-003
+- handoff_summary: T-009-003 complete: /api/translate/test now publishes privacy-safe translation runtime status through /api/status and /ws/app with running/ok/error transitions, provider-vocabulary/fallback error mapping, no malformed/preflight/wrong-method mutation, and no raw source/result/glossary/cache leakage. Verification passed locally and in Docker: node --check, node --test test/local-api-server.test.js 78 pass, npm test 279 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-003-r3 review imported clean with must_fix=0 and unresolved P1/P2=0. T-009-004 is now doing: translation API smoke runbook and parent closeout.
+- next_action: start T-009-004 translation API smoke runbook and parent closeout
+- updated_at: 2026-05-28T00:28:51.570Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

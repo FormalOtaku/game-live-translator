@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-27T23:48:02.105Z",
+  "migrated_at": "2026-05-28T00:26:10.491Z",
   "source_path": "TASKS.md",
-  "source_sha256": "9420ddf33162a97e2df60ebef5cc7d5b93114e4017755929a8b3d55e6524c9e9",
+  "source_sha256": "c9d2b135444094b36b80bfb7ea9adefa5fbdcdfd78ad06f7ba9c47fefcdd885d",
   "task_count": 34,
   "counts": {
-    "todo": 1,
+    "todo": 0,
     "doing": 2,
     "blocked": 0,
-    "done": 31
+    "done": 32
   },
   "tasks": [
     {
@@ -239,14 +239,14 @@
     {
       "id": "T-009-003",
       "title": "Translation runtime status broadcast",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+      "notes": "Added in-memory translation runtime status overlay for /api/translate/test, publishing privacy-safe running/ok/error AppStatus through /api/status and /ws/app with provider-vocabulary/fallback error mapping, no malformed/preflight/wrong-method mutation, and no raw source/result/glossary/cache leakage. Local and Docker npm test/build/lint pass with 279 tests; node --test test/local-api-server.test.js 78 pass; git diff --check pass; Claude T-009-003-r3 review clean with must_fix=0 and unresolved P1/P2=0."
     },
     {
       "id": "T-009-004",
       "title": "Translation API smoke runbook and parent closeout",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-009. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
     }

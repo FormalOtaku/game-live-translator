@@ -1,11 +1,15 @@
 {
   "completed_items": [
-    "POST /api/translate/test route,translateTestProvider seam,prepareTranslationInput route boundary,provider result mismatch guard,provider/profile error mapping,privacy-safe route tests,T-009-002 specs and migration note"
+    "translation runtime status overlay for AppStatus",
+    "/api/translate/test running/ok/error broadcasts",
+    "provider/fallback error status mapping",
+    "privacy no-leak regression tests",
+    "T-009-003 spec and decision updates"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-024 translation test endpoint provider seam"
+    "DEC-025 translation runtime status broadcast"
   ],
   "open_questions": [],
-  "summary": "T-009-002 complete: POST /api/translate/test is wired through translateTestProvider.runTranslateTest with assertTranslateTestRequest, profile lookup, prepareTranslationInput, TranslationResult validation, provider/profile match enforcement, canonical TranslationResult serialization, provider/profile error mapping, privacy-safe redaction, and method/CORS coverage. Verification passed locally and in Docker: node --check files, node --test test/local-api-server.test.js 75 pass, npm test 276 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-002-r2 review imported clean with unresolved P1/P2=0 and must_fix=0. T-009-003 is now doing: translation runtime status broadcast."
+  "summary": "T-009-003 complete: /api/translate/test now publishes privacy-safe translation runtime status through /api/status and /ws/app with running/ok/error transitions, provider-vocabulary/fallback error mapping, no malformed/preflight/wrong-method mutation, and no raw source/result/glossary/cache leakage. Verification passed locally and in Docker: node --check, node --test test/local-api-server.test.js 78 pass, npm test 279 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-003-r3 review imported clean with must_fix=0 and unresolved P1/P2=0. T-009-004 is now doing: translation API smoke runbook and parent closeout."
 }
