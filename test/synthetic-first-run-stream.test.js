@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 
 const { ContractError } = require('../src/contracts/security');
+const { OverlayState } = require('../src/core/subtitle-state');
 const {
   SCHEMA_VERSION,
   DEFAULT_MAX_DURATION_MS,
@@ -102,6 +103,27 @@ test('runSyntheticFirstRunStream publishes English subtitle to overlay within bu
   assert.equal(calls.length, 1);
   assert.equal(calls[0].targetLang, 'en');
   assert.equal(calls[0].sourceText, SYNTHETIC_OCR_CANDIDATE.text);
+});
+
+test('runSyntheticFirstRunStream publishes into an injected OverlayState', async () => {
+  const { provider } = deterministicProvider({ translatedText: 'Hero and Demon King' });
+  const overlayState = new OverlayState({ clock: fixedClock() });
+
+  const summary = await runSyntheticFirstRunStream({
+    profile: baseProfile(),
+    provider,
+    overlayState,
+    clock: fixedClock(),
+    idFactory: () => 'first-run-shared-state',
+  });
+
+  const latest = overlayState.latestFrame();
+  assert.notEqual(latest, null);
+  assert.equal(summary.overlayPublished, true);
+  assert.equal(summary.subtitle.id, 'first-run-shared-state');
+  assert.equal(latest.id, 'first-run-shared-state');
+  assert.equal(latest.escapedText, 'Hero and Demon King');
+  assert.equal(Object.hasOwn(latest, 'sourceText'), false);
 });
 
 test('summary never exposes source text, translated text, images, api keys, or debug payloads', async () => {

@@ -8,21 +8,21 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-012
-- current_slice_id: T-012-002
-- current_slice_goal: End-to-end OBS overlay smoke command
+- current_slice_id: T-012-003
+- current_slice_goal: Backend restart and port conflict recovery smoke
 - current_slice_status: todo
-- completed_slices: 1
+- completed_slices: 2
 - total_slices: 5
-- progress_pct: 20
-- next_slice_id: T-012-002
-- next_slice_goal: End-to-end OBS overlay smoke command
-- last_checkpoint: 2026-05-28T05:55:06.954Z
+- progress_pct: 40
+- next_slice_id: T-012-003
+- next_slice_goal: Backend restart and port conflict recovery smoke
+- last_checkpoint: 2026-05-28T06:39:46.733Z
 ## Session Flow
-- current_session_role: supervisor
+- current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-012-001 deterministic validation and Claude agent-pass review recheck passed; PR #10 opened. Evidence: npm test 375, build/lint, git diff --check, Claude T-012-001-r2 clean with must_fix=0 and unresolved P1/P2=0.
-- last_completed_slice: T-012-001
-- handoff_summary: T-012-001 complete: dependency-free synthetic first-run stream harness contract landed with privacy-safe hash evidence, OCR/provider/timeout failure summaries, specs/decisions/migration updates, and 11 focused tests. Verification: node --test test/synthetic-first-run-stream.test.js 11 pass; npm test 375 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-001-r2 clean with must_fix=0 and unresolved P1/P2=0. Next slice: T-012-002 end-to-end OBS overlay smoke command.
+- checkpoint_reason: T-012-002 deterministic validation and Claude agent-pass review passed; stdout evidence is hash/id/check-only and no P1/P2/must_fix remain.
+- last_completed_slice: T-012-002
+- handoff_summary: T-012-002 complete: added npm run smoke:first-run-stream live localhost first-run stream smoke, shared OverlayState injection in runSyntheticFirstRunStream, child-process smoke coverage, and spec/decision/migration updates. Verification: focused npm test 13 pass; npm run smoke:first-run-stream pass with escalated localhost listen; direct node smoke pass with escalated localhost listen; npm test 377 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-002-r1 clean with must_fix=0 and unresolved P1/P2=0. Next slice: T-012-003 backend restart and port conflict recovery smoke.
 - next_action: start_execution_session
-- updated_at: 2026-05-28T05:55:06.951Z
+- updated_at: 2026-05-28T06:39:46.729Z

@@ -151,6 +151,7 @@ async function runSyntheticFirstRunStream(input = {}) {
     provider,
     clock,
     idFactory,
+    overlayState: providedOverlayState,
     maxDurationMs = DEFAULT_MAX_DURATION_MS,
   } = input;
 
@@ -160,7 +161,9 @@ async function runSyntheticFirstRunStream(input = {}) {
 
   const fingerprint = profileFingerprint(profile);
   const startedAtMs = resolveNowMs(clock);
-  const overlayState = new OverlayState({ clock });
+  const overlayState = providedOverlayState === undefined
+    ? new OverlayState({ clock })
+    : providedOverlayState;
 
   let pipelineResult = null;
   let pipelineError = null;

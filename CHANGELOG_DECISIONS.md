@@ -460,3 +460,16 @@
 - Regression tests added first: `test/synthetic-first-run-stream.test.js` covers Japanese fixture freezing, successful English subtitle publication within budget, summary freezing, privacy guarantees, provider mismatch, provider secret redaction, OCR rejection without provider calls, timeout reporting with published evidence, `maxDurationMs` validation, and malicious provider output escaping via subtitle hash evidence.
 - Migration needed: None.
 - Rollback plan: Remove `src/core/synthetic-first-run-stream.js`, `test/synthetic-first-run-stream.test.js`, and the T-012-001 spec/decision entries. Existing runtime pipeline, local API, overlay, diagnostics, and UI contracts remain unchanged.
+
+### CHG-20260528-036
+- Date: 2026-05-28
+- Summary: Added the T-012-002 first-run OBS overlay smoke command.
+- Reason: T-012-001 proved the synthetic Japanese fixture through the in-process runtime pipeline, but the first-run acceptance path also needs a reproducible live localhost check that the translated subtitle reaches the OBS overlay HTTP and WebSocket surfaces.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The smoke uses only in-memory `OverlayState`, injected provider fixtures, and an ephemeral localhost port; it persists no OCR/source text, translated text, images, screenshots, logs, cache rows, or provider keys.
+  - API: Adds `npm run smoke:first-run-stream`, `scripts/smoke-first-run-stream.js`, and `test/first-run-stream-smoke.test.js`. The command exercises existing `/health`, `/api/status`, `/overlay`, `/ws/app`, and `/ws/overlay` contracts and extends `runSyntheticFirstRunStream` with optional injected `overlayState`; it adds no new routes.
+  - UI: First-Run and OBS Setup Guide gain deterministic backend evidence that a sanitized subtitle is visible through the localhost overlay path. The summary is safe for UI/runbook display because it prints only ids, hashes, flags, and named checks.
+- Risk: This remains a dependency-free contract smoke over a synthetic provider and does not yet automate real Windows capture, PaddleOCR, DeepL, Electron, OBS Studio, or browser rendering. T-012-003 and later slices must continue recovery and layout evidence before the parent closeout.
+- Regression tests added first: `test/first-run-stream-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no synthetic source text, raw translated text, provider key, or screenshot sentinel in stdout. `test/synthetic-first-run-stream.test.js` covers injected shared `OverlayState` publication.
+- Migration needed: None.
+- Rollback plan: Remove `npm run smoke:first-run-stream`, `scripts/smoke-first-run-stream.js`, `test/first-run-stream-smoke.test.js`, the injected `overlayState` option and focused test, and the T-012-002 spec/decision entries. Existing server, overlay, and T-012-001 core harness contracts remain unchanged.

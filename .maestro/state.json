@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T05:55:06.955Z",
+  "migrated_at": "2026-05-28T06:39:46.733Z",
   "source_path": "STATE.md",
-  "source_sha256": "56cb866bfcc3b9edb81faa58313efda3eae80d119fa959046ec2b6964c092e60",
+  "source_sha256": "bae314f623ca83ad69e0497fbb37db4d235d79a59c20411c077a6a1f738b57af",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
     "current_slice_prefix": "T-012",
-    "current_slice_id": "T-012-002",
-    "current_slice_goal": "End-to-end OBS overlay smoke command",
+    "current_slice_id": "T-012-003",
+    "current_slice_goal": "Backend restart and port conflict recovery smoke",
     "current_slice_status": "todo",
-    "completed_slices": 1,
+    "completed_slices": 2,
     "total_slices": 5,
-    "progress_pct": 20,
-    "next_slice_id": "T-012-002",
-    "next_slice_goal": "End-to-end OBS overlay smoke command",
-    "last_checkpoint": "2026-05-28T05:55:06.954Z",
+    "progress_pct": 40,
+    "next_slice_id": "T-012-003",
+    "next_slice_goal": "Backend restart and port conflict recovery smoke",
+    "last_checkpoint": "2026-05-28T06:39:46.733Z",
     "done": [],
     "doing": [],
     "todo": []
