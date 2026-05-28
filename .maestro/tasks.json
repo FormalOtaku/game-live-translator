@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T07:40:07.491Z",
+  "migrated_at": "2026-05-28T08:13:14.424Z",
   "source_path": "TASKS.md",
-  "source_sha256": "000ff479f754aaf421faf152b0e2376acb2f27868fee04e62f42dd56b480ed2c",
+  "source_sha256": "db43b3c5a5f37b5705429a75ebb52d84090bd5ebcdaa4c8d46c341b843298ff5",
   "task_count": 50,
   "counts": {
-    "todo": 2,
+    "todo": 0,
     "doing": 0,
     "blocked": 0,
-    "done": 48
+    "done": 50
   },
   "tasks": [
     {
@@ -323,7 +323,7 @@
     {
       "id": "T-012",
       "title": "Implement synthetic first-run stream smoke and recovery evidence",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
       "notes": "Production-grade v1 acceptance slice after T-011: prove a synthetic Japanese scene can reach a visible English subtitle in OBS overlay through localhost contracts within a first-run smoke. Define 3-6 PR-sized children, keep one child doing, specs first, npm test/build/lint, and Claude sidecar evidence before completion."
     },
@@ -358,7 +358,7 @@
     {
       "id": "T-012-005",
       "title": "First-run stream closeout runbook",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     }

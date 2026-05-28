@@ -34,7 +34,7 @@
   - `doing` は1件のみ
 - 親タスク完了時:
   - full diff review
-  - 対象親タスクに smoke command がある場合は実行する（例: T-006 `npm run smoke:server`, T-007 `npm run smoke:config`, T-008 `npm run smoke:capture-ocr`, T-009 `npm run smoke:translation`, T-010 `npm run smoke:diagnostics`）
+  - 対象親タスクに smoke command がある場合は実行する（例: T-006 `npm run smoke:server`, T-007 `npm run smoke:config`, T-008 `npm run smoke:capture-ocr`, T-009 `npm run smoke:translation`, T-010 `npm run smoke:diagnostics`, T-012 `npm run smoke:first-run-closeout`）
   - cleanup スライス確認
   - `PARENT_TASK_CHECKLIST_JA.md` に沿って人手検証を依頼
 

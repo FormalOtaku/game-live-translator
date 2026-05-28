@@ -499,3 +499,16 @@
 - Regression tests added first: `test/overlay-layout-smoke.test.js` executes the smoke script as a child process, asserts coverage of required resolutions/themes/line counts, checks no clipping or overlap evidence, and verifies stdout/stderr do not contain source text, raw representative subtitle text, provider keys, screenshot paths, image data, stack traces, or debug sentinels.
 - Migration needed: None.
 - Rollback plan: Remove `npm run smoke:overlay-layout`, `scripts/smoke-overlay-layout.js`, `test/overlay-layout-smoke.test.js`, and the T-012-004 spec/decision entries. Existing overlay renderer, server smoke, first-run stream smoke, and backend recovery smoke contracts remain unchanged.
+
+### CHG-20260528-039
+- Date: 2026-05-28
+- Summary: Added the T-012-005 first-run stream closeout smoke and runbook.
+- Reason: The T-012 parent needs one repeatable closeout path that aggregates first-run stream, backend recovery, and overlay layout evidence while keeping real Windows/OBS visual confirmation as an explicit manual gate.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The closeout smoke executes existing child smokes and persists no OCR/source text, translated text, images, screenshots, logs, cache rows, or provider keys.
+  - API: Adds `npm run smoke:first-run-closeout`, `scripts/smoke-first-run-closeout.js`, `test/first-run-closeout-smoke.test.js`, and `FIRST_RUN_STREAM_CLOSEOUT_RUNBOOK_JA.md`. It validates runbook/package wiring and aggregates child smoke module evidence without adding HTTP routes.
+  - UI: First-Run and OBS Setup Guide gain a parent-level sanitized evidence summary that can be displayed as pass/fail/hash/count/schema data only, plus an explicit `WINDOWS_OBS_VISUAL_GATE` marker for future manual validation.
+- Risk: This remains a dependency-free contract closeout, not real Windows/Electron/OBS automation. It intentionally hides child smoke summaries behind byte counts and hashes, so debugging still requires running the failing child smoke locally.
+- Regression tests added first: `test/first-run-closeout-smoke.test.js` executes the closeout script as a child process, asserts all three T-012 child smoke modules pass, verifies runbook/package checks, and verifies stdout/stderr do not contain raw source text, translated text, provider-key sentinels, screenshot paths, cache keys, or debug payloads.
+- Migration needed: None.
+- Rollback plan: Remove `npm run smoke:first-run-closeout`, `scripts/smoke-first-run-closeout.js`, `test/first-run-closeout-smoke.test.js`, `FIRST_RUN_STREAM_CLOSEOUT_RUNBOOK_JA.md`, and the T-012-005 spec/decision entries. Existing T-012-001 through T-012-004 smoke commands remain unchanged.

@@ -722,6 +722,14 @@ type DiagnosticBundle = {
 - The smoke may inspect raw representative English subtitle text and source-text sentinels internally to prove layout and privacy behavior, but stdout/stderr are limited to resolution labels, theme ids, numeric layout metrics, booleans, counts, and SHA-256 hashes. They must not contain raw OCR/source text, raw representative subtitle text, provider keys, screenshot/image paths, stack traces, logs, cache keys, arbitrary error details, or debug payloads.
 - The smoke adds no HTTP routes, no SQLite schema changes, no profile export changes, no native OCR/capture dependency, no browser/OBS dependency, no real provider credential use, no npm dependency, and no durable logs.
 
+### First-Run Closeout Smoke Command
+- T-012-005 adds `npm run smoke:first-run-closeout` as the dependency-free closeout aggregator for the T-012 first-run stream parent task.
+- The command validates `FIRST_RUN_STREAM_CLOSEOUT_RUNBOOK_JA.md` and `package.json` contain the required closeout commands, then runs the exported `runSmoke()` module contracts from `scripts/smoke-first-run-stream.js`, `scripts/smoke-backend-recovery.js`, and `scripts/smoke-overlay-layout.js` in sequence.
+- Each child smoke's canonical evidence summary is scanned for known synthetic source text, raw representative subtitle text, translated text, provider-key sentinels, screenshot paths, stack frames, cache-key values, and debug-payload values. Raw child stdout/stderr are never produced by this aggregator; the summary includes only child ids, command names, `executionMode: "module"`, exit-code equivalents, durations, summary byte counts, summary SHA-256 hashes, and child evidence schema versions when the underlying smoke exposes them.
+- Success returns JSON with `schemaVersion: "first-run-closeout-smoke.v1"`, `command: "npm run smoke:first-run-closeout"`, runbook/package check counts, per-smoke safe evidence records, privacy booleans, and `manualGate.reasonCode: "WINDOWS_OBS_VISUAL_GATE"`. The manual gate is intentional: real Windows 10/11 + OBS visual confirmation is not claimed by the dependency-free smoke and must be recorded separately when a milestone requires it.
+- Failure output is a controlled JSON error on stderr. It must not include raw child output, source text, translated text, provider keys, screenshots/image paths, stack traces, raw logs, cache keys, arbitrary exception details, or debug payloads.
+- The closeout command adds no HTTP routes, no SQLite schema changes, no profile export changes, no native OCR/capture/browser/OBS dependency, no real provider credential use, no npm dependency, no durable logs, and no game modification/file parsing/code injection/script distribution.
+
 ## Error Model
 - Canonical error shape: `ApiError`.
 - Validation error code: `VALIDATION_ERROR` with `details.fieldErrors`.

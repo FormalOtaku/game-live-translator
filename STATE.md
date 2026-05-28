@@ -7,22 +7,22 @@
 - active_task_ids: (none)
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-012
-- current_slice_id: T-012-005
-- current_slice_goal: First-run stream closeout runbook
-- current_slice_status: todo
-- completed_slices: 4
-- total_slices: 5
-- progress_pct: 80
-- next_slice_id: T-012-005
-- next_slice_goal: First-run stream closeout runbook
-- last_checkpoint: 2026-05-28T07:41:26.347Z
+- current_slice_prefix: (none)
+- current_slice_id: (none)
+- current_slice_goal: (none)
+- current_slice_status: (none)
+- completed_slices: 0
+- total_slices: 0
+- progress_pct: 0
+- next_slice_id: (none)
+- next_slice_goal: (none)
+- last_checkpoint: 2026-05-28T08:13:22.878Z
 ## Session Flow
-- current_session_role: supervisor
-- recommended_next_session_role: execution
+- current_session_role: execution
+- recommended_next_session_role: supervisor
 - checkpoint_status: satisfied
-- checkpoint_reason: T-012-004 deterministic verification passed: smoke/layout targeted tests, full npm test, build, lint, diff-check; Claude agent-pass T-012-004-r1 clean with must_fix=0 and unresolved P1/P2=0.
-- last_completed_slice: T-012-004
-- handoff_summary: T-012-004 complete: added npm run smoke:overlay-layout, dependency-free overlay renderer layout smoke across 1280x720, 1920x1080, and 2560x1440 for built-in themes and maxLines 1/2/3; added child-process and direct regression coverage; updated product/API/UI/migration/change/decision docs and Maestro structured state. Verification: npm test 380 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-004-r1 clean with must_fix=0 and unresolved P1/P2=0. Next slice: T-012-005 first-run stream closeout runbook.
-- next_action: start_execution_session
-- updated_at: 2026-05-28T07:41:26.344Z
+- checkpoint_reason: T-012 complete: first-run closeout smoke/test/build/lint/diff-check passed; Claude agent-pass T-012-005-r2 full-diff clean with must_fix=0 and unresolved P1/P2=0.
+- last_completed_slice: T-012-005
+- handoff_summary: T-012-005 and parent T-012 complete: added npm run smoke:first-run-closeout and FIRST_RUN_STREAM_CLOSEOUT_RUNBOOK_JA.md, aggregating first-run stream, backend recovery, and overlay layout smoke module evidence into privacy-safe hash/count/schema records with explicit WINDOWS_OBS_VISUAL_GATE manual gate. Verification: node --check new files pass; npm test -- T-012 smoke tests pass; npm run smoke:first-run-closeout pass with escalated localhost listen; npm test 385 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-005-r2 full-diff clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: start_supervisor_session
+- updated_at: 2026-05-28T08:13:22.873Z
