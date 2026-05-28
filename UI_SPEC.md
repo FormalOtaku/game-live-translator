@@ -38,14 +38,16 @@
 - Steps:
   1. Welcome and product boundary: explains no game modification and no script distribution.
   2. Privacy explanation: explains that cloud providers receive recognized text when enabled.
-  3. Translation provider selection.
-  4. API key entry and test; key field is write-only after save.
-  5. OBS Browser Source setup with copyable overlay URL.
-  6. Capture source selection.
-  7. ROI draw.
-  8. Test OCR.
-  9. Test translation.
-  10. Save profile and finish.
+  3. Profile basics: profile name, optional game title, and v1 defaults.
+  4. Translation provider selection.
+  5. API key entry and test; key field is write-only after save.
+  6. OBS Browser Source setup with copyable overlay URL.
+  7. Capture source selection.
+  8. ROI draw.
+  9. Test OCR.
+  10. Test translation.
+  11. Save profile and finish.
+- API sequencing: OCR and translation test endpoints are profile-bound in the current API, so the wizard persists a profile after provider, source, and ROI are valid, then runs `/api/ocr/test` and `/api/translate/test` against that profile id. The final step activates the profile through `/api/profiles/active`.
 - Loading: provider validation, source enumeration, OCR, and translation steps show labeled progress.
 - Empty: no windows/screens found, no provider selected, or no OCR text recognized.
 - Error: invalid key, network failure, OCR engine failure, capture permission/source failure.
@@ -196,6 +198,15 @@
 - Recovery action derivation: `deriveRecoveryActions(runtimeStatus)` reads `state`, `code`, and `retryable` only. Idle/ok/running statuses produce an empty action list. Known error codes map to a frozen controlled vocabulary (`open_translation_settings`, `edit_api_key`, `wait_and_retry`, `switch_provider`, `check_network`, `open_diagnostics`, `open_capture_setup`, `refresh_sources`, `redraw_roi`, `stop_capture`, `start_capture`, `restart_backend`, `open_profiles`). `retryable=true` prepends `retry`. Unknown codes fall back to `open_diagnostics`. `RuntimeStatus.message` text is never parsed.
 - View model: `buildViewModel({ route, appStatus, port, setup })` returns a frozen `{ route, sidebar, setupComplete, status, recoveries }` snapshot. With no requested route, incomplete setup enters `first-run` and complete setup enters `home`; with a requested route, setup-required screens redirect to `first-run` until setup is complete while non-setup screens such as `about` remain reachable. The renderer harness `createDesktopShell({ port, setup, initialRoute, appStatus })` exposes `snapshot`, `navigate`, `consumeAppStatus`, `updateSetup`, and `setPort`; every method returns a new frozen view model, performs no I/O, and writes no persistence. `updateSetup` copies only the allow-listed setup fields so prototype-shaped keys cannot flip setup completion.
 
+## First-Run Flow Contract
+- T-011-002 adds `src/ui/first-run-flow.js` as the dependency-free pure JS contract for the First-Run Wizard. It performs no I/O, has no React/Electron dependency, and stores no provider API key, raw OCR text, or raw translation test text in serializable state.
+- Step registry: the frozen step list is `boundary`, `privacy`, `profile-basics`, `provider`, `provider-key`, `obs-overlay`, `capture-source`, `roi`, internal `persist-profile`, `ocr-test`, `translation-test`, and `finish`. `persist-profile` is hidden from the visible stepper but is explicit in the contract because `/api/ocr/test` and `/api/translate/test` require a persisted `profileId`.
+- Draft state: the wizard draft is allow-listed to `ProfileCreateRequest` fields (`name`, optional `gameTitle`, `captureSource`, `roi`, `ocrPreset`, `ocrConfidenceFloor`, `captureHz`, `translationProvider`, `targetLang`, `overlayThemeId`, `glossary`). Default draft values are privacy-safe v1 defaults (`default_dialogue`, confidence `0.6`, capture `2 Hz`, target `en`, built-in theme `classic_subtitle`, empty glossary). Unknown fields, prototype-shaped fields, API keys, and raw test text are ignored.
+- Provider readiness: `echo` is treated as local debug-ready without a key; `deepl` requires successful write-only key save through `/api/keys/deepl`. The key-save intent keeps the actual key behind a non-enumerable `makeBody()` call path for fetch-time use and exposes only `{ apiKey: "[REDACTED]" }` through `safeIntentForLog`.
+- HTTP intents: the flow emits frozen request descriptors for `GET /api/capture/sources`, `POST /api/profiles`, `PUT /api/keys/{provider}`, `POST /api/ocr/test`, `POST /api/translate/test`, and `PUT /api/profiles/active`. Sensitive OCR/translation/provider-key inputs are never present in `JSON.stringify(intent)` or the log-safe intent.
+- Progress and setup: profile creation records only `profileId`; OCR and translation success record booleans only; final activation records `activeProfileId`. First-run completion additionally requires explicit boundary, privacy, and overlay-copy acknowledgements. `deriveDesktopSetup(state)` returns exactly the shell setup contract `{ activeProfileId, providerKeySaved, captureSourceSelected, roiSaved }` so `desktop-shell.isSetupComplete` remains the single entry-route gate.
+- Error handling: `sanitizeFirstRunError(error)` accepts `ApiError`, `ContractError`, or unknown exceptions and returns only `{ code, message, retryable, fieldErrors, recoveryActions }`. Field errors are value-free, secrets are redacted, unknown exceptions collapse to `Action failed`, and recovery derives from `code`/`retryable` only.
+
 ## UX Acceptance Criteria
 - [ ] First-run wizard is completable by keyboard only.
 - [ ] Every first-class screen above has explicit loading, empty, error, success, and recovery rendering.
@@ -205,6 +216,7 @@
 - [ ] Overlay theme preview updates within 500ms of local changes.
 - [ ] Status screen always shows the next actionable recovery step for backend, capture, provider, and overlay failures.
 - [x] Desktop renderer shell registers every first-class screen with loading/empty/error/success/recovery capabilities, routes incomplete setup-required screens to First-Run, falls back safely on unknown routes, trusts only backend-reported `http://127.0.0.1:<port>/overlay`, and derives recovery actions from RuntimeStatus.code/retryable without parsing message text.
+- [x] First-run flow contract emits profile/key/capture/OCR/translation/activation HTTP intents aligned with the current localhost API, keeps API keys and raw translation test text out of serializable state/log-safe descriptors, requires boundary/privacy/overlay acknowledgements for completion, and derives the desktop setup gate from active profile, provider readiness, capture source, and ROI state.
 
 ## Product UX Priorities
 - プレースホルダーUIではなく、選択フローを実用できるv1品質にする。

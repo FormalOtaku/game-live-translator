@@ -1,11 +1,11 @@
 {
   "completed_items": [
-    "T-010 diagnostics bundle API core"
+    "T-011-002"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-029 records diagnostics API smoke/runbook closeout and dependency-free no-persistence scope"
+    "DEC-031 first-run flow contract keeps secrets out of serializable state and emits API intent descriptors only"
   ],
   "open_questions": [],
-  "summary": "T-010 parent complete: diagnostics bundle contract/redaction, GET /api/diagnostics/bundle route, and npm run smoke:diagnostics plus JA runbook are in place. Final slice T-010-003 added scripts/smoke-diagnostics-api.js, test/diagnostics-api-smoke.test.js, DIAGNOSTICS_API_SMOKE_RUNBOOK_JA.md, package script, and spec/decision/migration/runbook updates. Verification local and Docker Node 20 test/build/lint/smoke:diagnostics pass; Claude sidecar T-010-003-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
+  "summary": "T-011-002 complete: added dependency-free First-Run provider/profile flow contract in src/ui/first-run-flow.js, with privacy-first state normalization, provider readiness gating, capture/ROI/profile/OCR/translation/activation HTTP intents, redacted sensitive makeBody paths, explicit acknowledgement completion gates, and code-driven recovery actions. Added test/first-run-flow.test.js coverage for state allow-lists, DeepL key readiness, profile/capture/ROI validation, secret redaction, result application, setup completion, and recovery mapping. Updated PRODUCT/UI/API/decision/migration docs. Verification passed: node --check first-run source/test, node --test first-run plus desktop-shell tests, npm test 322 pass, npm run build pass, npm run lint pass, git diff --check pass. Claude sidecar T-011-002-r5 imported clean with findings=0, must_fix=0, unresolved P1/P2=0."
 }

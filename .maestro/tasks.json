@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T02:49:17.053Z",
+  "migrated_at": "2026-05-28T03:31:04.791Z",
   "source_path": "TASKS.md",
-  "source_sha256": "163d2688429707be152482de4dd45c70e713a2a4b44b1c53c1cb8a6c22184203",
+  "source_sha256": "01c7a079bcdc0b1f962a2d69bbaeac42373d5cde219f37779cb9d5611f7a8765",
   "task_count": 44,
   "counts": {
-    "todo": 4,
+    "todo": 3,
     "doing": 1,
     "blocked": 0,
-    "done": 39
+    "done": 40
   },
   "tasks": [
     {
@@ -295,7 +295,7 @@
     {
       "id": "T-011-002",
       "title": "First-run provider profile setup flow",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     },

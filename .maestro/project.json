@@ -31,11 +31,11 @@
     "current_session_role": "supervisor",
     "recommended_next_session_role": "execution",
     "checkpoint_status": "satisfied",
-    "checkpoint_reason": "T-011-001 deterministic contract validation complete: node --test test/desktop-shell.test.js, npm test, npm run build, npm run lint, git diff --check pass; Claude sidecar T-011-001-r2 imported clean with unresolved P1/P2=0.",
-    "last_completed_slice": "T-011-001",
-    "handoff_summary": "T-011-001 complete: dependency-free desktop shell contract landed in src/ui/desktop-shell.js with full screen registry, setup-required route gating, sanitized AppStatus/subtitle view model, strict 127.0.0.1 overlay URL trust, code/retryable-driven recovery actions, and createDesktopShell harness. Added test/desktop-shell.test.js with 16 focused checks plus PRODUCT/UI/API/decision/migration updates. Verification: node --test test/desktop-shell.test.js 16 pass; npm test 306 pass; npm run build pass; npm run lint pass; git diff --check pass. Claude sidecar T-011-001-r2 module review clean with must_fix=0 and unresolved P1/P2=0.",
+    "checkpoint_reason": "T-011-002 closeout verified: npm test 322 pass, npm run build pass, npm run lint pass, git diff --check pass, Claude sidecar T-011-002-r5 imported clean with unresolved P1/P2=0.",
+    "last_completed_slice": "T-011-002",
+    "handoff_summary": "T-011-002 complete: added dependency-free First-Run provider/profile flow contract in src/ui/first-run-flow.js, with privacy-first state normalization, provider readiness gating, capture/ROI/profile/OCR/translation/activation HTTP intents, redacted sensitive makeBody paths, explicit acknowledgement completion gates, and code-driven recovery actions. Added test/first-run-flow.test.js coverage for state allow-lists, DeepL key readiness, profile/capture/ROI validation, secret redaction, result application, setup completion, and recovery mapping. Updated PRODUCT/UI/API/decision/migration docs. Verification passed: node --check first-run source/test, node --test first-run plus desktop-shell tests, npm test 322 pass, npm run build pass, npm run lint pass, git diff --check pass. Claude sidecar T-011-002-r5 imported clean with findings=0, must_fix=0, unresolved P1/P2=0.",
     "next_action": "start_execution_session",
-    "updated_at": "2026-05-28T02:42:43.805Z"
+    "updated_at": "2026-05-28T03:30:55.023Z"
   },
   "ui_design_policy": {
     "surface_priority": [

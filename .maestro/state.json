@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T02:49:17.053Z",
+  "migrated_at": "2026-05-28T03:31:04.791Z",
   "source_path": "STATE.md",
-  "source_sha256": "bfc5c03b1e38d3464685f4e05bbc9f140a37d86d7c5f1edfe5af81b7e77ccc81",
+  "source_sha256": "824e79634d2738b0fde4ec2f2b105115d34d8745347bc0fa305d793b1c77650c",
   "current_focus": {
     "milestone": null,
     "active_task_ids": [
@@ -12,15 +12,15 @@
   },
   "slice_progress": {
     "current_slice_prefix": "T-011",
-    "current_slice_id": "T-011-002",
-    "current_slice_goal": "First-run provider profile setup flow",
+    "current_slice_id": "T-011-003",
+    "current_slice_goal": "Home status recovery and OBS URL actions",
     "current_slice_status": "todo",
-    "completed_slices": 1,
+    "completed_slices": 2,
     "total_slices": 5,
-    "progress_pct": 20,
-    "next_slice_id": "T-011-002",
-    "next_slice_goal": "First-run provider profile setup flow",
-    "last_checkpoint": "2026-05-28T02:42:43.808Z",
+    "progress_pct": 40,
+    "next_slice_id": "T-011-003",
+    "next_slice_goal": "Home status recovery and OBS URL actions",
+    "last_checkpoint": "2026-05-28T03:30:55.026Z",
     "done": [],
     "doing": [],
     "todo": []
