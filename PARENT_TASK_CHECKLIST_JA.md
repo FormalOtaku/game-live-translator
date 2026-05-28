@@ -16,7 +16,8 @@
 - [ ] `npm test` が pass
 - [ ] `npm run build` が pass（定義されている場合）
 - [ ] `npm run lint` が pass（定義されている場合）
-- [ ] 対象親タスクに smoke command がある場合は pass（T-006: `npm run smoke:server`, T-007: `npm run smoke:config`, T-008: `npm run smoke:capture-ocr`, T-009: `npm run smoke:translation`, T-010: `npm run smoke:diagnostics`）
+- [ ] 対象親タスクに smoke command がある場合は pass（T-006: `npm run smoke:server`, T-007: `npm run smoke:config`, T-008: `npm run smoke:capture-ocr`, T-009: `npm run smoke:translation`, T-010: `npm run smoke:diagnostics`, T-012: `npm run smoke:first-run-closeout`）
+- [ ] T-012 closeout では `FIRST_RUN_STREAM_CLOSEOUT_RUNBOOK_JA.md` を確認し、`WINDOWS_OBS_VISUAL_GATE` が未実施なら実機 Windows 10/11 + OBS Browser Source 検証を別 gate として記録する
 - [ ] 自動化できない主要ユースケースを手動で実行し、期待どおりに動作した
 
 ## C. 回帰/運用チェック（必須）

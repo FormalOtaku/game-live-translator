@@ -11,8 +11,7 @@
 ## Backlog
 | ID | Title | Status | Owner | Notes |
 |---|---|---|---|---|
-| T-012 | Implement synthetic first-run stream smoke and recovery evidence | todo | codex | Production-grade v1 acceptance slice after T-011: prove a synthetic Japanese scene can reach a visible English subtitle in OBS overlay through localhost contracts within a first-run smoke. Define 3-6 PR-sized children, keep one child doing, specs first, npm test/build/lint, and Claude sidecar evidence before completion. |
-| T-012-005 | First-run stream closeout runbook | todo | codex | PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
+| (none) |  |  |  |  |
 
 ## Done
 | ID | Title | Date | Evidence |
@@ -61,7 +60,9 @@
 | T-011-003 | Home status recovery and OBS URL actions |  | PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-011-004 | Capture OCR translation setup screens |  | PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-011-005 | Overlay theme diagnostics privacy UI closeout |  | PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
+| T-012 | Implement synthetic first-run stream smoke and recovery evidence |  | Production-grade v1 acceptance slice after T-011: prove a synthetic Japanese scene can reach a visible English subtitle in OBS overlay through localhost contracts within a first-run smoke. Define 3-6 PR-sized children, keep one child doing, specs first, npm test/build/lint, and Claude sidecar evidence before completion. |
 | T-012-001 | Synthetic first-run stream harness contract |  | PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-012-002 | End-to-end OBS overlay smoke command |  | PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-012-003 | Backend restart and port conflict recovery smoke |  | PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-012-004 | Overlay resolution layout verification smoke |  | PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
+| T-012-005 | First-run stream closeout runbook |  | PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |

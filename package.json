@@ -13,6 +13,7 @@
     "smoke:first-run-stream": "node scripts/smoke-first-run-stream.js",
     "smoke:backend-recovery": "node scripts/smoke-backend-recovery.js",
     "smoke:overlay-layout": "node scripts/smoke-overlay-layout.js",
+    "smoke:first-run-closeout": "node scripts/smoke-first-run-closeout.js",
     "check:syntax": "node scripts/check-syntax.js",
     "build": "npm run check:syntax",
     "lint": "npm run check:syntax"
