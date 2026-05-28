@@ -12,7 +12,6 @@
 | ID | Title | Status | Owner | Notes |
 |---|---|---|---|---|
 | T-011 | Implement desktop app shell and first-run UX core | doing | codex | Production-grade v1 desktop UI foundation after T-010 backend/API core. Build Electron/React-ready renderer contracts in small PR slices: shell/navigation, first-run provider/profile flow, home/status recovery, OBS guide/theme preview, diagnostics/privacy UI smoke. Keep exactly one child doing; specs first; tests/build/lint; Claude sidecar evidence before slice completion. |
-| T-011-004 | Capture OCR translation setup screens | todo | codex | PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-011-005 | Overlay theme diagnostics privacy UI closeout | todo | codex | PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 
 ## Done
@@ -59,3 +58,4 @@
 | T-011-001 | Desktop shell route and state contract |  | PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-011-002 | First-run provider profile setup flow |  | PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-011-003 | Home status recovery and OBS URL actions |  | PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
+| T-011-004 | Capture OCR translation setup screens |  | PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |

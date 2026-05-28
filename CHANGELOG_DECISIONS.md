@@ -421,3 +421,16 @@
 - Regression tests added first: `test/home-status-actions.test.js` covers readiness/card derivation, trusted and untrusted overlay copy behavior, redacted feedback, status refresh and `/ws/app` intents, capture start/stop intent bodies, recovery-action-to-navigation/host-command mapping, no runtime-message parsing, immutable snapshots, and no serialization of provider keys, raw OCR/source text, translated text, stack traces, screenshots, debug payloads, or untrusted URLs.
 - Migration needed: None.
 - Rollback plan: Remove `src/ui/home-status-actions.js`, `test/home-status-actions.test.js`, and the T-011-003 spec/decision entries. Existing T-011-001 shell and T-011-002 First-Run contracts remain unchanged.
+
+### CHG-20260528-033
+- Date: 2026-05-28
+- Summary: Added the dependency-free Capture/OCR/Translation setup-screen renderer contract for T-011-004.
+- Reason: Capture Setup, OCR Preview, and Translation Settings need one executable boundary for profile setting drafts, source enumeration, OCR preview, provider key saves, translation preview, and recovery actions before concrete React screens are built.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The contract is pure in-process renderer logic and adds no SQLite tables, no profile export schema bump, no key storage movement, no cache persistence, no logs/diagnostics persistence, and no screenshot/image persistence.
+  - API: Adds `src/ui/setup-screens.js` with HTTP intent descriptors for existing routes only: `GET /api/capture/sources`, `PUT /api/profiles/{id}`, `POST /api/ocr/test`, `PUT /api/keys/{provider}`, and `POST /api/translate/test`. No server routes are added or changed.
+  - UI: Capture Setup, OCR Preview, and Translation Settings gain a frozen view-model/state boundary with allow-listed profile draft updates, transient preview results, key/test-text redaction, sanitized errors, and code/retryable-driven recovery action ids.
+- Risk: This remains a renderer contract, not concrete React or Electron host wiring. Components must keep API-key and manual-test-text inputs local to submission paths and use the safe-log snapshot for telemetry or diagnostics.
+- Regression tests added first: `test/setup-screens.test.js` covers frozen state/view-model shapes, allow-listed draft updates, capture source response sanitization, profile update intent validation, OCR preview result validation and safe-log redaction, write-only provider-key intent redaction, translation preview intent redaction, sanitized error recovery, and no serialization of provider keys, manual source text, OCR text, translated text, screenshots, stack traces, provider responses, or debug payloads in log-safe outputs.
+- Migration needed: None.
+- Rollback plan: Remove `src/ui/setup-screens.js`, `test/setup-screens.test.js`, and the T-011-004 spec/decision entries. Existing T-011-001 shell, T-011-002 First-Run, and T-011-003 Home/Status contracts remain unchanged.

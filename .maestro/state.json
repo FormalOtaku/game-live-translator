@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T03:53:48.116Z",
+  "migrated_at": "2026-05-28T04:26:03.045Z",
   "source_path": "STATE.md",
-  "source_sha256": "d4e0375b7b45d23f8a99dc9bfd56af7200bba82c9677e30c40ee9747af180286",
+  "source_sha256": "f93e5e031d4e3c1fb6d24a7b09d08f0dab2cc057ec9bbb4f4716ae6a8afdb78d",
   "current_focus": {
     "milestone": null,
     "active_task_ids": [
@@ -12,15 +12,15 @@
   },
   "slice_progress": {
     "current_slice_prefix": "T-011",
-    "current_slice_id": "T-011-004",
-    "current_slice_goal": "Capture OCR translation setup screens",
+    "current_slice_id": "T-011-005",
+    "current_slice_goal": "Overlay theme diagnostics privacy UI closeout",
     "current_slice_status": "todo",
-    "completed_slices": 3,
+    "completed_slices": 4,
     "total_slices": 5,
-    "progress_pct": 60,
-    "next_slice_id": "T-011-004",
-    "next_slice_goal": "Capture OCR translation setup screens",
-    "last_checkpoint": "2026-05-28T03:53:33.783Z",
+    "progress_pct": 80,
+    "next_slice_id": "T-011-005",
+    "next_slice_goal": "Overlay theme diagnostics privacy UI closeout",
+    "last_checkpoint": "2026-05-28T04:26:03.045Z",
     "done": [],
     "doing": [],
     "todo": []
