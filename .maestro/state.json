@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T06:39:46.733Z",
+  "migrated_at": "2026-05-28T06:40:32.547Z",
   "source_path": "STATE.md",
-  "source_sha256": "bae314f623ca83ad69e0497fbb37db4d235d79a59c20411c077a6a1f738b57af",
+  "source_sha256": "aea2e6538ebf018b90fc55a265d975d7f0262410d7b92f7ae29548494862f089",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
@@ -18,7 +18,7 @@
     "progress_pct": 40,
     "next_slice_id": "T-012-003",
     "next_slice_goal": "Backend restart and port conflict recovery smoke",
-    "last_checkpoint": "2026-05-28T06:39:46.733Z",
+    "last_checkpoint": "2026-05-28T06:40:32.546Z",
     "done": [],
     "doing": [],
     "todo": []
