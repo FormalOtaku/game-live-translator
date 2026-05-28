@@ -486,3 +486,16 @@
 - Regression tests added first: `test/backend-recovery-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no synthetic source text, raw translated text, provider key, screenshot path, stack trace, or debug sentinel in stdout/stderr.
 - Migration needed: None.
 - Rollback plan: Remove `npm run smoke:backend-recovery`, `scripts/smoke-backend-recovery.js`, `test/backend-recovery-smoke.test.js`, and the T-012-003 spec/decision entries. Existing server, overlay, and T-012-002 first-run smoke contracts remain unchanged.
+
+### CHG-20260528-038
+- Date: 2026-05-28
+- Summary: Added the T-012-004 OBS overlay resolution layout smoke command.
+- Reason: T-012 already proved the synthetic subtitle reaches the overlay and survives backend recovery. The remaining first-run stream evidence needs repeatable proof that the OBS Browser Source overlay layout does not clip or overlap representative subtitles at the required streaming resolutions.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The smoke renders overlay HTML/CSS in memory only and persists no OCR/source text, translated text, images, screenshots, logs, cache rows, or provider keys.
+  - API: Adds `npm run smoke:overlay-layout`, `scripts/smoke-overlay-layout.js`, and `test/overlay-layout-smoke.test.js`. The command exercises existing `renderOverlayHtml(...)` and `createSubtitleFrame(...)` contracts and adds no HTTP route.
+  - UI: First-Run and OBS Setup Guide gain deterministic layout evidence for built-in themes, 1-3 visible lines, 1280x720, 1920x1080, and 2560x1440. The summary is safe for UI/runbook display because it prints only resolution labels, theme ids, numeric layout metrics, booleans, counts, and hashes.
+- Risk: This remains a dependency-free renderer-contract smoke, not a real browser/OBS screenshot test. It intentionally uses conservative CSS-token and glyph-width estimates so CI/devcontainer workflows can run without Chromium, OBS Studio, Windows capture APIs, PaddleOCR, DeepL, or network access.
+- Regression tests added first: `test/overlay-layout-smoke.test.js` executes the smoke script as a child process, asserts coverage of required resolutions/themes/line counts, checks no clipping or overlap evidence, and verifies stdout/stderr do not contain source text, raw representative subtitle text, provider keys, screenshot paths, image data, stack traces, or debug sentinels.
+- Migration needed: None.
+- Rollback plan: Remove `npm run smoke:overlay-layout`, `scripts/smoke-overlay-layout.js`, `test/overlay-layout-smoke.test.js`, and the T-012-004 spec/decision entries. Existing overlay renderer, server smoke, first-run stream smoke, and backend recovery smoke contracts remain unchanged.
