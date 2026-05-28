@@ -343,3 +343,16 @@
 - Regression tests added first: `test/translation-api-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no provider key/source/translated/glossary/cache sentinel in stdout.
 - Migration needed: None.
 - Rollback plan: Remove `npm run smoke:translation`, the smoke script, runbook, focused smoke test, and spec/decision entries. Existing translation route behavior remains covered by unit tests.
+
+### CHG-20260528-027
+- Date: 2026-05-28
+- Summary: Started T-010 with diagnostics bundle contract validation and redaction fixtures.
+- Reason: Logs/Diagnostics needs a copyable redacted bundle, and the product privacy acceptance requires diagnostics to exclude provider keys, OCR/source text, translated text, screenshots/images, stack traces, and raw debug/provider payloads by default.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. This slice introduces no durable log store, screenshot/image read path, plaintext key access, profile export schema change, or cache persistence.
+  - API: Adds executable diagnostics bundle construction/redaction helpers and `validateDiagnosticBundle`/`assertDiagnosticBundle`. String and structured log inputs are redacted before output and normalized to the canonical `DiagnosticBundle` shape.
+  - UI: Logs/Diagnostics can rely on a fixed bundle shape and redaction summary before the HTTP route is wired.
+- Risk: This is the contract/redaction boundary only. T-010-002 must call it from `GET /api/diagnostics/bundle`, and concrete log sources must avoid feeding full game text by default even though this contract redacts defensive sentinel fields.
+- Regression tests added first: `test/contracts.test.js` covers string/structured diagnostics redaction, fixed redaction summary, bundle construction, validator acceptance, malformed bundle rejection, and value-free validation errors.
+- Migration needed: None.
+- Rollback plan: Remove the diagnostics bundle helpers, validators, focused tests, and spec/decision entries. Existing status/config/capture/translation routes remain unchanged.

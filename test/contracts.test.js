@@ -15,8 +15,11 @@ const {
   assertProfileExportSafe,
   apiKeyWriteResponse,
   redactSecrets,
+  redactDiagnosticString,
+  redactDiagnosticPayload,
   redactDiagnosticLogs,
   diagnosticsRedactionSummary,
+  buildDiagnosticBundle,
   escapeHtml,
   isBuiltInTheme,
   assertThemeDeletable,
@@ -53,6 +56,8 @@ const {
   assertOcrResult,
   validateTranslationResult,
   assertTranslationResult,
+  validateDiagnosticBundle,
+  assertDiagnosticBundle,
   validateThemeCssJson,
   validateOverlayThemeCreateRequest,
   assertOverlayThemeCreateRequest,
@@ -232,6 +237,104 @@ test('redactDiagnosticLogs maps arrays and rejects non-arrays', () => {
   );
 });
 
+test('diagnostic redaction removes string and structured sensitive payloads', () => {
+  const secret = 'sk-DIAGNOSTICSECRET1234';
+  const rawSource = '秘密のOCR原文';
+  const translated = 'Secret translated diagnostic output';
+  const screenshot = 'C:\\debug\\secret-scene.png';
+  const providerKeys = 'deepl=sk-DIAGNOSTICSECRET5678';
+  const stackFrame = 'at provider.translate (C:\\app\\provider.js:12:3)';
+  const parenlessStackFrame = 'at C:\\app\\provider.js:12:3';
+  const errorStack = `Error: failed translating ${rawSource}\n    ${stackFrame}\n    ${parenlessStackFrame}`;
+
+  assert.equal(redactDiagnosticString(null), '');
+  assert.equal(redactDiagnosticString(123), '123');
+
+  const stringLine = `apiKey=${secret} sourceText="${rawSource}" translatedText="${translated}" screenshotPath="${screenshot}" screenshot="${screenshot}" images=["${screenshot}"] debugScreenshots=["${screenshot}"] providerKeys="${providerKeys}" ${stackFrame} ${parenlessStackFrame}`;
+  const redactedString = redactDiagnosticString(stringLine);
+  assert.ok(redactedString.includes('[REDACTED]'));
+  assert.equal(redactedString.includes(secret), false);
+  assert.equal(redactedString.includes(rawSource), false);
+  assert.equal(redactedString.includes(translated), false);
+  assert.equal(redactedString.includes(screenshot), false);
+  assert.equal(redactedString.includes(providerKeys), false);
+  assert.equal(redactedString.includes(stackFrame), false);
+  assert.equal(redactedString.includes(parenlessStackFrame), false);
+  const redactedErrorStack = redactDiagnosticString(errorStack);
+  assert.equal(redactedErrorStack.includes(rawSource), false);
+  assert.equal(redactedErrorStack.includes(stackFrame), false);
+  assert.equal(redactedErrorStack.includes(parenlessStackFrame), false);
+
+  const structured = {
+    component: 'translator',
+    message: `failed with token: ${secret}`,
+    sourceText: rawSource,
+    normalizedText: rawSource,
+    translatedText: translated,
+    screenshotPath: screenshot,
+    errorStack: stackFrame,
+    nested: {
+      providerResponseBody: { text: translated },
+      durationMs: 12,
+    },
+  };
+  const redactedPayload = redactDiagnosticPayload(structured);
+  const serialized = JSON.stringify(redactedPayload);
+  assert.equal(redactedPayload.component, 'translator');
+  assert.equal(redactedPayload.nested.durationMs, 12);
+  assert.equal(redactedPayload.sourceText, '[REDACTED]');
+  assert.equal(redactedPayload.normalizedText, '[REDACTED]');
+  assert.equal(redactedPayload.translatedText, '[REDACTED]');
+  assert.equal(redactedPayload.screenshotPath, '[REDACTED]');
+  assert.equal(redactedPayload.errorStack, '[REDACTED]');
+  assert.equal(redactedPayload.nested.providerResponseBody, '[REDACTED]');
+  assert.equal(serialized.includes(secret), false);
+  assert.equal(serialized.includes(rawSource), false);
+  assert.equal(serialized.includes(translated), false);
+  assert.equal(serialized.includes(screenshot), false);
+
+  const logLines = redactDiagnosticLogs([stringLine, structured]);
+  const allLogs = JSON.stringify(logLines);
+  assert.equal(logLines.length, 2);
+  assert.equal(logLines.every((line) => typeof line === 'string'), true);
+  assert.equal(allLogs.includes(secret), false);
+  assert.equal(allLogs.includes(rawSource), false);
+  assert.equal(allLogs.includes(translated), false);
+  assert.equal(allLogs.includes(screenshot), false);
+});
+
+test('diagnostic structured redaction handles cycles and prototype-like keys', () => {
+  const secret = 'sk-DIAGNOSTICSECRET1234';
+  const rawSource = '秘密のOCR原文';
+  const cyclic = { component: 'diagnostics' };
+  cyclic.self = cyclic;
+
+  const redactedCycle = redactDiagnosticPayload(cyclic);
+  assert.equal(redactedCycle.component, 'diagnostics');
+  assert.equal(redactedCycle.self, '[REDACTED]');
+
+  const suspicious = Object.create(null);
+  Object.defineProperty(suspicious, '__proto__', {
+    enumerable: true,
+    value: { apiKey: secret },
+  });
+  suspicious.constructor = { sourceText: rawSource };
+  suspicious.prototype = { translatedText: 'translated debug text' };
+  suspicious.component = 'diagnostics';
+
+  const redactedSuspicious = redactDiagnosticPayload(suspicious);
+  assert.equal(Object.getPrototypeOf(redactedSuspicious), null);
+  assert.equal(redactedSuspicious.__proto__, '[REDACTED]');
+  assert.equal(redactedSuspicious.constructor, '[REDACTED]');
+  assert.equal(redactedSuspicious.prototype, '[REDACTED]');
+  assert.equal(redactedSuspicious.component, 'diagnostics');
+  const serialized = JSON.stringify(redactedSuspicious);
+  assert.equal(serialized.includes(secret), false);
+  assert.equal(serialized.includes(rawSource), false);
+  assert.equal({}.apiKey, undefined);
+  assert.equal({}.sourceText, undefined);
+});
+
 test('diagnosticsRedactionSummary matches API_SPEC DiagnosticBundle contract', () => {
   const summary = diagnosticsRedactionSummary();
   assert.deepEqual(summary, {
@@ -241,6 +344,166 @@ test('diagnosticsRedactionSummary matches API_SPEC DiagnosticBundle contract', (
     imagesIncluded: false,
   });
   assert.equal(Object.isFrozen(summary), true);
+});
+
+test('buildDiagnosticBundle returns a frozen redacted DiagnosticBundle', () => {
+  const secret = 'sk-DIAGNOSTICSECRET1234';
+  const rawSource = '秘密のOCR原文';
+  const translated = 'Secret translated diagnostic output';
+  const bundle = buildDiagnosticBundle({
+    appVersion: '0.1.0',
+    backendVersion: 'diagnostics-test',
+    os: 'Windows 11',
+    activeProfileId: 'profile_1',
+    clock: () => new Date('2026-05-28T00:00:00.000Z'),
+    logLines: [
+      'startup ok',
+      `apiKey=${secret} ocrText="${rawSource}" translatedText="${translated}"`,
+      {
+        component: 'ocr',
+        message: 'OCR provider rejected frame',
+        sourceText: rawSource,
+        translatedText: translated,
+      },
+    ],
+  });
+
+  assert.deepEqual(bundle, {
+    generatedAt: '2026-05-28T00:00:00.000Z',
+    appVersion: '0.1.0',
+    backendVersion: 'diagnostics-test',
+    os: 'Windows 11',
+    activeProfileId: 'profile_1',
+    redactedLogs: [
+      'startup ok',
+      '[REDACTED] ocrText=[REDACTED] translatedText=[REDACTED]',
+      '{"component":"ocr","message":"OCR provider rejected frame","sourceText":"[REDACTED]","translatedText":"[REDACTED]"}',
+    ],
+    redactionSummary: {
+      apiKeysRemoved: true,
+      ocrTextIncluded: false,
+      translatedTextIncluded: false,
+      imagesIncluded: false,
+    },
+  });
+  assert.equal(Object.isFrozen(bundle), true);
+  assert.equal(Object.isFrozen(bundle.redactedLogs), true);
+  assert.equal(Object.isFrozen(bundle.redactionSummary), true);
+  const serialized = JSON.stringify(bundle);
+  assert.equal(serialized.includes(secret), false);
+  assert.equal(serialized.includes(rawSource), false);
+  assert.equal(serialized.includes(translated), false);
+});
+
+test('buildDiagnosticBundle rejects invalid bundle inputs without leaking values', () => {
+  assert.throws(
+    () => buildDiagnosticBundle({ appVersion: '', backendVersion: 'b', os: 'Windows', logLines: [] }),
+    (error) => error instanceof ContractError && error.code === 'DIAGNOSTICS_FAILED',
+  );
+  assert.throws(
+    () =>
+      buildDiagnosticBundle({
+        appVersion: 'a',
+        backendVersion: 'b',
+        os: 'Windows',
+        activeProfileId: 123,
+        logLines: [],
+      }),
+    (error) => error instanceof ContractError && error.code === 'DIAGNOSTICS_FAILED',
+  );
+  assert.throws(
+    () =>
+      buildDiagnosticBundle({
+        appVersion: 'a',
+        backendVersion: 'b',
+        os: 'Windows',
+        activeProfileId: '',
+        logLines: [],
+      }),
+    (error) => error instanceof ContractError && error.code === 'DIAGNOSTICS_FAILED',
+  );
+  assert.throws(
+    () =>
+      buildDiagnosticBundle({
+        appVersion: 'a',
+        backendVersion: 'b',
+        os: 'Windows',
+        logLines: 'apiKey=sk-DIAGNOSTICSECRET1234',
+      }),
+    (error) =>
+      error instanceof ContractError &&
+      error.code === 'DIAGNOSTICS_FAILED' &&
+      error.message.includes('sk-DIAGNOSTICSECRET1234') === false &&
+      JSON.stringify(error).includes('sk-DIAGNOSTICSECRET1234') === false,
+  );
+  assert.throws(
+    () =>
+      buildDiagnosticBundle({
+        appVersion: 'a',
+        backendVersion: 'b',
+        os: 'Windows',
+        logLines: [],
+        clock: () => new Date('invalid'),
+      }),
+    (error) => error instanceof ContractError && error.code === 'DIAGNOSTICS_FAILED',
+  );
+});
+
+test('DiagnosticBundle: accepts canonical shape and rejects malformed bundles', () => {
+  const bundle = buildDiagnosticBundle({
+    appVersion: '0.1.0',
+    backendVersion: 'backend-v1',
+    os: 'Windows 11',
+    activeProfileId: null,
+    logLines: ['startup ok'],
+    clock: () => new Date('2026-05-28T00:00:00.000Z'),
+  });
+
+  assert.deepEqual(validateDiagnosticBundle(bundle), []);
+  assert.strictEqual(assertDiagnosticBundle(bundle), bundle);
+
+  const malformed = {
+    ...bundle,
+    apiKey: 'sk-DIAGNOSTICSECRET1234',
+    generatedAt: 'not-an-iso-timestamp',
+    activeProfileId: '',
+    redactedLogs: ['ok', { message: 'not serialized' }],
+    redactionSummary: {
+      apiKeysRemoved: false,
+      ocrTextIncluded: true,
+      translatedTextIncluded: true,
+      imagesIncluded: true,
+      raw: 'extra',
+    },
+  };
+  const errors = validateDiagnosticBundle(malformed);
+  const byField = Object.fromEntries(errors.map((error) => [error.field, error.code]));
+  assert.equal(byField.apiKey, 'UNKNOWN_DIAGNOSTIC_BUNDLE_FIELD');
+  assert.equal(byField.generatedAt, 'VALIDATION_ERROR');
+  assert.equal(byField.activeProfileId, 'VALIDATION_ERROR');
+  assert.equal(byField['redactedLogs[1]'], 'VALIDATION_ERROR');
+  assert.equal(
+    byField['redactionSummary.apiKeysRemoved'],
+    'DIAGNOSTIC_REDACTION_SUMMARY_INVALID',
+  );
+  assert.equal(
+    byField['redactionSummary.ocrTextIncluded'],
+    'DIAGNOSTIC_REDACTION_SUMMARY_INVALID',
+  );
+  assert.equal(
+    byField['redactionSummary.translatedTextIncluded'],
+    'DIAGNOSTIC_REDACTION_SUMMARY_INVALID',
+  );
+  assert.equal(
+    byField['redactionSummary.imagesIncluded'],
+    'DIAGNOSTIC_REDACTION_SUMMARY_INVALID',
+  );
+  assert.equal(byField['redactionSummary.raw'], 'UNKNOWN_DIAGNOSTIC_REDACTION_FIELD');
+  assert.equal(JSON.stringify(errors).includes('sk-DIAGNOSTICSECRET1234'), false);
+  assert.throws(
+    () => assertDiagnosticBundle(null),
+    (error) => error instanceof ContractError && error.code === 'VALIDATION_ERROR',
+  );
 });
 
 test('escapeHtml escapes script payloads and dangerous characters', () => {

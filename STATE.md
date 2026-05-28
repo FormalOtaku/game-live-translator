@@ -41,28 +41,28 @@
 
 ## Current Focus
 - milestone:
-- active_task_ids: (none)
+- active_task_ids: T-010
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: (none)
-- current_slice_id: (none)
-- current_slice_goal: (none)
-- current_slice_status: (none)
-- completed_slices: 0
-- total_slices: 0
-- progress_pct: 0
-- next_slice_id: (none)
-- next_slice_goal: (none)
-- last_checkpoint: 2026-05-28T00:57:34.804Z
+- current_slice_prefix: T-010
+- current_slice_id: T-010-002
+- current_slice_goal: Diagnostics bundle HTTP route
+- current_slice_status: doing
+- completed_slices: 1
+- total_slices: 3
+- progress_pct: 33
+- next_slice_id: T-010-003
+- next_slice_goal: Diagnostics smoke runbook and parent closeout
+- last_checkpoint: 2026-05-28T01:27:33.313Z
 ## Session Flow
 - current_session_role: execution
-- recommended_next_session_role: spec
+- recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-009 parent closeout satisfied by deterministic local/Docker verification and imported clean full-diff Claude sidecar evidence; no human validation required.
-- last_completed_slice: T-009-004
-- handoff_summary: T-009/T-009-004 complete: added repeatable translation API smoke command and JA runbook, locked smoke behavior in child-process regression test, and updated PRODUCT/API/decision/migration/runbook closeout docs. Verification passed: local npm test 280 pass, npm run build/lint pass, npm run smoke:translation pass; Docker npm test 280 pass, Docker build/lint/smoke:translation pass; git diff --check pass. Claude sidecar T-009-004-r2 full-diff review imported clean with must_fix=0 and unresolved P1/P2=0.
-- next_action: start_spec_session
-- updated_at: 2026-05-28T00:55:32.227Z
+- checkpoint_reason: T-010-001 deterministic local/Docker validation passed and Claude sidecar review evidence imported clean; no human validation required.
+- last_completed_slice: T-010-001
+- handoff_summary: T-010-001 complete: added DiagnosticBundle contract/redaction helpers and validators, redacted string/structured diagnostics including Error stack headers, cycles, prototype-like keys, screenshots, provider responses, OCR/source/translated text, and updated PRODUCT/API/decision/migration/change docs. Verification: local node checks, node --test test/contracts.test.js 74 pass, npm test 285 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 285 pass and build/lint pass. Claude sidecar T-010-001-r4 module review imported clean with findings=3 P3, must_fix=0, unresolved P1/P2=0.
+- next_action: start_execution_session
+- updated_at: 2026-05-28T01:27:33.311Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

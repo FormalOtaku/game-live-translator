@@ -188,6 +188,30 @@ type DiagnosticBundle = {
 };
 ```
 
+### Diagnostic Bundle Contract
+- T-010-001 adds the executable diagnostics contract used by the future
+  `GET /api/diagnostics/bundle` route. `buildDiagnosticBundle` accepts
+  operational log entries from injected sources, normalizes them to
+  `redactedLogs: string[]`, and returns only the `DiagnosticBundle` fields
+  above.
+- Diagnostic log inputs may be strings or structured objects. Structured logs
+  are recursively redacted before JSON serialization; fields that can contain
+  provider keys, tokens, OCR/source text, translated text, screenshots/images,
+  debug payloads, or stack traces are replaced with `[REDACTED]`.
+- String log inputs are passed through the same secret redactor plus serialized
+  key/value redaction for sensitive field names such as `apiKey`, `sourceText`,
+  `normalizedText`, `ocrText`, `translatedText`, `screenshotPath`, `imagePath`,
+  `stack`, `trace`, and provider response/debug text fields.
+- `validateDiagnosticBundle` and `assertDiagnosticBundle` enforce that bundles
+  contain only the documented top-level fields, `redactedLogs` is an array of
+  strings, and `redactionSummary` is exactly `{ apiKeysRemoved: true,
+  ocrTextIncluded: false, translatedTextIncluded: false, imagesIncluded:
+  false }`.
+- Bundle generation is in-memory and on-demand. T-010-001 introduces no durable
+  log store, no screenshot/image reads, no plaintext key access, and no SQLite
+  schema changes. The route slice must call this contract before returning a
+  diagnostics response.
+
 ## REST Endpoints
 | Method | Path | Purpose | Request | Response | Error Codes |
 |---|---|---|---|---|---|
