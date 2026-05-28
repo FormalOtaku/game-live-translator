@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T09:27:44.761Z",
+  "migrated_at": "2026-05-28T09:56:22.379Z",
   "source_path": "STATE.md",
-  "source_sha256": "52a8b3e03f21491fb96c669c847022fcc51b11ec551bacf9dc89ef89d7f4ed5d",
+  "source_sha256": "60491e72bd35a222dea66648d287ce9065bdeaf3e1299a5837fc423eb1b70b8d",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
     "current_slice_prefix": "T-013",
-    "current_slice_id": "T-013-002",
-    "current_slice_goal": "Desktop IPC bridge and safe host intents",
+    "current_slice_id": "T-013-003",
+    "current_slice_goal": "Windows adapter preflight and capture OCR readiness",
     "current_slice_status": "todo",
-    "completed_slices": 1,
+    "completed_slices": 2,
     "total_slices": 5,
-    "progress_pct": 20,
-    "next_slice_id": "T-013-002",
-    "next_slice_goal": "Desktop IPC bridge and safe host intents",
-    "last_checkpoint": "2026-05-28T09:27:31.166Z",
+    "progress_pct": 40,
+    "next_slice_id": "T-013-003",
+    "next_slice_goal": "Windows adapter preflight and capture OCR readiness",
+    "last_checkpoint": "2026-05-28T09:56:22.378Z",
     "done": [],
     "doing": [],
     "todo": []

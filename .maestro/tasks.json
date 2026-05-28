@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T09:27:44.761Z",
+  "migrated_at": "2026-05-28T09:54:39.396Z",
   "source_path": "TASKS.md",
-  "source_sha256": "ab6e984a7b922430c558d509c878bc7687f70240bb87f6bb6b059011decde394",
+  "source_sha256": "38339cc6f1e65fafd8d325dfb6fd2ef0dae989215d7d5577d367b02521994d11",
   "task_count": 56,
   "counts": {
-    "todo": 5,
+    "todo": 4,
     "doing": 0,
     "blocked": 0,
-    "done": 51
+    "done": 52
   },
   "tasks": [
     {
@@ -379,7 +379,7 @@
     {
       "id": "T-013-002",
       "title": "Desktop IPC bridge and safe host intents",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     },
