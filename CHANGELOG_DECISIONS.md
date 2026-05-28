@@ -525,3 +525,16 @@
 - Regression tests added first: `test/desktop-host-lifecycle.test.js` covers config defaults/rejections, trusted frozen ready snapshots, Home/Status restart intent execution, sanitized retryable startup failures, invalid started-port cleanup, failed-stop recovery cleanup before new adapter creation, failed restart counter semantics, sensitive/unsupported/inherited command rejection, trusted URL helpers, and no serialization of provider keys, raw text, screenshots, stack traces, or arbitrary adapter details.
 - Migration needed: None.
 - Rollback plan: Remove `src/desktop/host-lifecycle.js`, `test/desktop-host-lifecycle.test.js`, and the T-013-001 spec/decision entries. Existing localhost API server, Home/Status renderer contract, and T-012 smoke evidence remain unchanged.
+
+### CHG-20260528-041
+- Date: 2026-05-28
+- Summary: Added the dependency-free desktop IPC bridge contract for T-013-002.
+- Reason: Existing renderer contracts emit safe intent descriptors, and T-013-001 owns backend lifecycle, but the future Electron preload/main process needed one executable allow-list boundary so renderer payloads cannot directly trigger host shell, filesystem, browser, clipboard, or lifecycle side effects.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. IPC dispatch state is in-memory only and persists no queue, provider keys, OCR/source text, translated text, diagnostics logs, screenshots, debug paths, or command payloads.
+  - API: Adds `src/desktop/ipc-bridge.js` with allow-listed channel/type/command validation, local API path dispatch, trusted status/overlay URL checks, lifecycle restart binding, injected adapter dispatch, frozen results, and sanitized errors. It adds no HTTP routes, Electron dependencies, native dependencies, or npm dependencies.
+  - UI: Existing Home/Status, OBS Setup, Privacy, and Diagnostics intent descriptors gain a host-side bridge that preserves trusted overlay URL copy/open, status fetch/stream, route navigation, backend restart, troubleshooting, and debug privacy actions without weakening redaction gates.
+- Risk: This remains an IPC contract, not concrete Electron preload/main wiring. Future Electron code must preserve the same channel and call this bridge instead of dispatching raw renderer payloads directly.
+- Regression tests added first: `test/desktop-ipc-bridge.test.js` covers HTTP/WebSocket/clipboard/navigation dispatch, lifecycle restart, OBS trusted `open_url`, debug privacy commands without paths, sensitive diagnostics clipboard redaction, unsupported/sensitive/inherited/prototype payload rejection, localhost/remote URL gates, adapter error sanitization, frozen results, and log-safe privacy.
+- Migration needed: None.
+- Rollback plan: Remove `src/desktop/ipc-bridge.js`, `test/desktop-ipc-bridge.test.js`, and the T-013-002 spec/decision entries. Existing renderer contracts, host lifecycle contract, and localhost API server remain unchanged.
