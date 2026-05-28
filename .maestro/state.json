@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T07:40:40.694Z",
+  "migrated_at": "2026-05-28T07:41:26.348Z",
   "source_path": "STATE.md",
-  "source_sha256": "e4b521d86a13c4922264e45907ca613f1c6d7bb57a3884714a3dbaa9d634aa45",
+  "source_sha256": "53ee872e2dcbb20c1ba228bf46ee7683e8dbd843f9b657d4ac9148d3a4cc4317",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
@@ -18,7 +18,7 @@
     "progress_pct": 80,
     "next_slice_id": "T-012-005",
     "next_slice_goal": "First-run stream closeout runbook",
-    "last_checkpoint": "2026-05-28T07:40:40.693Z",
+    "last_checkpoint": "2026-05-28T07:41:26.347Z",
     "done": [],
     "doing": [],
     "todo": []

@@ -28,14 +28,14 @@
     "slices_per_checkpoint": 3
   },
   "session_flow": {
-    "current_session_role": "execution",
+    "current_session_role": "supervisor",
     "recommended_next_session_role": "execution",
     "checkpoint_status": "satisfied",
-    "checkpoint_reason": "T-012-004 complete: overlay layout smoke/test/build/lint/diff-check passed; Claude agent-pass T-012-004-r1 clean with must_fix=0 and unresolved P1/P2=0.",
+    "checkpoint_reason": "T-012-004 deterministic verification passed: smoke/layout targeted tests, full npm test, build, lint, diff-check; Claude agent-pass T-012-004-r1 clean with must_fix=0 and unresolved P1/P2=0.",
     "last_completed_slice": "T-012-004",
     "handoff_summary": "T-012-004 complete: added npm run smoke:overlay-layout, dependency-free overlay renderer layout smoke across 1280x720, 1920x1080, and 2560x1440 for built-in themes and maxLines 1/2/3; added child-process and direct regression coverage; updated product/API/UI/migration/change/decision docs and Maestro structured state. Verification: npm test 380 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-004-r1 clean with must_fix=0 and unresolved P1/P2=0. Next slice: T-012-005 first-run stream closeout runbook.",
     "next_action": "start_execution_session",
-    "updated_at": "2026-05-28T07:40:40.690Z"
+    "updated_at": "2026-05-28T07:41:26.344Z"
   },
   "ui_design_policy": {
     "surface_priority": [
