@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T01:49:13.576Z",
+  "migrated_at": "2026-05-28T02:10:01.828Z",
   "source_path": "TASKS.md",
-  "source_sha256": "a24701d8affd39d760f6cbb702a0a222b13e9bb9f0a9758717b52e49d8e72ce0",
+  "source_sha256": "6a8e2563f46ac178e67c67186d48a317ae04f2e555ad2aa7f924190dd0c4c271",
   "task_count": 38,
   "counts": {
     "todo": 0,
-    "doing": 2,
+    "doing": 0,
     "blocked": 0,
-    "done": 36
+    "done": 38
   },
   "tasks": [
     {
@@ -253,9 +253,9 @@
     {
       "id": "T-010",
       "title": "Implement redacted diagnostics bundle API core",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "Parent goal: add production-grade v1 diagnostics bundle support for Logs/Diagnostics and privacy acceptance. Scope includes DiagnosticBundle contract validation/redaction, GET /api/diagnostics/bundle route, no API keys/OCR text/translated text/images/stacks in bundle output by default, deterministic tests, smoke command, and runbook. DB/API/UI impact: no schema bump expected; API diagnostics endpoint; UI Logs/Diagnostics copy-bundle readiness."
+      "notes": "Parent complete: diagnostics bundle contract/redaction helpers, GET /api/diagnostics/bundle route, and npm run smoke:diagnostics / DIAGNOSTICS_API_SMOKE_RUNBOOK_JA closeout landed. Local node checks, node --test test/diagnostics-api-smoke.test.js 1 pass, node --test test/local-api-server.test.js 82 pass, npm run smoke:diagnostics pass, npm test 290 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 290 pass and build/lint/smoke:diagnostics pass; Claude T-010-003-r3 full-diff review clean with must_fix=0 and unresolved P1/P2=0."
     },
     {
       "id": "T-010-001",
@@ -274,9 +274,9 @@
     {
       "id": "T-010-003",
       "title": "Diagnostics smoke runbook and parent closeout",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-010. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+      "notes": "Added npm run smoke:diagnostics, scripts/smoke-diagnostics-api.js, test/diagnostics-api-smoke.test.js, DIAGNOSTICS_API_SMOKE_RUNBOOK_JA.md, and spec/decision/migration/runbook updates covering /health, no-provider minimal bundles, provider metadata/log redaction, method/CORS no-collection guards, and DIAGNOSTICS_FAILED no-leak failures. Local and Docker Node 20 npm test/build/lint/smoke:diagnostics pass with 290 tests; git diff --check pass; Claude T-010-003-r3 full-diff review clean with findings=3 info, must_fix=0, unresolved P1/P2=0."
     }
   ]
 }

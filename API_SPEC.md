@@ -402,6 +402,17 @@ type DiagnosticBundle = {
   localhost bind, CORS behavior, no-persistence behavior, and on-demand
   generation.
 
+## Diagnostics API Smoke Command
+- T-010-003 adds `npm run smoke:diagnostics` as the executable parent-closeout smoke for the dependency-free diagnostics bundle API core.
+- The smoke command starts `createLocalApiServer` on ephemeral `127.0.0.1` ports and exercises `GET /health` plus `GET /api/diagnostics/bundle` over real HTTP instead of calling route handlers directly.
+- Required smoke assertions:
+  - `/health` reports the selected localhost port and `bindAddress: "127.0.0.1"`.
+  - `GET /api/diagnostics/bundle` without a diagnostics provider returns a valid minimal `DiagnosticBundle` with empty `redactedLogs` and safe metadata defaults.
+  - `OPTIONS` and wrong-method requests on `/api/diagnostics/bundle` do not call `diagnosticsProvider.collectDiagnostics()`; wrong methods return `METHOD_NOT_ALLOWED` with `Allow: GET`.
+  - Provider metadata and active profile id are normalized through the route, provider string/object log entries are redacted, the response matches the canonical `DiagnosticBundle` shape, and the command does not copy redacted log contents into stdout.
+  - Provider throws and invalid provider output map to privacy-safe `DIAGNOSTICS_FAILED` envelopes without leaking provider keys, OCR/source text, translated output, screenshot/image paths, stack traces, provider responses, raw exception text, or debug payloads.
+- Smoke output must be concise JSON and must not include provider keys, raw OCR/source text, translated output, screenshot/image paths, stack traces, raw provider exception text, raw provider response bodies, or remote hosts.
+
 ## Translation API Smoke Command
 - T-009-004 adds `npm run smoke:translation` as the executable parent-closeout smoke for the dependency-free translation test API core.
 - The smoke command starts `createLocalApiServer` on an ephemeral `127.0.0.1` port with injected `profileRepository` and `translateTestProvider` implementations and exercises the live HTTP/WebSocket route surface instead of calling route handlers directly.

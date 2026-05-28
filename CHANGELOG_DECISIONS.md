@@ -369,3 +369,16 @@
 - Regression tests added first: `test/local-api-server.test.js` covers no-provider minimal bundle, provider metadata/log redaction, method/CORS behavior, provider failure redaction, invalid provider shape mapping, and bundle validator enforcement.
 - Migration needed: None.
 - Rollback plan: Remove the diagnostics route, injected provider handling, focused tests, and spec/decision entries. Existing status/config/capture/translation routes remain unchanged.
+
+### CHG-20260528-029
+- Date: 2026-05-28
+- Summary: Added the T-010 diagnostics API smoke command and parent-closeout runbook.
+- Reason: The diagnostics bundle API parent needs one reproducible live HTTP smoke that proves `/api/diagnostics/bundle` works with no provider state, provider log redaction, method/CORS guards, and privacy-safe failure envelopes.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The smoke uses injected diagnostics dependencies and ephemeral localhost ports only; it adds no durable log store, screenshot/image reads, plaintext key access, cache persistence, key storage movement, or profile export schema change.
+  - API: Adds `npm run smoke:diagnostics`, `scripts/smoke-diagnostics-api.js`, `test/diagnostics-api-smoke.test.js`, and `DIAGNOSTICS_API_SMOKE_RUNBOOK_JA.md`. The smoke covers `/health`, no-provider minimal bundles, provider metadata normalization, redacted string/structured log entries, method/CORS behavior, and redacted `DIAGNOSTICS_FAILED` failures.
+  - UI: Logs/Diagnostics gains parent-closeout evidence that copy diagnostic bundle can render a safe empty-state bundle and a provider-backed redacted bundle without exposing secrets or game text.
+- Risk: This remains a dependency-free contract smoke over injected diagnostics sources, not a real Windows/Electron/FastAPI log collector smoke. Concrete collectors must continue to avoid collecting full game text by default and should get a product-level smoke when they land.
+- Regression tests added first: `test/diagnostics-api-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no provider key/source/translated/screenshot/stack sentinel in stdout.
+- Migration needed: None.
+- Rollback plan: Remove `npm run smoke:diagnostics`, the smoke script, runbook, focused smoke test, and spec/decision entries. Existing diagnostics bundle route behavior remains covered by unit tests.

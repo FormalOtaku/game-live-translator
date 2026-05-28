@@ -1,26 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T01:49:13.576Z",
+  "migrated_at": "2026-05-28T02:10:01.828Z",
   "source_path": "STATE.md",
-  "source_sha256": "7098b315b42b8bd63d805d154abaf2553f19d0a31b376b590f8a5eca98982dca",
+  "source_sha256": "01f16d295f82898f9702fb12aee28da93d2cc7124d0b12254f9f86402efc314d",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": [
-      "T-010"
-    ]
+    "active_task_ids": []
   },
   "slice_progress": {
-    "current_slice_prefix": "T-010",
-    "current_slice_id": "T-010-003",
-    "current_slice_goal": "Diagnostics smoke runbook and parent closeout",
-    "current_slice_status": "doing",
-    "completed_slices": 2,
-    "total_slices": 3,
-    "progress_pct": 67,
+    "current_slice_prefix": null,
+    "current_slice_id": null,
+    "current_slice_goal": null,
+    "current_slice_status": null,
+    "completed_slices": 0,
+    "total_slices": 0,
+    "progress_pct": 0,
     "next_slice_id": null,
     "next_slice_goal": null,
-    "last_checkpoint": "2026-05-28T01:46:32.788Z",
+    "last_checkpoint": "2026-05-28T02:09:17.510Z",
     "done": [],
     "doing": [],
     "todo": []

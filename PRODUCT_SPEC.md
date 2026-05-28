@@ -136,6 +136,7 @@
 - T-009-004 adds `npm run smoke:translation` as the parent-closeout smoke for the translation test API core, covering live HTTP translation test success/failure, glossary/cache-prepared provider input, `/api/status` and `/ws/app` translation status transitions, malformed/preflight/wrong-method no-mutation behavior, and privacy invariants with injected adapters.
 - T-010-001 adds the executable diagnostics bundle contract used by Logs/Diagnostics. Diagnostic bundle construction is in-memory and redacts string and structured log inputs before output; provider keys, OCR/source text, translated text, screenshots/images, stack traces, provider response bodies, and raw debug payloads are replaced with `[REDACTED]` before `DiagnosticBundle` validation.
 - T-010-002 wires `GET /api/diagnostics/bundle` into the localhost API harness through an optional injected diagnostics provider. The route generates bundles on demand, validates the final `DiagnosticBundle` before response, returns a minimal empty-log bundle when no provider is installed, and maps source failures to privacy-safe `DIAGNOSTICS_FAILED` without persisting logs, screenshots, provider keys, OCR/source text, or translations.
+- T-010-003 adds `npm run smoke:diagnostics` as the parent-closeout smoke for the diagnostics bundle API core, covering live HTTP bundle generation with and without a diagnostics provider, method/CORS guards, redaction of injected sensitive log sentinels, privacy-safe `DIAGNOSTICS_FAILED` mapping, and the JA reproduction runbook for Logs/Diagnostics copy-bundle readiness.
 
 ## UI Impact
 - v1 introduces desktop screens documented in `UI_SPEC.md`: First-Run Wizard, Home/Status, Capture Setup, OCR Preview, Translation Settings, Glossary, Overlay Theme Editor, OBS Setup Guide, Profiles, Privacy Settings, Logs/Diagnostics, and About/Support.
@@ -151,6 +152,7 @@
 - [x] T-007 profile/configuration API core has a repeatable smoke command covering profiles, themes, glossary, privacy settings, and write-only provider keys.
 - [x] T-008 capture/OCR API core has a repeatable smoke command covering source enumeration, manual OCR test, capture start/stop status, and no-leak errors.
 - [x] T-009 translation test API core has a repeatable smoke command covering manual translation success/failure, glossary/cache-prepared input, translation status broadcast, and no-leak status/error output.
+- [x] T-010 diagnostics bundle API core has a repeatable smoke command covering no-provider bundles, provider log redaction, method/CORS guards, and no-leak diagnostics failures.
 - [x] Overlay escaping is verified with malicious OCR/subtitle payload fixtures in core and overlay renderer tests.
 - [ ] Capture, translation, overlay reconnect, backend restart, and port conflict have recoverable UI states.
 - [ ] 1280x720, 1920x1080, and 2560x1440 overlay layouts do not clip or overlap subtitle text.
