@@ -48,7 +48,7 @@
   10. Test translation.
   11. Save profile and finish.
 - API sequencing: OCR and translation test endpoints are profile-bound in the current API, so the wizard persists a profile after provider, source, and ROI are valid, then runs `/api/ocr/test` and `/api/translate/test` against that profile id. The final step activates the profile through `/api/profiles/active`.
-- Verification evidence: T-012-001 adds a non-UI synthetic first-run stream harness that proves the runtime pipeline can publish an English overlay subtitle from a Japanese fixture within the same 5-minute setup budget. The First-Run UI may display only sanitized pass/fail evidence from that harness; it must not display or log the synthetic source text, translated text, escaped text, provider keys, images, screenshots, or debug payloads from the evidence summary.
+- Verification evidence: T-012-001 adds a non-UI synthetic first-run stream harness that proves the runtime pipeline can publish an English overlay subtitle from a Japanese fixture within the same 5-minute setup budget. T-012-002 wraps that harness in `npm run smoke:first-run-stream`, which proves the same fixture reaches the localhost OBS overlay HTTP and WebSocket surfaces. The First-Run UI may display only sanitized pass/fail evidence from that harness or smoke summary; it must not display or log the synthetic source text, translated text, escaped text, provider keys, images, screenshots, or debug payloads from the evidence summary.
 - Loading: provider validation, source enumeration, OCR, and translation steps show labeled progress.
 - Empty: no windows/screens found, no provider selected, or no OCR text recognized.
 - Error: invalid key, network failure, OCR engine failure, capture permission/source failure.

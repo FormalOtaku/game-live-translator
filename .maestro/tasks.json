@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T05:52:16.454Z",
+  "migrated_at": "2026-05-28T06:37:44.034Z",
   "source_path": "TASKS.md",
-  "source_sha256": "93b7dbced3dd5c20cb6eb32cea92a95dea7e3e365355693c919c19b98a7bad7f",
+  "source_sha256": "bd1a7885ad89ebaadf0c67f5c0fab82de9a88b843c309827ffe1499c9b81ce1c",
   "task_count": 50,
   "counts": {
-    "todo": 5,
+    "todo": 4,
     "doing": 0,
     "blocked": 0,
-    "done": 45
+    "done": 46
   },
   "tasks": [
     {
@@ -337,7 +337,7 @@
     {
       "id": "T-012-002",
       "title": "End-to-end OBS overlay smoke command",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     },

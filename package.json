@@ -10,6 +10,7 @@
     "smoke:capture-ocr": "node scripts/smoke-capture-ocr-api.js",
     "smoke:translation": "node scripts/smoke-translation-api.js",
     "smoke:diagnostics": "node scripts/smoke-diagnostics-api.js",
+    "smoke:first-run-stream": "node scripts/smoke-first-run-stream.js",
     "check:syntax": "node scripts/check-syntax.js",
     "build": "npm run check:syntax",
     "lint": "npm run check:syntax"

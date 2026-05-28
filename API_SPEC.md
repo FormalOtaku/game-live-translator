@@ -687,12 +687,24 @@ type DiagnosticBundle = {
 - Overlay snapshots from this pipeline must replay `escapedText` and omit `sourceText` by default even when the internal subtitle frame is built with debug source text.
 
 ### Synthetic First-Run Stream Harness
-- T-012-001 adds `runSyntheticFirstRunStream({ profile, provider, clock?, idFactory?, maxDurationMs? })` in `src/core/synthetic-first-run-stream.js`.
-- The harness is a core contract, not an HTTP route. It creates an in-memory `OverlayState`, feeds the frozen Japanese `SYNTHETIC_OCR_CANDIDATE` through `runOcrToOverlayPipeline`, and requires an injected deterministic provider that returns an English subtitle for test evidence.
+- T-012-001 adds `runSyntheticFirstRunStream({ profile, provider, clock?, idFactory?, overlayState?, maxDurationMs? })` in `src/core/synthetic-first-run-stream.js`.
+- The harness is a core contract, not an HTTP route. It uses the supplied in-memory `overlayState` when present or creates one when omitted, feeds the frozen Japanese `SYNTHETIC_OCR_CANDIDATE` through `runOcrToOverlayPipeline`, and requires an injected deterministic provider that returns an English subtitle for test evidence.
 - Success returns a frozen summary with `schemaVersion: "synthetic-first-run-stream.v1"`, `startedAt`, `completedAt`, `durationMs`, `maxDurationMs`, `withinBudget`, profile/provider/target/theme fingerprints, `stage`, `overlayPublished`, subtitle metadata, and `privacy` guarantees. `stage` is one of `"ocr"`, `"translation"`, `"overlay"`, or the harness-only `"error"` sentinel for provider/profile/pipeline failures before a runtime stage can complete.
 - Subtitle metadata is evidence-only: it includes id/provider/theme/timing plus SHA-256 hashes of the translated and escaped overlay text. The summary must not include `sourceText`, `translatedText`, `escapedText`, provider keys, screenshots, image paths, stack traces, or debug payloads.
 - Failure summaries are frozen and sanitized. OCR rejection reports the controlled rejection code without text. Provider/pipeline errors use redacted messages and value-free field errors. `error.details` is dropped except for `fieldErrors[].field` and `fieldErrors[].code`; field-error messages and arbitrary provider details are never serialized. Timeout keeps any published subtitle hash evidence but sets `withinBudget=false` and a `TIMEOUT` failure.
-- The harness introduces no SQLite schema changes, no profile export changes, no network calls, no native OCR/capture dependency, no concrete DeepL credential use, and no durable logs. T-012-002 will wrap this contract in a live localhost/OBS overlay smoke command.
+- The harness introduces no SQLite schema changes, no profile export changes, no network calls, no native OCR/capture dependency, no concrete DeepL credential use, and no durable logs.
+
+### First-Run Stream Smoke Command
+- T-012-002 adds `npm run smoke:first-run-stream` as a dependency-free live localhost smoke over the existing `createLocalApiServer` and synthetic harness contracts.
+- The smoke starts the server on an ephemeral `127.0.0.1` port, connects `/ws/app` and `/ws/overlay`, runs `runSyntheticFirstRunStream` with a shared in-memory `OverlayState`, then verifies:
+  - `GET /health` reports the selected localhost port and version.
+  - Initial `GET /api/status` and `/ws/app` snapshots contain no last subtitle and redact runtime messages.
+  - `/ws/overlay` receives the live subtitle with `replay: false`, and a late `/ws/overlay` client receives the latest subtitle with `replay: true`.
+  - `/ws/app` broadcasts overlay client count and latest subtitle status.
+  - Post-publish `GET /api/status` exposes only a sanitized `lastSubtitle` with no `sourceText`.
+  - `GET /overlay` serves no-store, CSP-protected, self-contained HTML with no remote script, stylesheet, image, or font fetch.
+- The command may inspect the visible English subtitle internally to prove broadcast readiness, but stdout is limited to structured evidence: command name, localhost bind/port/overlay URL, stage/budget flags, subtitle id/provider/theme/timing, SHA-256 hashes, privacy guarantees, and named check results. Stdout and stderr must not contain the synthetic Japanese source text, raw translated text, provider keys, screenshot/image paths, logs, stack traces, cache keys, or debug payloads.
+- The smoke adds no new HTTP routes, no SQLite schema changes, no profile export changes, no native OCR/capture dependency, no real provider credential use, and no durable logs.
 
 ## Error Model
 - Canonical error shape: `ApiError`.
