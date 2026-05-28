@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T08:13:14.424Z",
+  "migrated_at": "2026-05-28T09:05:25.055Z",
   "source_path": "TASKS.md",
-  "source_sha256": "db43b3c5a5f37b5705429a75ebb52d84090bd5ebcdaa4c8d46c341b843298ff5",
-  "task_count": 50,
+  "source_sha256": "ab6e984a7b922430c558d509c878bc7687f70240bb87f6bb6b059011decde394",
+  "task_count": 56,
   "counts": {
-    "todo": 0,
+    "todo": 5,
     "doing": 0,
     "blocked": 0,
-    "done": 50
+    "done": 51
   },
   "tasks": [
     {
@@ -361,6 +361,48 @@
       "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-013",
+      "title": "Implement desktop host and Windows OBS readiness core",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "Production-grade v1 integration parent after T-012: turn dependency-free core/API/UI contracts into a desktop-host-ready Windows 10/11 + OBS Browser Source execution boundary. Keep no game modification/file parsing/code injection/script distribution, privacy-first defaults, localhost-only overlay server, no plaintext/logged API keys, specs first, 3-6 PR-sized slices, npm test/build/lint, smoke evidence, and Claude sidecar review before completion."
+    },
+    {
+      "id": "T-013-001",
+      "title": "Desktop host lifecycle contract",
+      "status": "done",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-013-002",
+      "title": "Desktop IPC bridge and safe host intents",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-013-003",
+      "title": "Windows adapter preflight and capture OCR readiness",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-013-004",
+      "title": "OBS manual validation evidence and release gate",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-013-005",
+      "title": "Desktop host closeout smoke runbook",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     }
   ]
 }
