@@ -1,13 +1,16 @@
 'use strict';
 
 const http = require('node:http');
+const nodeOs = require('node:os');
 const {
   ALLOWED_BIND_ADDRESS,
   ContractError,
   assertLocalhostBind,
+  buildDiagnosticBundle,
   redactSecrets,
 } = require('../contracts/security');
 const {
+  assertDiagnosticBundle,
   assertCaptureStartRequest,
   assertCaptureSourcesResponse,
   assertOcrResult,
@@ -410,6 +413,17 @@ function getTranslateTestProvider(provider) {
   return provider;
 }
 
+function getDiagnosticsProvider(provider) {
+  if (provider == null) return null;
+  if (!isObject(provider) || typeof provider.collectDiagnostics !== 'function') {
+    throw new ContractError(
+      'DIAGNOSTICS_FAILED',
+      'Diagnostics provider is not available',
+    );
+  }
+  return provider;
+}
+
 function sanitizeCaptureSourcesResponse(payload) {
   return Object.freeze({
     sources: Object.freeze(payload.sources.map((source) => {
@@ -453,6 +467,60 @@ function sanitizeTranslationResult(payload) {
     durationMs: payload.durationMs,
     cacheHit: payload.cacheHit,
   });
+}
+
+function defaultOsName() {
+  return `${nodeOs.type()} ${nodeOs.release()} ${process.arch}`.trim();
+}
+
+function normalizeDiagnosticSourceResult(payload) {
+  if (payload === undefined || payload === null) {
+    return Object.freeze({ logLines: Object.freeze([]) });
+  }
+  if (Array.isArray(payload)) {
+    return Object.freeze({ logLines: payload });
+  }
+  if (!isObject(payload) || !Array.isArray(payload.logLines)) {
+    throw new ContractError(
+      'DIAGNOSTICS_FAILED',
+      'Diagnostics provider returned an invalid response',
+    );
+  }
+  return payload;
+}
+
+function normalizeDiagnosticActiveProfileId(value) {
+  if (value === null) return null;
+  if (typeof value !== 'string') {
+    throw new ContractError(
+      'DIAGNOSTICS_FAILED',
+      'activeProfileId must be a non-empty string or null',
+    );
+  }
+  const normalized = value.normalize('NFKC').trim();
+  if (normalized.length === 0) {
+    throw new ContractError(
+      'DIAGNOSTICS_FAILED',
+      'activeProfileId must be a non-empty string or null',
+    );
+  }
+  return normalized;
+}
+
+function fieldErrorsFromContractError(error) {
+  return error instanceof ContractError &&
+    isObject(error.details) &&
+    Array.isArray(error.details.fieldErrors)
+    ? { fieldErrors: error.details.fieldErrors }
+    : undefined;
+}
+
+function mapDiagnosticsError(error) {
+  return new ContractError(
+    'DIAGNOSTICS_FAILED',
+    'Diagnostics bundle generation failed',
+    fieldErrorsFromContractError(error),
+  );
 }
 
 function assertTranslationResultProviderMatches(payload, expectedProvider) {
@@ -723,6 +791,7 @@ function createLocalApiServer(options = {}) {
   const captureController = options.captureController;
   const ocrTestProvider = options.ocrTestProvider;
   const translateTestProvider = options.translateTestProvider;
+  const diagnosticsProvider = options.diagnosticsProvider;
   let selectedPort = null;
   let upgradeAttached = false;
   let captureRuntimeStatus = null;
@@ -1227,6 +1296,51 @@ function createLocalApiServer(options = {}) {
     return sanitizeTranslationResult(result);
   }
 
+  async function buildDiagnosticsBundleForRoute() {
+    let source = { logLines: [] };
+    try {
+      const provider = getDiagnosticsProvider(diagnosticsProvider);
+      if (provider !== null) {
+        source = normalizeDiagnosticSourceResult(await provider.collectDiagnostics());
+      }
+      const bundle = buildDiagnosticBundle({
+        appVersion: source.appVersion ?? valueFromOption(options.appVersion) ?? version,
+        backendVersion: source.backendVersion ?? valueFromOption(options.backendVersion) ?? version,
+        os: source.os ?? valueFromOption(options.osName) ?? defaultOsName(),
+        activeProfileId: source.activeProfileId !== undefined
+          ? normalizeDiagnosticActiveProfileId(source.activeProfileId)
+          : normalizeActiveProfileId(resolveActiveProfileId(valueFromOption(options.activeProfileId))),
+        logLines: source.logLines,
+        clock: options.clock,
+      });
+      assertDiagnosticBundle(bundle);
+      return bundle;
+    } catch (error) {
+      throw mapDiagnosticsError(error);
+    }
+  }
+
+  async function handleDiagnosticsRoute(pathname, req, res) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] !== 'api' || segments[1] !== 'diagnostics') return false;
+
+    try {
+      if (segments.length === 3 && segments[2] === 'bundle') {
+        if (req.method !== 'GET') {
+          writeMethodNotAllowed(res, ['GET']);
+          return true;
+        }
+        writeJson(res, 200, await buildDiagnosticsBundleForRoute());
+        return true;
+      }
+    } catch (error) {
+      writeContractError(res, error);
+      return true;
+    }
+
+    return false;
+  }
+
   async function handleTranslateRoute(pathname, req, res) {
     const segments = pathname.split('/').filter(Boolean);
     if (segments[0] !== 'api' || segments[1] !== 'translate') return false;
@@ -1602,6 +1716,7 @@ function createLocalApiServer(options = {}) {
     if (await handleCaptureRoute(pathname, req, res)) return;
     if (await handleOcrRoute(pathname, req, res)) return;
     if (await handleTranslateRoute(pathname, req, res)) return;
+    if (await handleDiagnosticsRoute(pathname, req, res)) return;
     if (await handleThemeRoute(pathname, req, res)) return;
     if (await handleSettingsRoute(pathname, req, res)) return;
     if (await handleProviderKeyRoute(pathname, req, res)) return;

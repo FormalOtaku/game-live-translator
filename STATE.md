@@ -46,23 +46,23 @@
 
 ## Slice Progress (Update Every Slice)
 - current_slice_prefix: T-010
-- current_slice_id: T-010-002
-- current_slice_goal: Diagnostics bundle HTTP route
+- current_slice_id: T-010-003
+- current_slice_goal: Diagnostics smoke runbook and parent closeout
 - current_slice_status: doing
-- completed_slices: 1
+- completed_slices: 2
 - total_slices: 3
-- progress_pct: 33
-- next_slice_id: T-010-003
-- next_slice_goal: Diagnostics smoke runbook and parent closeout
-- last_checkpoint: 2026-05-28T01:27:33.313Z
+- progress_pct: 67
+- next_slice_id:
+- next_slice_goal:
+- last_checkpoint: 2026-05-28T01:46:32.788Z
 ## Session Flow
 - current_session_role: execution
 - recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-010-001 deterministic local/Docker validation passed and Claude sidecar review evidence imported clean; no human validation required.
-- last_completed_slice: T-010-001
-- handoff_summary: T-010-001 complete: added DiagnosticBundle contract/redaction helpers and validators, redacted string/structured diagnostics including Error stack headers, cycles, prototype-like keys, screenshots, provider responses, OCR/source/translated text, and updated PRODUCT/API/decision/migration/change docs. Verification: local node checks, node --test test/contracts.test.js 74 pass, npm test 285 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 285 pass and build/lint pass. Claude sidecar T-010-001-r4 module review imported clean with findings=3 P3, must_fix=0, unresolved P1/P2=0.
+- checkpoint_reason: T-010-002 deterministic local/Docker validation passed and Claude sidecar review evidence imported clean; no human validation required.
+- last_completed_slice: T-010-002
+- handoff_summary: T-010-002 complete: wired GET /api/diagnostics/bundle into createLocalApiServer through optional diagnosticsProvider.collectDiagnostics(), with no-provider minimal bundle, provider metadata defaults, strict provider activeProfileId normalization, buildDiagnosticBundle/assertDiagnosticBundle validation, privacy-safe DIAGNOSTICS_FAILED mapping, method/CORS coverage, and docs/decisions/migration updates. Verification: local node checks, node --test test/local-api-server.test.js 82 pass, npm test 289 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 289 pass and build/lint pass. Claude sidecar T-010-002-r2 module review imported clean with findings=2 P3, must_fix=0, unresolved P1/P2=0.
 - next_action: start_execution_session
-- updated_at: 2026-05-28T01:27:33.311Z
+- updated_at: 2026-05-28T01:46:32.786Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.

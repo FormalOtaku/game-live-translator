@@ -2678,6 +2678,241 @@ test('translate test API inherits local CORS policy and method handling without 
   }
 });
 
+test('diagnostics bundle API returns a valid minimal bundle without a provider', async () => {
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    version: 'server-version',
+    appVersion: 'app-version',
+    backendVersion: 'backend-version',
+    osName: 'Windows 11',
+    activeProfileId: 'profile_diag',
+    clock: fixedClock,
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({ port: started.port, path: '/api/diagnostics/bundle' });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.parsed, {
+      generatedAt: FIXED_TIME,
+      appVersion: 'app-version',
+      backendVersion: 'backend-version',
+      os: 'Windows 11',
+      activeProfileId: 'profile_diag',
+      redactedLogs: [],
+      redactionSummary: {
+        apiKeysRemoved: true,
+        ocrTextIncluded: false,
+        translatedTextIncluded: false,
+        imagesIncluded: false,
+      },
+    });
+    assert.deepEqual(Object.keys(response.parsed).sort(), [
+      'activeProfileId',
+      'appVersion',
+      'backendVersion',
+      'generatedAt',
+      'os',
+      'redactedLogs',
+      'redactionSummary',
+    ]);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('diagnostics bundle API redacts provider logs and metadata before response', async () => {
+  const leakedKey = 'sk-DIAGNOSTICHTTP1234';
+  const rawSource = '秘密のOCR原文';
+  const translated = 'Secret translated diagnostic output';
+  const screenshot = 'C:\\debug\\secret-scene.png';
+  const stack = `Error: failed translating ${rawSource}\n    at provider.translate (C:\\app\\provider.js:12:3)`;
+  const calls = [];
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    version: 'server-version',
+    appVersion: 'app-default',
+    backendVersion: 'backend-default',
+    osName: 'Windows fallback',
+    activeProfileId: 'profile_default',
+    clock: fixedClock,
+    diagnosticsProvider: {
+      async collectDiagnostics() {
+        calls.push('collectDiagnostics');
+        return {
+          appVersion: 'app-provider',
+          backendVersion: 'backend-provider',
+          os: 'Windows 11',
+          activeProfileId: ' profile_provider ',
+          logLines: [
+            `apiKey=${leakedKey} sourceText="${rawSource}" translatedText="${translated}" screenshotPath="${screenshot}"`,
+            {
+              component: 'translator',
+              message: `failed token=${leakedKey}`,
+              providerResponseBody: { text: translated },
+              nested: {
+                imagePath: screenshot,
+                errorStack: stack,
+              },
+            },
+            null,
+            42,
+          ],
+        };
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const response = await requestJson({ port: started.port, path: '/api/diagnostics/bundle' });
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.parsed.appVersion, 'app-provider');
+    assert.equal(response.parsed.backendVersion, 'backend-provider');
+    assert.equal(response.parsed.os, 'Windows 11');
+    assert.equal(response.parsed.activeProfileId, 'profile_provider');
+    assert.equal(response.parsed.generatedAt, FIXED_TIME);
+    assert.deepEqual(calls, ['collectDiagnostics']);
+    assert.equal(response.parsed.redactedLogs.length, 4);
+    assert.equal(response.parsed.redactedLogs.every((line) => typeof line === 'string'), true);
+    assert.equal(response.parsed.redactedLogs[2], '');
+    assert.equal(response.parsed.redactedLogs[3], '42');
+
+    const serialized = JSON.stringify(response.parsed);
+    assert.ok(serialized.includes('[REDACTED]'));
+    assert.equal(serialized.includes(leakedKey), false);
+    assert.equal(serialized.includes(rawSource), false);
+    assert.equal(serialized.includes(translated), false);
+    assert.equal(serialized.includes(screenshot), false);
+    assert.equal(serialized.includes('provider.js'), false);
+  } finally {
+    await api.stop();
+  }
+});
+
+test('diagnostics bundle API maps provider and shape failures without leaking diagnostics', async () => {
+  const leakedKey = 'sk-DIAGNOSTICHTTP1234';
+  const rawSource = '秘密のOCR原文';
+  const failingApi = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    diagnosticsProvider: {
+      collectDiagnostics() {
+        throw new Error(`diagnostics failed ${leakedKey} ${rawSource}`);
+      },
+    },
+  });
+  const failingStarted = await failingApi.start();
+
+  try {
+    const response = await requestJson({
+      port: failingStarted.port,
+      path: '/api/diagnostics/bundle',
+    });
+    assert.equal(response.statusCode, 500);
+    assert.equal(response.parsed.error.code, 'DIAGNOSTICS_FAILED');
+    assert.equal(response.parsed.error.message, 'Diagnostics bundle generation failed');
+    assert.equal(JSON.stringify(response.parsed).includes(leakedKey), false);
+    assert.equal(JSON.stringify(response.parsed).includes(rawSource), false);
+  } finally {
+    await failingApi.stop();
+  }
+
+  const invalidApi = createLocalApiServer({
+    preferredPort: 0,
+    clock: fixedClock,
+    diagnosticsProvider: {
+      collectDiagnostics() {
+        return { logLines: `sourceText="${rawSource}" apiKey=${leakedKey}` };
+      },
+    },
+  });
+  const invalidStarted = await invalidApi.start();
+
+  try {
+    const response = await requestJson({
+      port: invalidStarted.port,
+      path: '/api/diagnostics/bundle',
+    });
+    assert.equal(response.statusCode, 500);
+    assert.equal(response.parsed.error.code, 'DIAGNOSTICS_FAILED');
+    assert.equal(JSON.stringify(response.parsed).includes(leakedKey), false);
+    assert.equal(JSON.stringify(response.parsed).includes(rawSource), false);
+  } finally {
+    await invalidApi.stop();
+  }
+
+  const invalidClockApi = createLocalApiServer({
+    preferredPort: 0,
+    clock: () => 'not-a-date',
+  });
+  const invalidClockStarted = await invalidClockApi.start();
+
+  try {
+    const response = await requestJson({
+      port: invalidClockStarted.port,
+      path: '/api/diagnostics/bundle',
+    });
+    assert.equal(response.statusCode, 500);
+    assert.equal(response.parsed.error.code, 'DIAGNOSTICS_FAILED');
+    assert.equal(response.parsed.error.message, 'Diagnostics bundle generation failed');
+    assert.equal(JSON.stringify(response.parsed).includes('not-a-date'), false);
+  } finally {
+    await invalidClockApi.stop();
+  }
+});
+
+test('diagnostics bundle API inherits local CORS policy and method handling', async () => {
+  const calls = [];
+  const api = createLocalApiServer({
+    preferredPort: 0,
+    diagnosticsProvider: {
+      collectDiagnostics() {
+        calls.push('collectDiagnostics');
+        return [];
+      },
+    },
+  });
+  const started = await api.start();
+
+  try {
+    const allowedOrigin = `http://127.0.0.1:${started.port}`;
+    const preflight = await requestJson({
+      port: started.port,
+      path: '/api/diagnostics/bundle',
+      method: 'OPTIONS',
+      headers: { Origin: allowedOrigin },
+    });
+    assert.equal(preflight.statusCode, 204);
+    assert.equal(preflight.headers['access-control-allow-origin'], allowedOrigin);
+    assert.equal(preflight.headers['access-control-allow-methods'], 'GET, POST, PUT, DELETE, OPTIONS');
+    assert.equal(preflight.headers['access-control-allow-headers'], 'Content-Type');
+    assert.deepEqual(calls, []);
+
+    const wrongMethod = await requestJson({
+      port: started.port,
+      path: '/api/diagnostics/bundle',
+      method: 'POST',
+      body: { apiKey: 'sk-DIAGNOSTICHTTP1234' },
+    });
+    assert.equal(wrongMethod.statusCode, 405);
+    assert.equal(wrongMethod.headers.allow, 'GET');
+    assert.equal(wrongMethod.parsed.error.code, 'METHOD_NOT_ALLOWED');
+    assert.deepEqual(calls, []);
+
+    const disallowed = await requestJson({
+      port: started.port,
+      path: '/api/diagnostics/bundle',
+      headers: { Origin: 'https://evil.example.com' },
+    });
+    assert.equal(disallowed.statusCode, 200);
+    assert.equal(disallowed.headers['access-control-allow-origin'], undefined);
+    assert.deepEqual(calls, ['collectDiagnostics']);
+  } finally {
+    await api.stop();
+  }
+});
+
 test('profile API lists and creates profiles through the injected repository', async () => {
   const calls = [];
   const createdProfile = makeApiProfile({ id: 'profile_created', name: 'Created Profile' });

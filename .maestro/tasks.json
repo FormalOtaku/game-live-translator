@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T01:28:40.567Z",
+  "migrated_at": "2026-05-28T01:49:13.576Z",
   "source_path": "TASKS.md",
-  "source_sha256": "7afd1c4cbbef79ce99cb38d57c186f6b1c6784a3246f811d7dd2016e862f87e9",
+  "source_sha256": "a24701d8affd39d760f6cbb702a0a222b13e9bb9f0a9758717b52e49d8e72ce0",
   "task_count": 38,
   "counts": {
-    "todo": 1,
+    "todo": 0,
     "doing": 2,
     "blocked": 0,
-    "done": 35
+    "done": 36
   },
   "tasks": [
     {
@@ -267,14 +267,14 @@
     {
       "id": "T-010-002",
       "title": "Diagnostics bundle HTTP route",
-      "status": "doing",
+      "status": "done",
       "owner": "codex",
-      "notes": "PR-sized queue for T-010. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
+      "notes": "Wired GET /api/diagnostics/bundle through optional diagnosticsProvider.collectDiagnostics(), no-provider minimal bundle, provider metadata defaults, strict provider activeProfileId normalization, buildDiagnosticBundle/assertDiagnosticBundle validation, privacy-safe DIAGNOSTICS_FAILED mapping, method/CORS coverage, and docs/decision/migration updates. Local node checks, node --test test/local-api-server.test.js 82 pass, npm test 289 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 289 pass and build/lint pass; Claude T-010-002-r2 module review clean with must_fix=0 and unresolved P1/P2=0."
     },
     {
       "id": "T-010-003",
       "title": "Diagnostics smoke runbook and parent closeout",
-      "status": "todo",
+      "status": "doing",
       "owner": "codex",
       "notes": "PR-sized queue for T-010. Keep exactly one child doing. Each slice updates specs first, then implementation/tests/docs, runs npm test/build/lint, and attempts Claude sidecar review evidence before completion."
     }

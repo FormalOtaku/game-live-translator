@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T01:28:40.567Z",
+  "migrated_at": "2026-05-28T01:49:13.576Z",
   "source_path": "STATE.md",
-  "source_sha256": "519188f148dc8d82863f3a8e7cfd8394d2c352d2a15472c6e431f2e4287a0018",
+  "source_sha256": "7098b315b42b8bd63d805d154abaf2553f19d0a31b376b590f8a5eca98982dca",
   "current_focus": {
     "milestone": null,
     "active_task_ids": [
@@ -12,15 +12,15 @@
   },
   "slice_progress": {
     "current_slice_prefix": "T-010",
-    "current_slice_id": "T-010-002",
-    "current_slice_goal": "Diagnostics bundle HTTP route",
+    "current_slice_id": "T-010-003",
+    "current_slice_goal": "Diagnostics smoke runbook and parent closeout",
     "current_slice_status": "doing",
-    "completed_slices": 1,
+    "completed_slices": 2,
     "total_slices": 3,
-    "progress_pct": 33,
-    "next_slice_id": "T-010-003",
-    "next_slice_goal": "Diagnostics smoke runbook and parent closeout",
-    "last_checkpoint": "2026-05-28T01:27:33.313Z",
+    "progress_pct": 67,
+    "next_slice_id": null,
+    "next_slice_goal": null,
+    "last_checkpoint": "2026-05-28T01:46:32.788Z",
     "done": [],
     "doing": [],
     "todo": []

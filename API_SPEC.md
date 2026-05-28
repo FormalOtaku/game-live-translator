@@ -211,6 +211,15 @@ type DiagnosticBundle = {
   log store, no screenshot/image reads, no plaintext key access, and no SQLite
   schema changes. The route slice must call this contract before returning a
   diagnostics response.
+- T-010-002 wires `GET /api/diagnostics/bundle` through this contract in
+  `createLocalApiServer`. The route may use an injected
+  `diagnosticsProvider.collectDiagnostics()` source that returns string or
+  structured log entries, plus optional metadata, but it must call
+  `buildDiagnosticBundle` and `assertDiagnosticBundle` before writing JSON.
+  When no provider is installed, the route returns a valid minimal bundle with
+  empty `redactedLogs` so Logs/Diagnostics remains usable in a clean runtime.
+  Provider throws or invalid provider output collapse to the privacy-safe
+  `DIAGNOSTICS_FAILED` `ApiError`.
 
 ## REST Endpoints
 | Method | Path | Purpose | Request | Response | Error Codes |
@@ -245,7 +254,7 @@ type DiagnosticBundle = {
 
 ## Localhost HTTP Server Core
 - T-006 introduces a dependency-free localhost server core in `src/server/local-api-server.js` as the executable wire-contract harness for the v1 local API. The production sidecar may wrap or port this contract to Python FastAPI, but endpoint shapes, bind restrictions, error envelopes, and privacy rules must remain compatible.
-- `createLocalApiServer({ bindAddress, preferredPort, maxPortAttempts, version, overlayState, runtimeStatus, activeProfileId, allowedOrigins, allowSamePortLocalhostOrigin, overlayWsPath, appWsPath, profileRepository, providerKeyStore, captureSourceProvider, captureController, ocrTestProvider, translateTestProvider })` is the T-006 through T-009 server factory. `translateTestProvider.runTranslateTest({ profile, input })` is the T-009-002 boundary; T-009-003 adds the in-memory translation runtime status override that broadcasts translate-test transitions through `/api/status` and `/ws/app` without changing the route's response shape.
+- `createLocalApiServer({ bindAddress, preferredPort, maxPortAttempts, version, appVersion, backendVersion, osName, overlayState, runtimeStatus, activeProfileId, allowedOrigins, allowSamePortLocalhostOrigin, overlayWsPath, appWsPath, profileRepository, providerKeyStore, captureSourceProvider, captureController, ocrTestProvider, translateTestProvider, diagnosticsProvider })` is the T-006 through T-010 server factory. `translateTestProvider.runTranslateTest({ profile, input })` is the T-009-002 boundary; T-009-003 adds the in-memory translation runtime status override that broadcasts translate-test transitions through `/api/status` and `/ws/app` without changing the route's response shape. `diagnosticsProvider.collectDiagnostics()` is the T-010-002 boundary for process-local diagnostic log entries and optional safe metadata.
 - Bind behavior:
   - `bindAddress` defaults to `127.0.0.1` and any other value, including `0.0.0.0`, `::`, LAN IPs, or hostnames, raises `NON_LOCALHOST_BIND_REJECTED` before listening.
   - `preferredPort` defaults to `39600`; when unavailable, the server may try sequential local ports up to `maxPortAttempts` and must report the selected port through `/health` and `/api/status`.
@@ -363,6 +372,35 @@ type DiagnosticBundle = {
 - The runtime status broadcast preserves all T-009-002 privacy invariants: supplied request `text`, provider `translatedText`, glossary entries, internal `cacheKey`, provider keys, stack traces, and raw provider exception text never appear in the `AppStatus` snapshot, broadcast frames, or `/api/status` response. The `running`, `ok`, and `error` statuses carry only `state`, `updatedAt`, `code`, the controlled `message`, and `retryable`.
 - Malformed JSON bodies, `assertTranslateTestRequest` validation failures, `OPTIONS` preflight requests, and disallowed HTTP methods on `/api/translate/test` do not change the in-memory translation runtime status and do not publish `/ws/app` frames; only valid translate-test attempts mutate the override.
 - The `/api/translate/test` response shape is unchanged: successful responses still return only the canonical `TranslationResult` fields, and error responses still return canonical `ApiError` envelopes with the existing HTTP status mapping. The translation runtime status override is observable only through `GET /api/status` and `/ws/app` snapshots.
+
+## Diagnostics Bundle Endpoint
+- T-010-002 wires `GET /api/diagnostics/bundle` into the localhost API harness
+  with an optional dependency-injected `diagnosticsProvider` boundary. The
+  future Electron/FastAPI runtime owns concrete log collection behind this
+  interface.
+- When provided, `diagnosticsProvider.collectDiagnostics()` may return either
+  an array of log entries or an object with `{ logLines, appVersion?,
+  backendVersion?, os?, activeProfileId? }`. Log entries may be strings or
+  structured objects. Metadata, when present, must be non-empty strings except
+  `activeProfileId`, which may be `null`. The route applies safe defaults from
+  server options (`appVersion`, `backendVersion`, `osName`, `activeProfileId`)
+  and then calls `buildDiagnosticBundle`.
+- The route must validate the final response with `assertDiagnosticBundle`
+  before writing JSON. Only the canonical `DiagnosticBundle` fields can leave
+  the process.
+- Missing diagnostics provider returns a valid minimal bundle with empty
+  `redactedLogs`; it is not an error. Provider exceptions, non-array log
+  sources, invalid metadata, invalid bundle clocks, and validator failures map
+  to `DIAGNOSTICS_FAILED`.
+- `DIAGNOSTICS_FAILED` responses must not include provider keys, raw OCR/source
+  text, translated text, screenshots, image paths, stack traces, raw provider
+  response bodies, raw provider exception text, or debug payloads. Error details
+  may include value-free field names/codes only when produced by the bundle
+  validator.
+- Only `GET` is allowed on `/api/diagnostics/bundle`; other methods return
+  `METHOD_NOT_ALLOWED` with `Allow: GET`. The endpoint preserves the existing
+  localhost bind, CORS behavior, no-persistence behavior, and on-demand
+  generation.
 
 ## Translation API Smoke Command
 - T-009-004 adds `npm run smoke:translation` as the executable parent-closeout smoke for the dependency-free translation test API core.
