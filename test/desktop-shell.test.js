@@ -136,6 +136,13 @@ test('route normalization accepts known ids and never echoes unknown input', () 
   assert.equal(normalizeRoute('home', { setup: {} }), 'first-run');
   assert.equal(normalizeRoute('glossary', { setup: {} }), 'first-run');
   assert.equal(normalizeRoute('missing', { setup: {} }), 'first-run');
+  assert.equal(normalizeRoute('home', { setup: {}, backendRecovery: true }), 'home');
+  assert.equal(normalizeRoute('home', { setup: COMPLETE_SETUP, backendRecovery: true }), 'home');
+  assert.equal(
+    normalizeRoute('translation-settings', { setup: {}, backendRecovery: true }),
+    'first-run',
+  );
+  assert.equal(normalizeRoute('missing', { setup: {}, backendRecovery: true }), 'home');
   assert.equal(normalizeRoute('first-run', { setup: {} }), 'first-run');
   assert.equal(normalizeRoute('about', { setup: {} }), 'about');
   assert.equal(normalizeRoute('glossary', { setup: COMPLETE_SETUP }), 'glossary');
@@ -385,6 +392,23 @@ test('view model falls back to home for unknown route after setup completion', (
 test('view model defaults to home when route is omitted after setup completion', () => {
   const vm = buildViewModel({ setup: COMPLETE_SETUP });
   assert.equal(vm.route.id, ENTRY_ROUTE_WHEN_COMPLETE);
+});
+
+test('view model can enter home for explicit backend recovery before setup completion', () => {
+  const vm = buildViewModel({
+    setup: {},
+    backendRecovery: true,
+    appStatus: makeAppStatus({ backend: 'error' }),
+  });
+  assert.equal(vm.route.id, 'home');
+  assert.equal(vm.setupComplete, false);
+
+  const translationSettings = buildViewModel({
+    route: 'translation-settings',
+    setup: {},
+    backendRecovery: true,
+  });
+  assert.equal(translationSettings.route.id, 'first-run');
 });
 
 test('desktop shell harness navigates, consumes status, updates setup, and rechecks port trust', () => {

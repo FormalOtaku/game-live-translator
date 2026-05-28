@@ -1,11 +1,11 @@
 {
   "completed_items": [
-    "T-011-002"
+    "T-011-003"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-031 first-run flow contract keeps secrets out of serializable state and emits API intent descriptors only"
+    "DEC-032 Home/Status action contract keeps status/recovery/OBS/capture actions as safe renderer intents only"
   ],
   "open_questions": [],
-  "summary": "T-011-002 complete: added dependency-free First-Run provider/profile flow contract in src/ui/first-run-flow.js, with privacy-first state normalization, provider readiness gating, capture/ROI/profile/OCR/translation/activation HTTP intents, redacted sensitive makeBody paths, explicit acknowledgement completion gates, and code-driven recovery actions. Added test/first-run-flow.test.js coverage for state allow-lists, DeepL key readiness, profile/capture/ROI validation, secret redaction, result application, setup completion, and recovery mapping. Updated PRODUCT/UI/API/decision/migration docs. Verification passed: node --check first-run source/test, node --test first-run plus desktop-shell tests, npm test 322 pass, npm run build pass, npm run lint pass, git diff --check pass. Claude sidecar T-011-002-r5 imported clean with findings=0, must_fix=0, unresolved P1/P2=0."
+  "summary": "T-011-003 complete: added dependency-free Home/Status action contract in src/ui/home-status-actions.js, consuming desktop-shell sanitization to build backend/overlay/capture/OCR/translation cards, trusted overlay URL copy feedback, /api/status and /ws/app intents, capture start/stop intents, backendRecovery home-route exception, diagnostics/re-run setup actions, and code-driven navigation/host-command recovery intents without I/O or raw payload retention. Updated desktop-shell backendRecovery route handling, PRODUCT/UI/API/decision/migration docs, and focused tests. Verification passed: node --check desktop-shell/home-status source and home-status tests, node --test home-status + desktop-shell + first-run tests, npm test 333 pass, npm run build pass, npm run lint pass, git diff --check pass. Claude sidecar T-011-003-r2 imported clean with must_fix=0 and unresolved P1/P2=0."
 }

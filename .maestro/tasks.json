@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T03:31:04.791Z",
+  "migrated_at": "2026-05-28T03:53:48.116Z",
   "source_path": "TASKS.md",
-  "source_sha256": "01c7a079bcdc0b1f962a2d69bbaeac42373d5cde219f37779cb9d5611f7a8765",
+  "source_sha256": "27146287d232196c2024b14a3d029a32073e263547efc37490592384e1cd7c63",
   "task_count": 44,
   "counts": {
-    "todo": 3,
+    "todo": 2,
     "doing": 1,
     "blocked": 0,
-    "done": 40
+    "done": 41
   },
   "tasks": [
     {
@@ -302,7 +302,7 @@
     {
       "id": "T-011-003",
       "title": "Home status recovery and OBS URL actions",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     },
