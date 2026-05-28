@@ -1,0 +1,42 @@
+{
+  "task_id": "T-010-002",
+  "branch": "task/T-010-002",
+  "worktree_path": "/home/murasaki01/Projects/Game_Live_Translator",
+  "head_sha": "3095c26ee38a3641d43c39d62610b732b001bf37",
+  "implementation_head_sha": "3095c26ee38a3641d43c39d62610b732b001bf37",
+  "published_branch_head_sha": null,
+  "pr_body_generated_at_sha": null,
+  "commit_subject": "task(T-010-002): Add diagnostics bundle HTTP route",
+  "changed_files": [
+    ".maestro/decisions.jsonl",
+    ".maestro/project.json",
+    ".maestro/state.json",
+    ".maestro/structured-handoff.json",
+    ".maestro/task-state.json",
+    ".maestro/tasks.json",
+    "API_SPEC.md",
+    "CHANGELOG_DECISIONS.md",
+    "DECISIONS.md",
+    "MIGRATION_PLAN.md",
+    "PRODUCT_SPEC.md",
+    "src/server/local-api-server.js",
+    "STATE.md",
+    "TASKS.md",
+    "test/local-api-server.test.js"
+  ],
+  "design_packet_id": null,
+  "checkpoint_status": "satisfied",
+  "test_summary": "local: node checks pass; node --test test/local-api-server.test.js 82 pass; npm test 289 pass; npm run build pass; npm run lint pass; git diff --check pass. Docker Node 20: npm test 289 pass; npm run build pass; npm run lint pass.",
+  "review_evidence": [
+    "Claude sidecar T-010-002-r2 module review imported clean; findings=2 P3; must_fix=0; unresolved P1/P2=0.",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-010-002-r1/claude/review/review.json; receive=.maestro/agent-pass/T-010-002-r1/claude/review/receive-report.json",
+    "review.json; reviewed_files=7; findings=3; must_fix=0",
+    "unresolved P1/P2=0",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-010-002-r2/claude/review/review.json; receive=.maestro/agent-pass/T-010-002-r2/claude/review/receive-report.json",
+    "review.json; reviewed_files=7; findings=2; must_fix=0"
+  ],
+  "screenshots": [],
+  "design_evidence": null,
+  "committed_at": "2026-05-28T01:49:41.619Z",
+  "published_at": null
+}

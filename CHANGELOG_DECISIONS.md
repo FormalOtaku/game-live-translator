@@ -356,3 +356,16 @@
 - Regression tests added first: `test/contracts.test.js` covers string/structured diagnostics redaction, fixed redaction summary, bundle construction, validator acceptance, malformed bundle rejection, and value-free validation errors.
 - Migration needed: None.
 - Rollback plan: Remove the diagnostics bundle helpers, validators, focused tests, and spec/decision entries. Existing status/config/capture/translation routes remain unchanged.
+
+### CHG-20260528-028
+- Date: 2026-05-28
+- Summary: Wired T-010-002 `GET /api/diagnostics/bundle` through the localhost API with an optional diagnostics provider seam.
+- Reason: Logs/Diagnostics needs a live copy-bundle endpoint before the UI and concrete Electron/FastAPI log collection adapters land, while preserving the T-010-001 redaction and validation boundary.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. Bundle generation is on-demand and in-memory; this slice adds no durable log store, screenshot/image reads, key storage movement, cache persistence, or profile export schema change.
+  - API: Adds `diagnosticsProvider.collectDiagnostics()` to `createLocalApiServer` and wires `GET /api/diagnostics/bundle`. The route accepts provider log arrays or `{ logLines, appVersion?, backendVersion?, os?, activeProfileId? }`, applies safe defaults, calls `buildDiagnosticBundle`, validates with `assertDiagnosticBundle`, and maps provider/shape failures to privacy-safe `DIAGNOSTICS_FAILED`.
+  - UI: Logs/Diagnostics gains a stable HTTP route for copyable redacted bundles; clean runtimes with no provider return an empty-log bundle rather than a setup-blocking error.
+- Risk: This is still dependency-free route wiring over injected diagnostics sources. T-010-003 must add a repeatable live smoke/runbook, and concrete runtime log collectors must avoid collecting full game text by default even though the bundle route redacts known sensitive fields.
+- Regression tests added first: `test/local-api-server.test.js` covers no-provider minimal bundle, provider metadata/log redaction, method/CORS behavior, provider failure redaction, invalid provider shape mapping, and bundle validator enforcement.
+- Migration needed: None.
+- Rollback plan: Remove the diagnostics route, injected provider handling, focused tests, and spec/decision entries. Existing status/config/capture/translation routes remain unchanged.
