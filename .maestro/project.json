@@ -28,14 +28,14 @@
     "slices_per_checkpoint": 3
   },
   "session_flow": {
-    "current_session_role": "supervisor",
+    "current_session_role": "execution",
     "recommended_next_session_role": "execution",
     "checkpoint_status": "satisfied",
-    "checkpoint_reason": "T-012-002 complete: deterministic smoke/test/build/lint/diff-check passed; Claude agent-pass T-012-002-r1 clean with must_fix=0 and unresolved P1/P2=0.",
-    "last_completed_slice": "T-012-002",
-    "handoff_summary": "T-012-002 complete: added npm run smoke:first-run-stream live localhost first-run stream smoke, shared OverlayState injection in runSyntheticFirstRunStream, child-process smoke coverage, and spec/decision/migration updates. Verification: focused npm test 13 pass; npm run smoke:first-run-stream pass with escalated localhost listen; direct node smoke pass with escalated localhost listen; npm test 377 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-002-r1 clean with must_fix=0 and unresolved P1/P2=0. Next slice: T-012-003 backend restart and port conflict recovery smoke.",
-    "next_action": "start_execution_session",
-    "updated_at": "2026-05-28T06:40:32.542Z"
+    "checkpoint_reason": "T-012-003 deterministic tests/smoke/build/lint/diff-check passed and Claude review evidence was imported.",
+    "last_completed_slice": "T-012-003",
+    "handoff_summary": "T-012-003 complete: added npm run smoke:backend-recovery, dependency-free backend restart and preferred-port conflict smoke, child-process regression coverage, and spec/decision/migration updates. Verification: node --check new files pass; npm test -- test/backend-recovery-smoke.test.js pass; npm run smoke:backend-recovery pass with escalated localhost listen; npm test 378 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-003-r1 clean with must_fix=0 and unresolved P1/P2=0. Next slice: T-012-004 overlay resolution layout verification smoke.",
+    "next_action": "start T-012-004 overlay resolution layout verification smoke",
+    "updated_at": "2026-05-28T07:13:03.354Z"
   },
   "ui_design_policy": {
     "surface_priority": [
