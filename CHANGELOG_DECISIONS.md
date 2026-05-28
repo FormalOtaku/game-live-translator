@@ -330,3 +330,16 @@
 - Regression tests added first: `test/local-api-server.test.js` adds focused tests for `/api/status` and `/ws/app` running→ok broadcast on success, `/api/status` and `/ws/app` running→error broadcast on provider failure with redacted code/message, and a no-status-change assertion for malformed body, `OPTIONS` preflight, and disallowed HTTP method on `/api/translate/test`.
 - Migration needed: None.
 - Rollback plan: Revert the translation runtime status override, `runManualTranslateTest` publish/error paths, focused tests, and spec/decision entries. The T-009-002 route response shape, validators, and provider error mapping remain intact.
+
+### CHG-20260528-026
+- Date: 2026-05-28
+- Summary: Added the T-009 translation API smoke command and parent-closeout runbook.
+- Reason: The translation test API parent needs one reproducible live HTTP/WebSocket smoke that proves `/api/translate/test`, provider input preparation, `/api/status`, `/ws/app`, and privacy invariants work together with injected adapters.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The smoke uses injected profile/provider dependencies, an ephemeral localhost port, and in-memory runtime status only.
+  - API: Adds `npm run smoke:translation`, `scripts/smoke-translation-api.js`, `test/translation-api-smoke.test.js`, and `TRANSLATION_API_SMOKE_RUNBOOK_JA.md`. The smoke covers preflight/method/malformed no-mutation behavior, translation success, glossary/cache-prepared input, provider failure retryability, status broadcasts, and redaction/no-persistence invariants.
+  - UI: First-Run, Translation Settings, and Home/Status gain parent-closeout evidence that their backing translation test route and status stream are available as one coherent API.
+- Risk: This remains a dependency-free contract smoke over injected adapters, not a real DeepL or Windows/Electron/FastAPI smoke. Real-adapter smoke should be added when those adapters land.
+- Regression tests added first: `test/translation-api-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no provider key/source/translated/glossary/cache sentinel in stdout.
+- Migration needed: None.
+- Rollback plan: Remove `npm run smoke:translation`, the smoke script, runbook, focused smoke test, and spec/decision entries. Existing translation route behavior remains covered by unit tests.

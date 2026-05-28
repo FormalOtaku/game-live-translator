@@ -1,26 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T00:28:51.573Z",
+  "migrated_at": "2026-05-28T00:57:34.805Z",
   "source_path": "STATE.md",
-  "source_sha256": "27e3305dd5249167550f4302857c8a282792beba8269a60fc4bdf80eee365ec0",
+  "source_sha256": "f89a3d3e4559ca605294275846a2e27e3c6685f43a5f019eac5de49435499a99",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": [
-      "T-009"
-    ]
+    "active_task_ids": []
   },
   "slice_progress": {
-    "current_slice_prefix": "T-009",
-    "current_slice_id": "T-009-004",
-    "current_slice_goal": "Translation API smoke runbook and parent closeout",
-    "current_slice_status": "doing",
-    "completed_slices": 3,
-    "total_slices": 4,
-    "progress_pct": 75,
+    "current_slice_prefix": null,
+    "current_slice_id": null,
+    "current_slice_goal": null,
+    "current_slice_status": null,
+    "completed_slices": 0,
+    "total_slices": 0,
+    "progress_pct": 0,
     "next_slice_id": null,
     "next_slice_goal": null,
-    "last_checkpoint": "2026-05-28T00:28:51.573Z",
+    "last_checkpoint": "2026-05-28T00:57:34.804Z",
     "done": [],
     "doing": [],
     "todo": []

@@ -1,15 +1,11 @@
 {
   "completed_items": [
-    "translation runtime status overlay for AppStatus",
-    "/api/translate/test running/ok/error broadcasts",
-    "provider/fallback error status mapping",
-    "privacy no-leak regression tests",
-    "T-009-003 spec and decision updates"
+    "T-009-004 translation API smoke runbook,T-009 parent closeout"
   ],
   "blockers": [],
   "decisions_made": [
-    "DEC-025 translation runtime status broadcast"
+    "DEC-026 npm run smoke:translation is the required translation API smoke evidence"
   ],
   "open_questions": [],
-  "summary": "T-009-003 complete: /api/translate/test now publishes privacy-safe translation runtime status through /api/status and /ws/app with running/ok/error transitions, provider-vocabulary/fallback error mapping, no malformed/preflight/wrong-method mutation, and no raw source/result/glossary/cache leakage. Verification passed locally and in Docker: node --check, node --test test/local-api-server.test.js 78 pass, npm test 279 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-003-r3 review imported clean with must_fix=0 and unresolved P1/P2=0. T-009-004 is now doing: translation API smoke runbook and parent closeout."
+  "summary": "T-009/T-009-004 complete: added repeatable translation API smoke command and JA runbook, locked smoke behavior in child-process regression test, and updated PRODUCT/API/decision/migration/runbook closeout docs. Verification passed: local npm test 280 pass, npm run build/lint pass, npm run smoke:translation pass; Docker npm test 280 pass, Docker build/lint/smoke:translation pass; git diff --check pass. Claude sidecar T-009-004-r2 full-diff review imported clean with must_fix=0 and unresolved P1/P2=0."
 }

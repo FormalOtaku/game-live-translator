@@ -340,6 +340,16 @@ type DiagnosticBundle = {
 - Malformed JSON bodies, `assertTranslateTestRequest` validation failures, `OPTIONS` preflight requests, and disallowed HTTP methods on `/api/translate/test` do not change the in-memory translation runtime status and do not publish `/ws/app` frames; only valid translate-test attempts mutate the override.
 - The `/api/translate/test` response shape is unchanged: successful responses still return only the canonical `TranslationResult` fields, and error responses still return canonical `ApiError` envelopes with the existing HTTP status mapping. The translation runtime status override is observable only through `GET /api/status` and `/ws/app` snapshots.
 
+## Translation API Smoke Command
+- T-009-004 adds `npm run smoke:translation` as the executable parent-closeout smoke for the dependency-free translation test API core.
+- The smoke command starts `createLocalApiServer` on an ephemeral `127.0.0.1` port with injected `profileRepository` and `translateTestProvider` implementations and exercises the live HTTP/WebSocket route surface instead of calling route handlers directly.
+- Required smoke assertions:
+  - `/health` reports the selected localhost port and `bindAddress: "127.0.0.1"`.
+  - `OPTIONS`, wrong-method, and malformed `POST /api/translate/test` requests do not call the provider and do not mutate `/api/status.translation` or publish non-idle `/ws/app` frames.
+  - Successful `POST /api/translate/test` returns only the canonical `TranslationResult` fields, passes glossary/cache-prepared input into the injected provider seam, and publishes `TRANSLATE_TEST_RUNNING` then `TRANSLATE_TEST_OK` through `/ws/app` and `/api/status`.
+  - Provider failures return canonical retryable/non-retryable `ApiError` envelopes and publish `TRANSLATE_TEST_RUNNING` then provider-vocabulary `error` status through `/ws/app` and `/api/status`.
+- Smoke output must be concise JSON and must not include provider keys, raw source/test text, translated output, glossary replacement text, translation cache keys, stack traces, raw provider exception text, or remote hosts. The successful `/api/translate/test` response may contain explicit manual-test `sourceText` and `translatedText`, but the smoke must not copy those values into stdout, stderr, status frames, or error envelopes.
+
 ## Capture/OCR API Smoke Command
 - T-008-005 adds `npm run smoke:capture-ocr` as the executable parent-closeout smoke for the dependency-free capture/OCR API core.
 - The smoke command starts `createLocalApiServer` on an ephemeral `127.0.0.1` port with injected `profileRepository`, `captureSourceProvider`, `captureController`, and `ocrTestProvider` implementations and exercises the live HTTP route surface instead of calling route handlers directly.

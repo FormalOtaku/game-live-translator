@@ -41,28 +41,28 @@
 
 ## Current Focus
 - milestone:
-- active_task_ids: T-009
+- active_task_ids: (none)
 - connectivity_checks: GitHub SSH remote verified; Claude sidecar connectivity verified through Maestro MCP
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-009
-- current_slice_id: T-009-004
-- current_slice_goal: Translation API smoke runbook and parent closeout
-- current_slice_status: doing
-- completed_slices: 3
-- total_slices: 4
-- progress_pct: 75
-- next_slice_id:
-- next_slice_goal:
-- last_checkpoint: 2026-05-28T00:28:51.573Z
+- current_slice_prefix: (none)
+- current_slice_id: (none)
+- current_slice_goal: (none)
+- current_slice_status: (none)
+- completed_slices: 0
+- total_slices: 0
+- progress_pct: 0
+- next_slice_id: (none)
+- next_slice_goal: (none)
+- last_checkpoint: 2026-05-28T00:57:34.804Z
 ## Session Flow
 - current_session_role: execution
-- recommended_next_session_role: execution
+- recommended_next_session_role: spec
 - checkpoint_status: satisfied
-- checkpoint_reason: Deterministic verification and imported Claude review evidence satisfied for T-009-003; no human validation required.
-- last_completed_slice: T-009-003
-- handoff_summary: T-009-003 complete: /api/translate/test now publishes privacy-safe translation runtime status through /api/status and /ws/app with running/ok/error transitions, provider-vocabulary/fallback error mapping, no malformed/preflight/wrong-method mutation, and no raw source/result/glossary/cache leakage. Verification passed locally and in Docker: node --check, node --test test/local-api-server.test.js 78 pass, npm test 279 pass, npm run build/lint pass, git diff --check pass. Claude sidecar T-009-003-r3 review imported clean with must_fix=0 and unresolved P1/P2=0. T-009-004 is now doing: translation API smoke runbook and parent closeout.
-- next_action: start T-009-004 translation API smoke runbook and parent closeout
-- updated_at: 2026-05-28T00:28:51.570Z
+- checkpoint_reason: T-009 parent closeout satisfied by deterministic local/Docker verification and imported clean full-diff Claude sidecar evidence; no human validation required.
+- last_completed_slice: T-009-004
+- handoff_summary: T-009/T-009-004 complete: added repeatable translation API smoke command and JA runbook, locked smoke behavior in child-process regression test, and updated PRODUCT/API/decision/migration/runbook closeout docs. Verification passed: local npm test 280 pass, npm run build/lint pass, npm run smoke:translation pass; Docker npm test 280 pass, Docker build/lint/smoke:translation pass; git diff --check pass. Claude sidecar T-009-004-r2 full-diff review imported clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: start_spec_session
+- updated_at: 2026-05-28T00:55:32.227Z
 ## Risks
 - GitHub CLI token remains invalid, but git SSH remote is usable for repository push/pull.
