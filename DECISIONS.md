@@ -1,19 +1,7 @@
 # DECISIONS
 
-## Record Rule
-- Keep one entry per decision.
-- Include context, options, chosen option, and follow-up.
+> Generated from `.maestro/decisions.jsonl`.
 
-## Template
-### DEC-000
-- Date:
-- Context:
-- Options:
-- Decision:
-- Consequences:
-- Follow-up:
-
-## Entries
 ### DEC-001
 - Date: 2026-05-27
 - Context: Kickoff docs define Game Live Translator as a streamer-facing OBS overlay for Japanese-to-English game screen translation. The initial product/API/UI specs were placeholders and could not safely guide implementation.
@@ -245,3 +233,11 @@
 - Decision: Add `npm run smoke:diagnostics` and protect it with `test/diagnostics-api-smoke.test.js`. The smoke starts `createLocalApiServer` on ephemeral `127.0.0.1` ports, verifies `/health`, no-provider minimal bundles, method/CORS guards that do not collect diagnostics, provider metadata normalization, provider log redaction, canonical `DiagnosticBundle` shape, and privacy-safe `DIAGNOSTICS_FAILED` mapping for thrown and malformed provider output.
 - Consequences: T-010 parent closeout can be reproduced locally and in Docker/devcontainer workflows without real log files, screenshots, OCR text persistence, DeepL credentials, OBS, Windows capture APIs, PaddleOCR, or network access. The Logs/Diagnostics UI can rely on one copy-bundle route while concrete Electron/FastAPI log collectors remain replaceable behind the provider seam.
 - Follow-up: When concrete Windows/Electron/FastAPI log collection is wired, add a product-level smoke against the real collector while keeping this dependency-free contract smoke as the fast regression fixture.
+
+### DEC-030
+- Date: 2026-05-28
+- Context: T-011 starts the desktop UI core slice. The future Electron/React renderer needs one executable route registry, entry-route gate, AppStatus sanitization layer, recovery-action vocabulary, and overlay URL trust rule before any concrete React components or Electron host code lands. Without it, parallel UI work would re-invent privacy and routing rules that the backend has already locked through T-006/T-007/T-008/T-009/T-010.
+- Options: (a) wait for Electron scaffolding to land first and inline these rules inside React components; (b) introduce a React/Redux-style state library now to model the shell; (c) add a dependency-free pure JS shell module that the future Electron main/renderer process can import without adding npm dependencies, and that focused node:test coverage can lock against the spec.
+- Decision: Add `src/ui/desktop-shell.js` as the executable renderer contract for T-011-001. It registers every UI_SPEC.md first-class screen with `loading/empty/error/success/recovery` capabilities, defines the First-Run vs Home entry-route gate via explicit `isSetupComplete({ activeProfileId, providerKeySaved, captureSourceSelected, roiSaved })`, sanitizes `AppStatus`/`RuntimeStatus`/`SubtitleFrame` consumption to drop `sourceText`, `translatedText`, provider keys, and raw runtime messages, requires `http://127.0.0.1:<port>/overlay` for overlay URL trust, and derives recovery actions from `RuntimeStatus.code`/`retryable` only — never from message text. `createDesktopShell(...)` is the optional stateful harness; `buildViewModel(...)` is the pure functional entry point. The module adds no npm dependencies, no persistence, and no SQLite schema change.
+- Consequences: The future Electron/React renderer and any review tooling consume one canonical shape for routes, recovery actions, and sanitized status. UI tests can lock privacy invariants (`message`/`sourceText`/provider key omission, overlay URL trust, recovery vocabulary) before any React component renders user-supplied state. Unknown route ids, prototype-shaped strings, and untrusted overlay URLs cannot leak through the renderer. The contract preserves T-006/T-009/T-010 invariants: `RuntimeStatus.message` is never parsed for retryability, `overlayUrl` must match the backend-reported localhost URL, and the shell holds no durable state.
+- Follow-up: When the Electron host and React renderer land, they must consume `createDesktopShell`/`buildViewModel` rather than re-deriving routes or sanitization. New `RuntimeStatus.code` or `ApiError.code` values added by future backend slices must be added to `RECOVERY_ACTIONS_BY_CODE` in the same slice that adds the code, and the docs in `API_SPEC.md` / `UI_SPEC.md` must be updated together.
