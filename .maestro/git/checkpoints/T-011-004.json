@@ -1,0 +1,37 @@
+{
+  "task_id": "T-011-004",
+  "branch": "task/T-011-004",
+  "worktree_path": "/home/murasaki01/Projects/Game_Live_Translator",
+  "head_sha": "05612bafbfec67de4d86bd466ebc9f5ca66ce0e5",
+  "implementation_head_sha": "05612bafbfec67de4d86bd466ebc9f5ca66ce0e5",
+  "published_branch_head_sha": null,
+  "pr_body_generated_at_sha": null,
+  "commit_subject": "task(T-011-004): T-011-004 setup-screen renderer contract complete",
+  "changed_files": [
+    "API_SPEC.md",
+    "CHANGELOG_DECISIONS.md",
+    "DECISIONS.md",
+    "MIGRATION_PLAN.md",
+    "PRODUCT_SPEC.md",
+    "src/ui/setup-screens.js",
+    "STATE.md",
+    "TASKS.md",
+    "test/setup-screens.test.js",
+    "UI_SPEC.md"
+  ],
+  "design_packet_id": null,
+  "checkpoint_status": "satisfied",
+  "test_summary": "node --test test/setup-screens.test.js; npm test (344 pass); npm run build; npm run lint; git diff --check",
+  "review_evidence": [
+    "agent-pass T-011-004-r3 clean must_fix=0 unresolved_P1_P2=0",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-011-004/claude/review/review.json; receive=.maestro/agent-pass/T-011-004/claude/review/receive-report.json",
+    "review.json; reviewed_files=8; findings=7; must_fix=0",
+    "unresolved P1/P2=0",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-011-004-r3/claude/review/review.json; receive=.maestro/agent-pass/T-011-004-r3/claude/review/receive-report.json",
+    "review.json; reviewed_files=8; findings=5; must_fix=0"
+  ],
+  "screenshots": [],
+  "design_evidence": null,
+  "committed_at": "2026-05-28T04:26:38.492Z",
+  "published_at": null
+}

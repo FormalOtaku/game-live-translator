@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T03:53:48.116Z",
+  "migrated_at": "2026-05-28T04:25:37.535Z",
   "source_path": "TASKS.md",
-  "source_sha256": "27146287d232196c2024b14a3d029a32073e263547efc37490592384e1cd7c63",
+  "source_sha256": "907fe96c0dd653b3120aa23d2d76ff9fddf3a41cf840f7ce7c541c73c8031180",
   "task_count": 44,
   "counts": {
-    "todo": 2,
+    "todo": 1,
     "doing": 1,
     "blocked": 0,
-    "done": 41
+    "done": 42
   },
   "tasks": [
     {
@@ -309,7 +309,7 @@
     {
       "id": "T-011-004",
       "title": "Capture OCR translation setup screens",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     },

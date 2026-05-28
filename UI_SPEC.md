@@ -70,6 +70,7 @@
 - Purpose: choose capture source and define OCR region.
 - Inputs: source picker, refresh source list, draw ROI, capture frequency 0/1/2/3/4 Hz where `0` is manual-only, manual test capture.
 - Outputs: live ROI preview, coordinates, source details, capture timing.
+- Renderer contract: Capture Setup uses the T-011-004 setup-screen contract to keep an in-memory profile draft for `captureSource`, `roi`, and `captureHz`, fetch source choices through `GET /api/capture/sources`, and save only allow-listed profile update fields through `PUT /api/profiles/{id}` after both a source and ROI exist. Source lists are copied into visible UI state with only `kind`, `id`, `label`, and optional `bounds`; log-safe snapshots redact labels because window titles may contain private context. Provider keys, screenshot paths, capture frames, raw OCR text, translated text, and debug payloads are not retained.
 - Loading: enumerating screens/windows.
 - Empty: no eligible source found.
 - Error: source disappeared, capture failed, ROI out of bounds.
@@ -79,6 +80,7 @@
 - Purpose: tune OCR quality before going live.
 - Inputs: OCR preset, confidence floor, run OCR now, show preprocessing preview.
 - Outputs: recognized text, normalized text, confidence, rejected lines with reason, timing.
+- Renderer contract: OCR Preview uses `POST /api/ocr/test` with `{ profileId, roi? }` for one-shot tests and `PUT /api/profiles/{id}` for `ocrPreset` / `ocrConfidenceFloor` updates. Recognized and normalized text may appear only in the transient screen view model for the current preview; log-safe snapshots and errors redact those text fields and never persist screenshots or OCR engine debug payloads.
 - Loading: OCR in progress.
 - Empty: no ROI or no recognized text.
 - Error: OCR engine unavailable or preprocessing failure.
@@ -88,6 +90,7 @@
 - Purpose: configure provider and test translation.
 - Inputs: provider selector, write-only API key field, target language display fixed to English for v1, translation style, test translation.
 - Outputs: provider status, last error, cache status, key saved indicator.
+- Renderer contract: Translation Settings uses write-only `PUT /api/keys/{provider}` for key saves, `PUT /api/profiles/{id}` for provider/target-language settings, and `POST /api/translate/test` for manual provider tests. API keys and manual test text are fetch-time-only inputs exposed through intent `makeBody()` functions, not serializable state. Translated preview text may appear only in the transient screen view model; log-safe snapshots redact translated/source text and provider responses.
 - Loading: provider test in progress.
 - Empty: no provider selected.
 - Error: missing key, invalid key, quota/rate limit, network failure, provider timeout.
