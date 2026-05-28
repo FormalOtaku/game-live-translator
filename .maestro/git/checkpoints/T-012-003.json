@@ -1,0 +1,41 @@
+{
+  "task_id": "T-012-003",
+  "branch": "task/T-012-003",
+  "worktree_path": "/home/murasaki01/Projects/Game_Live_Translator",
+  "head_sha": "21810cc85f1df101c6813f9c7891b623735d5e13",
+  "implementation_head_sha": "21810cc85f1df101c6813f9c7891b623735d5e13",
+  "published_branch_head_sha": "db2f9456f819b1548e7c3cb1b395da754163b136",
+  "pr_body_generated_at_sha": null,
+  "commit_subject": "task(T-012-003): T-012-003 backend restart and port conflict recovery smoke",
+  "changed_files": [
+    ".maestro/decisions.jsonl",
+    ".maestro/project.json",
+    ".maestro/state.json",
+    ".maestro/structured-handoff.json",
+    ".maestro/task-state.json",
+    ".maestro/tasks.json",
+    "API_SPEC.md",
+    "CHANGELOG_DECISIONS.md",
+    "DECISIONS.md",
+    "MIGRATION_PLAN.md",
+    "package.json",
+    "PRODUCT_SPEC.md",
+    "scripts/smoke-backend-recovery.js",
+    "STATE.md",
+    "TASKS.md",
+    "test/backend-recovery-smoke.test.js",
+    "UI_SPEC.md"
+  ],
+  "design_packet_id": null,
+  "checkpoint_status": "satisfied",
+  "test_summary": "node --check scripts/smoke-backend-recovery.js; node --check test/backend-recovery-smoke.test.js; npm test -- test/backend-recovery-smoke.test.js; npm run smoke:backend-recovery (escalated localhost listen); npm test (378 pass); npm run build; npm run lint; git diff --check",
+  "review_evidence": [
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-012-003-r1/claude/review/review.json; receive=.maestro/agent-pass/T-012-003-r1/claude/review/receive-report.json",
+    "review.json; reviewed_files=14; findings=2; must_fix=0",
+    "unresolved P1/P2=0"
+  ],
+  "screenshots": [],
+  "design_evidence": null,
+  "committed_at": "2026-05-28T07:13:40.016Z",
+  "published_at": "2026-05-28T07:15:00.466Z"
+}

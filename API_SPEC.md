@@ -706,6 +706,14 @@ type DiagnosticBundle = {
 - The command may inspect the visible English subtitle internally to prove broadcast readiness, but stdout is limited to structured evidence: command name, localhost bind/port/overlay URL, stage/budget flags, subtitle id/provider/theme/timing, SHA-256 hashes, privacy guarantees, and named check results. Stdout and stderr must not contain the synthetic Japanese source text, raw translated text, provider keys, screenshot/image paths, logs, stack traces, cache keys, or debug payloads.
 - The smoke adds no new HTTP routes, no SQLite schema changes, no profile export changes, no native OCR/capture dependency, no real provider credential use, and no durable logs.
 
+### Backend Recovery Smoke Command
+- T-012-003 adds `npm run smoke:backend-recovery` as a dependency-free live localhost smoke over the existing `createLocalApiServer`, `OverlayState`, and `createSubtitleFrame` contracts.
+- The smoke reserves a free preferred localhost port, starts a backend on that port, publishes a deterministic in-memory subtitle frame, verifies `/health`, `/api/status`, `/overlay`, and `/ws/overlay`, stops the backend, then starts a fresh backend instance on the same preferred port and verifies the same surfaces again. This models the Electron host restarting the backend process rather than reusing a stopped server object.
+- Port-conflict coverage uses a localhost blocker to occupy a preferred port. With multiple attempts configured, the backend must select a later localhost port and keep `/health` and `/api/status` aligned to the selected port. With `maxPortAttempts=1`, startup must fail with `ContractError` code `PORT_UNAVAILABLE`; `buildApiErrorFromContractError` must map it to an `ApiError` with `retryable: true` and details for `bindAddress`, `preferredPort`, and `maxPortAttempts`.
+- After the blocker releases, a fresh backend must start on the original preferred port and serve the same health/status/overlay/WebSocket checks. Recovery evidence is code-driven: UI and host callers must use the controlled error code/retryability instead of parsing raw exception messages.
+- Stdout is limited to command name, localhost bind, selected/restarted/fallback/recovered ports, `PORT_UNAVAILABLE` code/retryability/details, SHA-256 hashes of internally verified overlay text/HTML evidence, and named checks. Stdout and stderr must not contain raw OCR/source text, translated text, provider keys, screenshot/image paths, stack traces, logs, cache keys, arbitrary error details, or debug payloads.
+- The smoke adds no new HTTP routes, no SQLite schema changes, no profile export changes, no native OCR/capture dependency, no real provider credential use, no npm dependency, and no durable logs.
+
 ## Error Model
 - Canonical error shape: `ApiError`.
 - Validation error code: `VALIDATION_ERROR` with `details.fieldErrors`.

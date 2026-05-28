@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T06:37:44.034Z",
+  "migrated_at": "2026-05-28T07:12:45.325Z",
   "source_path": "TASKS.md",
-  "source_sha256": "bd1a7885ad89ebaadf0c67f5c0fab82de9a88b843c309827ffe1499c9b81ce1c",
+  "source_sha256": "4fa6dc3af01348f83e3806c43ffd57a2c48ff94de2d29463d07d33cf584ba132",
   "task_count": 50,
   "counts": {
-    "todo": 4,
+    "todo": 3,
     "doing": 0,
     "blocked": 0,
-    "done": 46
+    "done": 47
   },
   "tasks": [
     {
@@ -344,7 +344,7 @@
     {
       "id": "T-012-003",
       "title": "Backend restart and port conflict recovery smoke",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     },

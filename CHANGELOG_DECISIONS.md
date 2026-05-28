@@ -473,3 +473,16 @@
 - Regression tests added first: `test/first-run-stream-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no synthetic source text, raw translated text, provider key, or screenshot sentinel in stdout. `test/synthetic-first-run-stream.test.js` covers injected shared `OverlayState` publication.
 - Migration needed: None.
 - Rollback plan: Remove `npm run smoke:first-run-stream`, `scripts/smoke-first-run-stream.js`, `test/first-run-stream-smoke.test.js`, the injected `overlayState` option and focused test, and the T-012-002 spec/decision entries. Existing server, overlay, and T-012-001 core harness contracts remain unchanged.
+
+### CHG-20260528-037
+- Date: 2026-05-28
+- Summary: Added the T-012-003 backend restart and port conflict recovery smoke command.
+- Reason: T-012-002 proved the first-run subtitle reaches the localhost OBS overlay surfaces, but the product acceptance path also needs repeatable evidence that backend restarts and preferred-port conflicts are recoverable without leaking text or secrets.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The smoke uses in-memory `OverlayState`, ephemeral localhost API servers, and temporary localhost port blockers only; it persists no OCR/source text, translated text, images, screenshots, logs, cache rows, or provider keys.
+  - API: Adds `npm run smoke:backend-recovery`, `scripts/smoke-backend-recovery.js`, and `test/backend-recovery-smoke.test.js`. The command exercises existing `/health`, `/api/status`, `/overlay`, and `/ws/overlay` contracts, `listenWithFallback`, and `buildApiErrorFromContractError`; it adds no new routes.
+  - UI: First-Run and Home/Status gain deterministic backend recovery evidence for restart, preferred-port fallback, retryable `PORT_UNAVAILABLE`, and released-port recovery. The summary is safe for UI/runbook display because it prints only ids, ports, codes, retryability flags, hashes, and named checks.
+- Risk: This remains a dependency-free contract smoke over Node localhost servers and does not yet automate the Electron host restart button, real browser rendering, OBS Studio, Windows capture APIs, PaddleOCR, or DeepL. T-012-004 should add layout verification before parent closeout.
+- Regression tests added first: `test/backend-recovery-smoke.test.js` executes the smoke script as a child process and asserts the JSON evidence shape plus no synthetic source text, raw translated text, provider key, screenshot path, stack trace, or debug sentinel in stdout/stderr.
+- Migration needed: None.
+- Rollback plan: Remove `npm run smoke:backend-recovery`, `scripts/smoke-backend-recovery.js`, `test/backend-recovery-smoke.test.js`, and the T-012-003 spec/decision entries. Existing server, overlay, and T-012-002 first-run smoke contracts remain unchanged.

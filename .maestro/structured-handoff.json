@@ -1,9 +1,11 @@
 {
   "completed_items": [
-    "T-011-004"
+    "T-012-003"
   ],
   "blockers": [],
-  "decisions_made": [],
+  "decisions_made": [
+    "DEC-037"
+  ],
   "open_questions": [],
-  "summary": "T-011-004 complete: added dependency-free Capture/OCR/Translation setup-screen renderer contract in src/ui/setup-screens.js with allow-listed profile draft state, validated intents for source enumeration/profile updates/OCR preview/provider key/translation preview, write-only makeBody handling, transient OCR/translation preview state, capture label and preview text redaction in log-safe snapshots, code/retryable recovery actions, spec/decision/migration updates, and focused regression tests. Verification passed: node --check setup source/test, node --test setup + focused UI contracts, npm test 344 pass, npm run build pass, npm run lint pass, git diff --check pass. Claude sidecar T-011-004-r3 imported clean with must_fix=0 and unresolved P1/P2=0."
+  "summary": "T-012-003 complete: added npm run smoke:backend-recovery, dependency-free backend restart and preferred-port conflict smoke, child-process regression coverage, and spec/decision/migration updates. Verification: node --check new files pass; npm test -- test/backend-recovery-smoke.test.js pass; npm run smoke:backend-recovery pass with escalated localhost listen; npm test 378 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-003-r1 clean with must_fix=0 and unresolved P1/P2=0. Next slice: T-012-004 overlay resolution layout verification smoke."
 }
