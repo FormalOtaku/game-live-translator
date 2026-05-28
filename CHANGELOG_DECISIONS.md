@@ -434,3 +434,16 @@
 - Regression tests added first: `test/setup-screens.test.js` covers frozen state/view-model shapes, allow-listed draft updates, capture source response sanitization, profile update intent validation, OCR preview result validation and safe-log redaction, write-only provider-key intent redaction, translation preview intent redaction, sanitized error recovery, and no serialization of provider keys, manual source text, OCR text, translated text, screenshots, stack traces, provider responses, or debug payloads in log-safe outputs.
 - Migration needed: None.
 - Rollback plan: Remove `src/ui/setup-screens.js`, `test/setup-screens.test.js`, and the T-011-004 spec/decision entries. Existing T-011-001 shell, T-011-002 First-Run, and T-011-003 Home/Status contracts remain unchanged.
+
+### CHG-20260528-034
+- Date: 2026-05-28
+- Summary: Added the dependency-free Overlay/Privacy/Diagnostics closeout renderer contract for T-011-005.
+- Reason: Overlay Theme Editor, OBS Setup Guide, Privacy Settings, and Logs/Diagnostics need one executable renderer boundary for existing APIs, localhost URL trust, privacy warnings, diagnostics redaction, and copy actions before concrete React screens are built.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The contract is pure in-process renderer logic and adds no SQLite tables, no profile export schema bump, no key storage movement, no cache persistence, no logs/diagnostics persistence, and no screenshot/image persistence.
+  - API: Adds `src/ui/closeout-screens.js` with intent descriptors for existing routes only: theme CRUD, profile overlay-theme update, privacy settings read/update, diagnostics bundle fetch, `/api/status`, and `/ws/app`. No server routes are added or changed.
+  - UI: Overlay Theme Editor, OBS Setup Guide, Privacy Settings, and Logs/Diagnostics gain frozen state/view-model boundaries with built-in theme protections, trusted OBS URL actions, debug persistence warnings, diagnostics bundle copy safety, sanitized errors, and code/retryable-driven recovery action ids.
+- Risk: This remains a renderer contract, not concrete React or Electron host wiring. Host bindings must keep clipboard/browser/debug-folder/backend-restart side effects outside this pure module and preserve the localhost trust plus diagnostics redaction gates.
+- Regression tests added first: `test/closeout-screens.test.js` covers theme list normalization and built-in/custom action gating, validated theme create/update/delete/profile-apply intents, OBS trusted/untrusted overlay URL behavior, privacy draft warning/update validation and debug-path redaction, diagnostics bundle re-redaction and sensitive copy intent logging, sanitized error recovery, immutable view models, and no serialization of provider keys, OCR/source text, translated text, screenshots, stack traces, provider responses, debug directories, or diagnostic logs in log-safe outputs.
+- Migration needed: None.
+- Rollback plan: Remove `src/ui/closeout-screens.js`, `test/closeout-screens.test.js`, and the T-011-005 spec/decision entries. Existing T-011-001 shell, T-011-002 First-Run, T-011-003 Home/Status, and T-011-004 setup-screen contracts remain unchanged.

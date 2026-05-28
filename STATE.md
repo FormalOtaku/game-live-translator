@@ -4,25 +4,25 @@
 
 ## Current Focus
 - milestone: (none)
-- active_task_ids: T-011
+- active_task_ids: (none)
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: T-011
-- current_slice_id: T-011-005
-- current_slice_goal: Overlay theme diagnostics privacy UI closeout
-- current_slice_status: todo
-- completed_slices: 4
-- total_slices: 5
-- progress_pct: 80
-- next_slice_id: T-011-005
-- next_slice_goal: Overlay theme diagnostics privacy UI closeout
-- last_checkpoint: 2026-05-28T04:26:03.045Z
+- current_slice_prefix: (none)
+- current_slice_id: (none)
+- current_slice_goal: (none)
+- current_slice_status: (none)
+- completed_slices: 0
+- total_slices: 0
+- progress_pct: 0
+- next_slice_id: (none)
+- next_slice_goal: (none)
+- last_checkpoint: 2026-05-28T05:15:25.454Z
 ## Session Flow
 - current_session_role: supervisor
-- recommended_next_session_role: execution
+- recommended_next_session_role: spec
 - checkpoint_status: satisfied
-- checkpoint_reason: T-011-004 deterministic verification passed (npm test 344, build, lint, git diff --check) and Claude sidecar T-011-004-r3 imported clean with unresolved P1/P2=0.
-- last_completed_slice: T-011-004
-- handoff_summary: T-011-004 complete: added dependency-free Capture/OCR/Translation setup-screen renderer contract in src/ui/setup-screens.js with allow-listed profile draft state, validated intents for source enumeration/profile updates/OCR preview/provider key/translation preview, write-only makeBody handling, transient OCR/translation preview state, capture label and preview text redaction in log-safe snapshots, code/retryable recovery actions, spec/decision/migration updates, and focused regression tests. Verification passed: node --check setup source/test, node --test setup + focused UI contracts, npm test 344 pass, npm run build pass, npm run lint pass, git diff --check pass. Claude sidecar T-011-004-r3 imported clean with must_fix=0 and unresolved P1/P2=0.
-- next_action: start_execution_session
-- updated_at: 2026-05-28T04:26:03.042Z
+- checkpoint_reason: Checkpoint marked ok after PR #9 creation and parent full-diff review evidence.
+- last_completed_slice: T-011-005
+- handoff_summary: T-011 parent complete and PR #9 opened: all desktop UI renderer contract slices are done, T-011-005 is committed, and parent full-diff Claude review passed. Verification evidence: npm test 364, npm run build, npm run lint, git diff --check; Claude T-011-005-r2 and T-011-full-diff-r1 clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: start next spec session
+- updated_at: 2026-05-28T05:15:25.452Z

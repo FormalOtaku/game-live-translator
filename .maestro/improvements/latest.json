@@ -1,7 +1,7 @@
 {
   "repo_path": "/home/murasaki01/Projects/Game_Live_Translator",
-  "generated_at": "2026-05-28T04:26:03.089Z",
-  "trigger": "checkpoint_mark",
+  "generated_at": "2026-05-28T05:15:25.499Z",
+  "trigger": "session_handoff",
   "summary": {
     "suggestion_count": 1,
     "high_priority_count": 1,

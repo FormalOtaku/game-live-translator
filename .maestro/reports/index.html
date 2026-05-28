@@ -29,24 +29,24 @@
 <body>
   <main>
     <header>
-      <p class="meta">Generated from structured Maestro state at 2026-05-28T04:26:03.046Z</p>
+      <p class="meta">Generated from structured Maestro state at 2026-05-28T05:15:25.456Z</p>
       <h1>Maestro<br>Project Report</h1>
       <p class="meta">/home/murasaki01/Projects/Game_Live_Translator</p>
     </header>
     <section class="grid">
       <div class="card"><span class="metric">44</span><span class="muted">tasks</span></div>
-      <div class="card"><span class="metric">1</span><span class="muted">doing</span></div>
-      <div class="card"><span class="metric">1</span><span class="muted">todo</span></div>
-      <div class="card"><span class="metric">42</span><span class="muted">done</span></div>
+      <div class="card"><span class="metric">0</span><span class="muted">doing</span></div>
+      <div class="card"><span class="metric">0</span><span class="muted">todo</span></div>
+      <div class="card"><span class="metric">44</span><span class="muted">done</span></div>
       <div class="card"><span class="metric">32</span><span class="muted">decisions</span></div>
     </section>
     <section>
       <h2>Current Focus</h2>
       <div class="card">
         <p><strong>Milestone:</strong> (none)</p>
-        <p><strong>Current slice:</strong> T-011-005</p>
-        <p><strong>Goal:</strong> Overlay theme diagnostics privacy UI closeout</p>
-        <p><strong>Progress:</strong> 80%</p>
+        <p><strong>Current slice:</strong> (none)</p>
+        <p><strong>Goal:</strong> (none)</p>
+        <p><strong>Progress:</strong> 0%</p>
       </div>
     </section>
     <section>
@@ -91,12 +91,12 @@
 <tr><td>T-010-001</td><td>Diagnostics bundle contract and redaction fixture</td><td><span class="pill done">done</span></td><td>codex</td><td>Added DiagnosticBundle contract, redaction helpers, validators, and regression fixtures covering API keys, OCR/source text, translated text, screenshots/images, provider responses, Error stack headers, cycles, and prototype-like keys. Local node checks, node --test test/contracts.test.js 74 pass, npm test 285 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 285 pass and build/lint pass; Claude T-010-001-r4 module review clean with must_fix=0 and unresolved P1/P2=0.</td></tr>
 <tr><td>T-010-002</td><td>Diagnostics bundle HTTP route</td><td><span class="pill done">done</span></td><td>codex</td><td>Wired GET /api/diagnostics/bundle through optional diagnosticsProvider.collectDiagnostics(), no-provider minimal bundle, provider metadata defaults, strict provider activeProfileId normalization, buildDiagnosticBundle/assertDiagnosticBundle validation, privacy-safe DIAGNOSTICS_FAILED mapping, method/CORS coverage, and docs/decision/migration updates. Local node checks, node --test test/local-api-server.test.js 82 pass, npm test 289 pass, npm run build/lint pass, git diff --check pass; Docker Node 20 npm test 289 pass and build/lint pass; Claude T-010-002-r2 module review clean with must_fix=0 and unresolved P1/P2=0.</td></tr>
 <tr><td>T-010-003</td><td>Diagnostics smoke runbook and parent closeout</td><td><span class="pill done">done</span></td><td>codex</td><td>Added npm run smoke:diagnostics, scripts/smoke-diagnostics-api.js, test/diagnostics-api-smoke.test.js, DIAGNOSTICS_API_SMOKE_RUNBOOK_JA.md, and spec/decision/migration/runbook updates covering /health, no-provider minimal bundles, provider metadata/log redaction, method/CORS no-collection guards, and DIAGNOSTICS_FAILED no-leak failures. Local and Docker Node 20 npm test/build/lint/smoke:diagnostics pass with 290 tests; git diff --check pass; Claude T-010-003-r3 full-diff review clean with findings=3 info, must_fix=0, unresolved P1/P2=0.</td></tr>
-<tr><td>T-011</td><td>Implement desktop app shell and first-run UX core</td><td><span class="pill doing">doing</span></td><td>codex</td><td>Production-grade v1 desktop UI foundation after T-010 backend/API core. Build Electron/React-ready renderer contracts in small PR slices: shell/navigation, first-run provider/profile flow, home/status recovery, OBS guide/theme preview, diagnostics/privacy UI smoke. Keep exactly one child doing; specs first; tests/build/lint; Claude sidecar evidence before slice completion.</td></tr>
+<tr><td>T-011</td><td>Implement desktop app shell and first-run UX core</td><td><span class="pill done">done</span></td><td>codex</td><td>Production-grade v1 desktop UI foundation after T-010 backend/API core. Build Electron/React-ready renderer contracts in small PR slices: shell/navigation, first-run provider/profile flow, home/status recovery, OBS guide/theme preview, diagnostics/privacy UI smoke. Keep exactly one child doing; specs first; tests/build/lint; Claude sidecar evidence before slice completion.</td></tr>
 <tr><td>T-011-001</td><td>Desktop shell route and state contract</td><td><span class="pill done">done</span></td><td>codex</td><td>PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion.</td></tr>
 <tr><td>T-011-002</td><td>First-run provider profile setup flow</td><td><span class="pill done">done</span></td><td>codex</td><td>PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion.</td></tr>
 <tr><td>T-011-003</td><td>Home status recovery and OBS URL actions</td><td><span class="pill done">done</span></td><td>codex</td><td>PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion.</td></tr>
 <tr><td>T-011-004</td><td>Capture OCR translation setup screens</td><td><span class="pill done">done</span></td><td>codex</td><td>PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion.</td></tr>
-<tr><td>T-011-005</td><td>Overlay theme diagnostics privacy UI closeout</td><td><span class="pill todo">todo</span></td><td>codex</td><td>PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion.</td></tr></tbody>
+<tr><td>T-011-005</td><td>Overlay theme diagnostics privacy UI closeout</td><td><span class="pill done">done</span></td><td>codex</td><td>PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion.</td></tr></tbody>
       </table>
     </section>
     <section>

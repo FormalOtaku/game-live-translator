@@ -1,26 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T04:26:03.045Z",
+  "migrated_at": "2026-05-28T05:15:25.455Z",
   "source_path": "STATE.md",
-  "source_sha256": "f93e5e031d4e3c1fb6d24a7b09d08f0dab2cc057ec9bbb4f4716ae6a8afdb78d",
+  "source_sha256": "72062fe422ef6f35928f64526bfc05dbc0a26f11c6f63c893cb69b94d265b8ec",
   "current_focus": {
     "milestone": null,
-    "active_task_ids": [
-      "T-011"
-    ]
+    "active_task_ids": []
   },
   "slice_progress": {
-    "current_slice_prefix": "T-011",
-    "current_slice_id": "T-011-005",
-    "current_slice_goal": "Overlay theme diagnostics privacy UI closeout",
-    "current_slice_status": "todo",
-    "completed_slices": 4,
-    "total_slices": 5,
-    "progress_pct": 80,
-    "next_slice_id": "T-011-005",
-    "next_slice_goal": "Overlay theme diagnostics privacy UI closeout",
-    "last_checkpoint": "2026-05-28T04:26:03.045Z",
+    "current_slice_prefix": null,
+    "current_slice_id": null,
+    "current_slice_goal": null,
+    "current_slice_status": null,
+    "completed_slices": 0,
+    "total_slices": 0,
+    "progress_pct": 0,
+    "next_slice_id": null,
+    "next_slice_goal": null,
+    "last_checkpoint": "2026-05-28T05:15:25.454Z",
     "done": [],
     "doing": [],
     "todo": []

@@ -109,6 +109,7 @@
 - Purpose: design OBS subtitle presentation.
 - Inputs: theme name, duplicate built-in theme, create custom theme, delete custom theme, font, size, weight, text color, stroke, shadow, background box, line height, max width, anchor, fade, visible lines.
 - Outputs: live preview, theme JSON summary, open overlay in browser.
+- Renderer contract: Overlay Theme Editor uses the T-011-005 closeout-screen contract to list themes through `GET /api/themes`, create/duplicate through `POST /api/themes`, update custom themes through `PUT /api/themes/{id}`, delete custom themes through `DELETE /api/themes/{id}`, and apply a theme to the active profile through `PUT /api/profiles/{id}` with `overlayThemeId` only. Built-in themes are read-only in the view model; update/delete actions are disabled before intent creation. Theme preview text is a fixed renderer fixture unless the host supplies an explicit transient preview string, and safe-log snapshots redact preview text plus any diagnostic-looking theme fields.
 - Loading: theme fetch/save.
 - Empty: no custom theme; show read-only built-in defaults and a duplicate action.
 - Error: invalid color/font value or save failure.
@@ -118,6 +119,7 @@
 - Purpose: help the user add the Browser Source manually.
 - Inputs: copy URL, recommended width/height, test subtitle, connection check.
 - Outputs: step list, current local URL, overlay client connected/disconnected status.
+- Renderer contract: OBS Setup Guide consumes the same sanitized `desktop-shell` status as Home/Status. It may copy or open only a trusted backend-reported `http://127.0.0.1:<port>/overlay` URL, derives `/ws/app` connection intent from the numeric local port, and exposes recommended Browser Source dimensions without constructing LAN, wildcard, `localhost`, query, fragment, or user-supplied URLs.
 - Loading: checking overlay client.
 - Empty: no Browser Source connected yet.
 - Error: server down, wrong port, OBS cache issue.
@@ -136,6 +138,7 @@
 - Purpose: make persistence and external API behavior explicit.
 - Inputs: toggles for saving recent OCR text, saving translated text, and saving debug screenshots.
 - Outputs: warning text, storage path, retention setting, clear-now action, current disk usage for debug data.
+- Renderer contract: Privacy Settings uses `GET /api/settings/privacy` and `PUT /api/settings/privacy` only. The draft is allow-listed to the canonical `PrivacySettings` fields, debug persistence warnings appear whenever OCR text, translated text, or screenshots are enabled, and `PUT` is disabled until validator rules prove explicit positive retention budgets. Log-safe state redacts debug directories and never stores provider keys, OCR text, translated text, screenshots, or logs.
 - Loading: settings fetch.
 - Empty: no debug data exists.
 - Error: cannot clear files, cannot open folder, setting save failed.
@@ -145,6 +148,7 @@
 - Purpose: troubleshoot without exposing secrets or game text by default.
 - Inputs: severity filter, component filter, search, copy diagnostic bundle.
 - Outputs: redacted log list, recent error summary, bundle preview.
+- Renderer contract: Logs/Diagnostics uses `GET /api/diagnostics/bundle`, validates the returned `DiagnosticBundle`, defensively re-runs diagnostic string redaction before display/copy, and treats copy-bundle as a sensitive clipboard intent whose log-safe descriptor contains only counts and redaction summary. Raw stack traces, provider responses, API keys, OCR/source text, translated text, screenshots, image paths, and debug payloads must not appear in safe state or action feedback.
 - Loading: reading logs.
 - Empty: no logs yet.
 - Error: log file unavailable.

@@ -29,13 +29,13 @@
   },
   "session_flow": {
     "current_session_role": "supervisor",
-    "recommended_next_session_role": "execution",
+    "recommended_next_session_role": "spec",
     "checkpoint_status": "satisfied",
-    "checkpoint_reason": "T-011-004 deterministic verification passed (npm test 344, build, lint, git diff --check) and Claude sidecar T-011-004-r3 imported clean with unresolved P1/P2=0.",
-    "last_completed_slice": "T-011-004",
-    "handoff_summary": "T-011-004 complete: added dependency-free Capture/OCR/Translation setup-screen renderer contract in src/ui/setup-screens.js with allow-listed profile draft state, validated intents for source enumeration/profile updates/OCR preview/provider key/translation preview, write-only makeBody handling, transient OCR/translation preview state, capture label and preview text redaction in log-safe snapshots, code/retryable recovery actions, spec/decision/migration updates, and focused regression tests. Verification passed: node --check setup source/test, node --test setup + focused UI contracts, npm test 344 pass, npm run build pass, npm run lint pass, git diff --check pass. Claude sidecar T-011-004-r3 imported clean with must_fix=0 and unresolved P1/P2=0.",
-    "next_action": "start_execution_session",
-    "updated_at": "2026-05-28T04:26:03.042Z"
+    "checkpoint_reason": "Checkpoint marked ok after PR #9 creation and parent full-diff review evidence.",
+    "last_completed_slice": "T-011-005",
+    "handoff_summary": "T-011 parent complete and PR #9 opened: all desktop UI renderer contract slices are done, T-011-005 is committed, and parent full-diff Claude review passed. Verification evidence: npm test 364, npm run build, npm run lint, git diff --check; Claude T-011-005-r2 and T-011-full-diff-r1 clean with must_fix=0 and unresolved P1/P2=0.",
+    "next_action": "start next spec session",
+    "updated_at": "2026-05-28T05:15:25.452Z"
   },
   "ui_design_policy": {
     "surface_priority": [
@@ -245,12 +245,5 @@
       ]
     },
     "note": "When true, Maestro may send repository context, diffs, prompts, and logs from this repo to interactive Claude Code sidecar sessions for review/patch/fix/design automation."
-  },
-  "active_task_id": "T-011",
-  "last_kickoff": {
-    "idea": "synced from task activation",
-    "started_at": "2026-05-28T02:15:40.440Z",
-    "task_id": "T-011",
-    "decision_id": "DEC-001"
   }
 }
