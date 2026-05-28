@@ -4,7 +4,7 @@
   "worktree_path": "/home/murasaki01/Projects/Game_Live_Translator",
   "head_sha": "21810cc85f1df101c6813f9c7891b623735d5e13",
   "implementation_head_sha": "21810cc85f1df101c6813f9c7891b623735d5e13",
-  "published_branch_head_sha": null,
+  "published_branch_head_sha": "db2f9456f819b1548e7c3cb1b395da754163b136",
   "pr_body_generated_at_sha": null,
   "commit_subject": "task(T-012-003): T-012-003 backend restart and port conflict recovery smoke",
   "changed_files": [
@@ -37,5 +37,5 @@
   "screenshots": [],
   "design_evidence": null,
   "committed_at": "2026-05-28T07:13:40.016Z",
-  "published_at": null
+  "published_at": "2026-05-28T07:15:00.466Z"
 }
