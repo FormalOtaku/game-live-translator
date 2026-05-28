@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T04:26:03.045Z",
+  "migrated_at": "2026-05-28T05:04:46.127Z",
   "source_path": "STATE.md",
-  "source_sha256": "f93e5e031d4e3c1fb6d24a7b09d08f0dab2cc057ec9bbb4f4716ae6a8afdb78d",
+  "source_sha256": "b02be23eff10f075e2e311d7defd871f9eaaeaa11e535f6f2c58e7393b4c9274",
   "current_focus": {
     "milestone": null,
     "active_task_ids": [
@@ -12,15 +12,15 @@
   },
   "slice_progress": {
     "current_slice_prefix": "T-011",
-    "current_slice_id": "T-011-005",
-    "current_slice_goal": "Overlay theme diagnostics privacy UI closeout",
-    "current_slice_status": "todo",
-    "completed_slices": 4,
+    "current_slice_id": "T-011-001",
+    "current_slice_goal": "Desktop shell route and state contract",
+    "current_slice_status": "done",
+    "completed_slices": 5,
     "total_slices": 5,
-    "progress_pct": 80,
-    "next_slice_id": "T-011-005",
-    "next_slice_goal": "Overlay theme diagnostics privacy UI closeout",
-    "last_checkpoint": "2026-05-28T04:26:03.045Z",
+    "progress_pct": 100,
+    "next_slice_id": null,
+    "next_slice_goal": null,
+    "last_checkpoint": "2026-05-28T05:04:46.127Z",
     "done": [],
     "doing": [],
     "todo": []

@@ -1,0 +1,41 @@
+{
+  "task_id": "T-011-005",
+  "branch": "task/T-011-005",
+  "worktree_path": "/home/murasaki01/Projects/Game_Live_Translator",
+  "head_sha": "a9c1dd74982e613c8cd2f7d046be60b405afebb4",
+  "implementation_head_sha": "a9c1dd74982e613c8cd2f7d046be60b405afebb4",
+  "published_branch_head_sha": null,
+  "pr_body_generated_at_sha": null,
+  "commit_subject": "task(T-011-005): T-011-005 closeout renderer contract: added src/ui/closeout-screens.js and focused tests for overlay theme, OBS setup, privacy settings, diagnostics bundle copy, redaction, and recovery actions. Verification: npm test 364 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude T-011-005-r2 clean with must_fix=0 and unresolved P1/P2=0.",
+  "changed_files": [
+    ".maestro/project.json",
+    ".maestro/state.json",
+    ".maestro/task-state.json",
+    ".maestro/tasks.json",
+    "API_SPEC.md",
+    "CHANGELOG_DECISIONS.md",
+    "DECISIONS.md",
+    "MIGRATION_PLAN.md",
+    "PRODUCT_SPEC.md",
+    "src/ui/closeout-screens.js",
+    "STATE.md",
+    "TASKS.md",
+    "test/closeout-screens.test.js",
+    "UI_SPEC.md"
+  ],
+  "design_packet_id": null,
+  "checkpoint_status": "satisfied",
+  "test_summary": "unknown",
+  "review_evidence": [
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-011-005-r1/claude/review/review.json; receive=.maestro/agent-pass/T-011-005-r1/claude/review/receive-report.json",
+    "review.json; reviewed_files=9; findings=5; must_fix=0",
+    "unresolved P1/P2=0",
+    "agent-pass review limitation: Whether the closeout module is expected to keep server-returned theme order or canonicalize via alphabetical sort (F1).",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-011-005-r2/claude/review/review.json; receive=.maestro/agent-pass/T-011-005-r2/claude/review/receive-report.json",
+    "review.json; reviewed_files=9; findings=3; must_fix=0"
+  ],
+  "screenshots": [],
+  "design_evidence": null,
+  "committed_at": "2026-05-28T05:05:38.157Z",
+  "published_at": null
+}
