@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T07:12:45.325Z",
+  "migrated_at": "2026-05-28T07:40:07.491Z",
   "source_path": "TASKS.md",
-  "source_sha256": "4fa6dc3af01348f83e3806c43ffd57a2c48ff94de2d29463d07d33cf584ba132",
+  "source_sha256": "000ff479f754aaf421faf152b0e2376acb2f27868fee04e62f42dd56b480ed2c",
   "task_count": 50,
   "counts": {
-    "todo": 3,
+    "todo": 2,
     "doing": 0,
     "blocked": 0,
-    "done": 47
+    "done": 48
   },
   "tasks": [
     {
@@ -351,7 +351,7 @@
     {
       "id": "T-012-004",
       "title": "Overlay resolution layout verification smoke",
-      "status": "todo",
+      "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     },

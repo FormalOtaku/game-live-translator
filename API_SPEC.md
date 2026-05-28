@@ -714,6 +714,14 @@ type DiagnosticBundle = {
 - Stdout is limited to command name, localhost bind, selected/restarted/fallback/recovered ports, `PORT_UNAVAILABLE` code/retryability/details, SHA-256 hashes of internally verified overlay text/HTML evidence, and named checks. Stdout and stderr must not contain raw OCR/source text, translated text, provider keys, screenshot/image paths, stack traces, logs, cache keys, arbitrary error details, or debug payloads.
 - The smoke adds no new HTTP routes, no SQLite schema changes, no profile export changes, no native OCR/capture dependency, no real provider credential use, no npm dependency, and no durable logs.
 
+### Overlay Layout Smoke Command
+- T-012-004 adds `npm run smoke:overlay-layout` as a dependency-free renderer-contract smoke over the existing `renderOverlayHtml(...)` and `createSubtitleFrame(...)` contracts.
+- The smoke renders each built-in theme id (`classic_subtitle`, `stream_box`, `minimal`) for max line counts 1, 2, and 3 at the required OBS Browser Source dimensions 1280x720, 1920x1080, and 2560x1440.
+- For every case, the smoke verifies the generated overlay document remains transparent, fixed to the full viewport, non-interactive, scrollbar-free, CSP-protected, no-store-compatible, self-contained, free of remote scripts/styles/images/media/font/url assets, and still using the documented safe-area padding `min(5vh, 64px) min(5vw, 96px)`.
+- Layout evidence resolves the renderer CSS tokens without a browser dependency: `font-size: clamp(...)`, `max-width: min(...)`, frame `em` padding, `line-height: 1.18`, `-webkit-line-clamp`, `text-wrap: balance`, `overflow-wrap: anywhere`, and `word-break: keep-all`. It then runs a conservative glyph-width estimate for representative English subtitles sized to 1, 2, and 3 lines and requires `usedLines <= maxLines`, block width within the broadcast safe area, block height within the safe area, and `overlaps=false`.
+- The smoke may inspect raw representative English subtitle text and source-text sentinels internally to prove layout and privacy behavior, but stdout/stderr are limited to resolution labels, theme ids, numeric layout metrics, booleans, counts, and SHA-256 hashes. They must not contain raw OCR/source text, raw representative subtitle text, provider keys, screenshot/image paths, stack traces, logs, cache keys, arbitrary error details, or debug payloads.
+- The smoke adds no HTTP routes, no SQLite schema changes, no profile export changes, no native OCR/capture dependency, no browser/OBS dependency, no real provider credential use, no npm dependency, and no durable logs.
+
 ## Error Model
 - Canonical error shape: `ApiError`.
 - Validation error code: `VALIDATION_ERROR` with `details.fieldErrors`.

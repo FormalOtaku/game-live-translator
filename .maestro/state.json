@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T07:14:05.183Z",
+  "migrated_at": "2026-05-28T07:41:26.348Z",
   "source_path": "STATE.md",
-  "source_sha256": "bd899b685b990750144a39afc4ef3e9bb023aa465ca6d8a7a8179c5cc5dd06fa",
+  "source_sha256": "53ee872e2dcbb20c1ba228bf46ee7683e8dbd843f9b657d4ac9148d3a4cc4317",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
   },
   "slice_progress": {
     "current_slice_prefix": "T-012",
-    "current_slice_id": "T-012-004",
-    "current_slice_goal": "Overlay resolution layout verification smoke",
+    "current_slice_id": "T-012-005",
+    "current_slice_goal": "First-run stream closeout runbook",
     "current_slice_status": "todo",
-    "completed_slices": 3,
+    "completed_slices": 4,
     "total_slices": 5,
-    "progress_pct": 60,
-    "next_slice_id": "T-012-004",
-    "next_slice_goal": "Overlay resolution layout verification smoke",
-    "last_checkpoint": "2026-05-28T07:14:05.182Z",
+    "progress_pct": 80,
+    "next_slice_id": "T-012-005",
+    "next_slice_goal": "First-run stream closeout runbook",
+    "last_checkpoint": "2026-05-28T07:41:26.347Z",
     "done": [],
     "doing": [],
     "todo": []

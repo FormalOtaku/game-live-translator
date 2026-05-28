@@ -1,6 +1,6 @@
 {
   "repo_path": "/home/murasaki01/Projects/Game_Live_Translator",
-  "generated_at": "2026-05-28T07:14:05.227Z",
+  "generated_at": "2026-05-28T07:41:26.399Z",
   "trigger": "checkpoint_mark",
   "summary": {
     "suggestion_count": 1,
@@ -20,7 +20,7 @@
       "summary": "review health is critical; infra degraded count=3",
       "next_action": "maestro review diag --path . --tool all --lines 20 --json",
       "evidence": [
-        "window=20 primary_success=0% infra_degraded=60% dominant_empty_result=0% coverage_reduced=0% coverage_recovered=0% packet_capture=0%",
+        "window=20 primary_success=0% infra_degraded=50% dominant_empty_result=0% coverage_reduced=0% coverage_recovered=0% packet_capture=0%",
         "infra_degraded_records=3"
       ],
       "source": "review_diag"
