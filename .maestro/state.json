@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T09:05:44.476Z",
+  "migrated_at": "2026-05-28T09:27:44.761Z",
   "source_path": "STATE.md",
-  "source_sha256": "0b0dbbd859a6a5c2a5cb8c3cb589e1b9219262c26ec396f028abe7d18c6a14d2",
+  "source_sha256": "52a8b3e03f21491fb96c669c847022fcc51b11ec551bacf9dc89ef89d7f4ed5d",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
@@ -18,7 +18,7 @@
     "progress_pct": 20,
     "next_slice_id": "T-013-002",
     "next_slice_goal": "Desktop IPC bridge and safe host intents",
-    "last_checkpoint": "2026-05-28T09:05:44.475Z",
+    "last_checkpoint": "2026-05-28T09:27:31.166Z",
     "done": [],
     "doing": [],
     "todo": []

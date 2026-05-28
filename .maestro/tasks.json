@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T09:05:25.055Z",
+  "migrated_at": "2026-05-28T09:27:44.761Z",
   "source_path": "TASKS.md",
   "source_sha256": "ab6e984a7b922430c558d509c878bc7687f70240bb87f6bb6b059011decde394",
   "task_count": 56,
