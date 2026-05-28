@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T08:13:22.879Z",
+  "migrated_at": "2026-05-28T08:14:41.831Z",
   "source_path": "STATE.md",
-  "source_sha256": "505fdce0293bcc15cb3515fd50beae612bec059872d1c2a102c6b6a68de9b1ef",
+  "source_sha256": "b6a90c17da8e58dcea0184d234fe44377cbeb90633cb23acc32b8dbc254789bd",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
@@ -18,7 +18,7 @@
     "progress_pct": 0,
     "next_slice_id": null,
     "next_slice_goal": null,
-    "last_checkpoint": "2026-05-28T08:13:22.878Z",
+    "last_checkpoint": "2026-05-28T08:14:41.831Z",
     "done": [],
     "doing": [],
     "todo": []
