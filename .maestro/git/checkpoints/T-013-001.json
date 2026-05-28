@@ -1,0 +1,42 @@
+{
+  "task_id": "T-013-001",
+  "branch": "task/T-013-001",
+  "worktree_path": "/home/murasaki01/Projects/Game_Live_Translator",
+  "head_sha": "849d67e2243a898fcf6b0c91f89bf725eb8d03a1",
+  "implementation_head_sha": "849d67e2243a898fcf6b0c91f89bf725eb8d03a1",
+  "published_branch_head_sha": null,
+  "pr_body_generated_at_sha": null,
+  "commit_subject": "task(T-013-001): T-013-001 desktop host lifecycle contract: dependency-free localhost-only host lifecycle for future Electron main process, with trusted OBS/app URLs, sanitized snapshots/errors, restart_backend host-command execution, failed-stop cleanup, restart counter safety, and spec/decision updates.",
+  "changed_files": [
+    ".maestro/project.json",
+    ".maestro/state.json",
+    ".maestro/task-state.json",
+    ".maestro/tasks.json",
+    "API_SPEC.md",
+    "CHANGELOG_DECISIONS.md",
+    "DECISIONS.md",
+    "MIGRATION_PLAN.md",
+    "PRODUCT_SPEC.md",
+    "src/desktop/host-lifecycle.js",
+    "STATE.md",
+    "TASKS.md",
+    "test/desktop-host-lifecycle.test.js",
+    "UI_SPEC.md"
+  ],
+  "design_packet_id": null,
+  "checkpoint_status": "satisfied",
+  "test_summary": "node --check src/desktop/host-lifecycle.js; node --check test/desktop-host-lifecycle.test.js; npm test -- test/desktop-host-lifecycle.test.js test/home-status-actions.test.js test/local-api-server.test.js; npm test; npm run build; npm run lint; git diff --check",
+  "review_evidence": [
+    "agent-pass:T-013-001-r3:module:clean:must_fix=0:P1P2=0",
+    "agent-pass claude review completed; scope=module; status=findings; artifact=.maestro/agent-pass/T-013-001-r1/claude/review/review.json; receive=.maestro/agent-pass/T-013-001-r1/claude/review/receive-report.json",
+    "review.json; reviewed_files=8; findings=6; must_fix=1",
+    "unresolved P1/P2=1; must_fix=1",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-013-001-r3/claude/review/review.json; receive=.maestro/agent-pass/T-013-001-r3/claude/review/receive-report.json",
+    "review.json; reviewed_files=8; findings=3; must_fix=0",
+    "unresolved P1/P2=0"
+  ],
+  "screenshots": [],
+  "design_evidence": null,
+  "committed_at": "2026-05-28T09:23:11.120Z",
+  "published_at": null
+}
