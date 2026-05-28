@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T05:52:50.129Z",
+  "migrated_at": "2026-05-28T05:55:06.955Z",
   "source_path": "STATE.md",
-  "source_sha256": "72e54d254d8e3282bd74ea99cec72a89f9ef2c0a3b93b7fe9c18b7081a95b588",
+  "source_sha256": "56cb866bfcc3b9edb81faa58313efda3eae80d119fa959046ec2b6964c092e60",
   "current_focus": {
     "milestone": null,
     "active_task_ids": []
@@ -18,7 +18,7 @@
     "progress_pct": 20,
     "next_slice_id": "T-012-002",
     "next_slice_goal": "End-to-end OBS overlay smoke command",
-    "last_checkpoint": "2026-05-28T05:52:50.128Z",
+    "last_checkpoint": "2026-05-28T05:55:06.954Z",
     "done": [],
     "doing": [],
     "todo": []
