@@ -1,0 +1,42 @@
+{
+  "schema_version": "maestro.pending-review-evidence.v1",
+  "task_id": "T-011-002",
+  "evidence": [
+    "agent-pass claude review completed; scope=module; status=findings; artifact=.maestro/agent-pass/T-011-002-r1/claude/review/review.json; receive=.maestro/agent-pass/T-011-002-r1/claude/review/receive-report.json",
+    "review.json; reviewed_files=8; findings=6; must_fix=1",
+    "unresolved P1/P2=1; must_fix=1",
+    "agent-pass claude review completed; scope=module; status=findings; artifact=.maestro/agent-pass/T-011-002-r4/claude/review/review.json; receive=.maestro/agent-pass/T-011-002-r4/claude/review/receive-report.json",
+    "review.json; reviewed_files=8; findings=2; must_fix=0",
+    "unresolved P1/P2=2; must_fix=0",
+    "agent-pass claude review completed; scope=module; status=clean; artifact=.maestro/agent-pass/T-011-002-r5/claude/review/review.json; receive=.maestro/agent-pass/T-011-002-r5/claude/review/receive-report.json",
+    "review.json; reviewed_files=8; findings=0; must_fix=0",
+    "unresolved P1/P2=0"
+  ],
+  "sources": [
+    {
+      "slice_id": "T-011-002-r1",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-011-002-r1/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-011-002-r1/claude/review/receive-report.json",
+      "recorded_at": "2026-05-28T03:14:11.993Z"
+    },
+    {
+      "slice_id": "T-011-002-r4",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-011-002-r4/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-011-002-r4/claude/review/receive-report.json",
+      "recorded_at": "2026-05-28T03:25:36.465Z"
+    },
+    {
+      "slice_id": "T-011-002-r5",
+      "agent": "claude",
+      "mode": "review",
+      "review_artifact": ".maestro/agent-pass/T-011-002-r5/claude/review/review.json",
+      "receive_report": ".maestro/agent-pass/T-011-002-r5/claude/review/receive-report.json",
+      "recorded_at": "2026-05-28T03:30:05.212Z"
+    }
+  ],
+  "updated_at": "2026-05-28T03:30:05.212Z"
+}
