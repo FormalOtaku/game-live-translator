@@ -4,7 +4,7 @@
   "worktree_path": "/home/murasaki01/Projects/Game_Live_Translator",
   "head_sha": "849d67e2243a898fcf6b0c91f89bf725eb8d03a1",
   "implementation_head_sha": "849d67e2243a898fcf6b0c91f89bf725eb8d03a1",
-  "published_branch_head_sha": null,
+  "published_branch_head_sha": "7437eca453cae0634405648d920e20bb541d0cb3",
   "pr_body_generated_at_sha": null,
   "commit_subject": "task(T-013-001): T-013-001 desktop host lifecycle contract: dependency-free localhost-only host lifecycle for future Electron main process, with trusted OBS/app URLs, sanitized snapshots/errors, restart_backend host-command execution, failed-stop cleanup, restart counter safety, and spec/decision updates.",
   "changed_files": [
@@ -38,5 +38,5 @@
   "screenshots": [],
   "design_evidence": null,
   "committed_at": "2026-05-28T09:23:11.120Z",
-  "published_at": null
+  "published_at": "2026-05-28T09:26:35.363Z"
 }
