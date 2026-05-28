@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "source_of_truth": "structured",
-  "migrated_at": "2026-05-28T05:12:40.011Z",
+  "migrated_at": "2026-05-28T05:52:16.454Z",
   "source_path": "TASKS.md",
-  "source_sha256": "951550647828e6617da255d6a7ddc83ab46b34d6c47e091be204aab5ede19ca7",
-  "task_count": 44,
+  "source_sha256": "93b7dbced3dd5c20cb6eb32cea92a95dea7e3e365355693c919c19b98a7bad7f",
+  "task_count": 50,
   "counts": {
-    "todo": 0,
+    "todo": 5,
     "doing": 0,
     "blocked": 0,
-    "done": 44
+    "done": 45
   },
   "tasks": [
     {
@@ -319,6 +319,48 @@
       "status": "done",
       "owner": "codex",
       "notes": "PR-sized queue for T-011. Each slice must update specs first, implement production-grade states/contracts, add regression tests and smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-012",
+      "title": "Implement synthetic first-run stream smoke and recovery evidence",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "Production-grade v1 acceptance slice after T-011: prove a synthetic Japanese scene can reach a visible English subtitle in OBS overlay through localhost contracts within a first-run smoke. Define 3-6 PR-sized children, keep one child doing, specs first, npm test/build/lint, and Claude sidecar evidence before completion."
+    },
+    {
+      "id": "T-012-001",
+      "title": "Synthetic first-run stream harness contract",
+      "status": "done",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-012-002",
+      "title": "End-to-end OBS overlay smoke command",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-012-003",
+      "title": "Backend restart and port conflict recovery smoke",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-012-004",
+      "title": "Overlay resolution layout verification smoke",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
+    },
+    {
+      "id": "T-012-005",
+      "title": "First-run stream closeout runbook",
+      "status": "todo",
+      "owner": "codex",
+      "notes": "PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion."
     }
   ]
 }

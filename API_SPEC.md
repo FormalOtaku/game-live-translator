@@ -686,6 +686,14 @@ type DiagnosticBundle = {
 - Provider failures propagate as their existing `ContractError` codes and must not publish a subtitle frame. Callers may map retryability with `isRetryableProviderError`.
 - Overlay snapshots from this pipeline must replay `escapedText` and omit `sourceText` by default even when the internal subtitle frame is built with debug source text.
 
+### Synthetic First-Run Stream Harness
+- T-012-001 adds `runSyntheticFirstRunStream({ profile, provider, clock?, idFactory?, maxDurationMs? })` in `src/core/synthetic-first-run-stream.js`.
+- The harness is a core contract, not an HTTP route. It creates an in-memory `OverlayState`, feeds the frozen Japanese `SYNTHETIC_OCR_CANDIDATE` through `runOcrToOverlayPipeline`, and requires an injected deterministic provider that returns an English subtitle for test evidence.
+- Success returns a frozen summary with `schemaVersion: "synthetic-first-run-stream.v1"`, `startedAt`, `completedAt`, `durationMs`, `maxDurationMs`, `withinBudget`, profile/provider/target/theme fingerprints, `stage`, `overlayPublished`, subtitle metadata, and `privacy` guarantees. `stage` is one of `"ocr"`, `"translation"`, `"overlay"`, or the harness-only `"error"` sentinel for provider/profile/pipeline failures before a runtime stage can complete.
+- Subtitle metadata is evidence-only: it includes id/provider/theme/timing plus SHA-256 hashes of the translated and escaped overlay text. The summary must not include `sourceText`, `translatedText`, `escapedText`, provider keys, screenshots, image paths, stack traces, or debug payloads.
+- Failure summaries are frozen and sanitized. OCR rejection reports the controlled rejection code without text. Provider/pipeline errors use redacted messages and value-free field errors. `error.details` is dropped except for `fieldErrors[].field` and `fieldErrors[].code`; field-error messages and arbitrary provider details are never serialized. Timeout keeps any published subtitle hash evidence but sets `withinBudget=false` and a `TIMEOUT` failure.
+- The harness introduces no SQLite schema changes, no profile export changes, no network calls, no native OCR/capture dependency, no concrete DeepL credential use, and no durable logs. T-012-002 will wrap this contract in a live localhost/OBS overlay smoke command.
+
 ## Error Model
 - Canonical error shape: `ApiError`.
 - Validation error code: `VALIDATION_ERROR` with `details.fieldErrors`.
