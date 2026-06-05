@@ -447,3 +447,16 @@
 - Regression tests added first: `test/closeout-screens.test.js` covers theme list normalization and built-in/custom action gating, validated theme create/update/delete/profile-apply intents, OBS trusted/untrusted overlay URL behavior, privacy draft warning/update validation and debug-path redaction, diagnostics bundle re-redaction and sensitive copy intent logging, sanitized error recovery, immutable view models, and no serialization of provider keys, OCR/source text, translated text, screenshots, stack traces, provider responses, debug directories, or diagnostic logs in log-safe outputs.
 - Migration needed: None.
 - Rollback plan: Remove `src/ui/closeout-screens.js`, `test/closeout-screens.test.js`, and the T-011-005 spec/decision entries. Existing T-011-001 shell, T-011-002 First-Run, T-011-003 Home/Status, and T-011-004 setup-screen contracts remain unchanged.
+
+### CHG-20260528-035
+- Date: 2026-05-28
+- Summary: Added the dependency-free synthetic first-run stream harness contract for T-012-001.
+- Reason: The product acceptance now needs a reproducible bridge from first-run intent to an overlay-visible English subtitle before the live localhost/OBS smoke command lands. Existing OCR, translation, overlay, and UI contracts were individually tested, but no single core harness proved the synthetic Japanese scene can publish an English subtitle inside the 5-minute first-run budget while preserving privacy defaults.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. The harness is in-memory only and persists no OCR/source text, translated text, subtitle frames, images, screenshots, logs, cache rows, or provider keys.
+  - API: Adds `src/core/synthetic-first-run-stream.js` with `runSyntheticFirstRunStream(...)`, a frozen summary schema, subtitle hash evidence, budget handling, OCR rejection mapping, and redacted provider/pipeline failure summaries. It adds no HTTP routes, no native dependencies, and no npm dependencies.
+  - UI: First-Run can consume sanitized pass/fail evidence for the synthetic stream readiness path without displaying or logging source text, translated text, escaped text, provider keys, screenshots, images, or debug payloads.
+- Risk: The harness is still an in-process contract, not a real Windows/Electron/FastAPI/OBS smoke. T-012-002 must wrap it in a live localhost/overlay smoke command so the first acceptance criterion can move from core proof toward user-facing evidence.
+- Regression tests added first: `test/synthetic-first-run-stream.test.js` covers Japanese fixture freezing, successful English subtitle publication within budget, summary freezing, privacy guarantees, provider mismatch, provider secret redaction, OCR rejection without provider calls, timeout reporting with published evidence, `maxDurationMs` validation, and malicious provider output escaping via subtitle hash evidence.
+- Migration needed: None.
+- Rollback plan: Remove `src/core/synthetic-first-run-stream.js`, `test/synthetic-first-run-stream.test.js`, and the T-012-001 spec/decision entries. Existing runtime pipeline, local API, overlay, diagnostics, and UI contracts remain unchanged.

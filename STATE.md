@@ -7,22 +7,22 @@
 - active_task_ids: (none)
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: (none)
-- current_slice_id: (none)
-- current_slice_goal: (none)
-- current_slice_status: (none)
-- completed_slices: 0
-- total_slices: 0
-- progress_pct: 0
-- next_slice_id: (none)
-- next_slice_goal: (none)
-- last_checkpoint: 2026-05-28T05:15:25.454Z
+- current_slice_prefix: T-012
+- current_slice_id: T-012-002
+- current_slice_goal: End-to-end OBS overlay smoke command
+- current_slice_status: todo
+- completed_slices: 1
+- total_slices: 5
+- progress_pct: 20
+- next_slice_id: T-012-002
+- next_slice_goal: End-to-end OBS overlay smoke command
+- last_checkpoint: 2026-05-28T05:55:06.954Z
 ## Session Flow
 - current_session_role: supervisor
-- recommended_next_session_role: spec
+- recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: Checkpoint marked ok after PR #9 creation and parent full-diff review evidence.
-- last_completed_slice: T-011-005
-- handoff_summary: T-011 parent complete and PR #9 opened: all desktop UI renderer contract slices are done, T-011-005 is committed, and parent full-diff Claude review passed. Verification evidence: npm test 364, npm run build, npm run lint, git diff --check; Claude T-011-005-r2 and T-011-full-diff-r1 clean with must_fix=0 and unresolved P1/P2=0.
-- next_action: start next spec session
-- updated_at: 2026-05-28T05:15:25.452Z
+- checkpoint_reason: T-012-001 deterministic validation and Claude agent-pass review recheck passed; PR #10 opened. Evidence: npm test 375, build/lint, git diff --check, Claude T-012-001-r2 clean with must_fix=0 and unresolved P1/P2=0.
+- last_completed_slice: T-012-001
+- handoff_summary: T-012-001 complete: dependency-free synthetic first-run stream harness contract landed with privacy-safe hash evidence, OCR/provider/timeout failure summaries, specs/decisions/migration updates, and 11 focused tests. Verification: node --test test/synthetic-first-run-stream.test.js 11 pass; npm test 375 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-001-r2 clean with must_fix=0 and unresolved P1/P2=0. Next slice: T-012-002 end-to-end OBS overlay smoke command.
+- next_action: start_execution_session
+- updated_at: 2026-05-28T05:55:06.951Z
