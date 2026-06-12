@@ -512,3 +512,16 @@
 - Regression tests added first: `test/first-run-closeout-smoke.test.js` executes the closeout script as a child process, asserts all three T-012 child smoke modules pass, verifies runbook/package checks, and verifies stdout/stderr do not contain raw source text, translated text, provider-key sentinels, screenshot paths, cache keys, or debug payloads.
 - Migration needed: None.
 - Rollback plan: Remove `npm run smoke:first-run-closeout`, `scripts/smoke-first-run-closeout.js`, `test/first-run-closeout-smoke.test.js`, `FIRST_RUN_STREAM_CLOSEOUT_RUNBOOK_JA.md`, and the T-012-005 spec/decision entries. Existing T-012-001 through T-012-004 smoke commands remain unchanged.
+
+### CHG-20260528-040
+- Date: 2026-05-28
+- Summary: Added the dependency-free desktop host lifecycle contract for T-013-001.
+- Reason: The renderer already emits `restart_backend` host-command intents and the backend recovery smoke already proves restart/port-conflict behavior, but the future Electron main process needed a tested lifecycle boundary for starting, stopping, restarting, and reporting the localhost backend without duplicating privacy and localhost rules.
+- Impact scope (DB/API/UI):
+  - DB: No schema change. Lifecycle state is process memory only and persists no host history, provider keys, OCR/source text, translated text, screenshots, images, logs, cache rows, or profile/export data.
+  - API: Adds `src/desktop/host-lifecycle.js` with config normalization, injected API adapter lifecycle, trusted localhost overlay/app WebSocket URL reporting, restart counters, sanitized error snapshots, and host-command validation. It adds no HTTP routes, Electron dependencies, native dependencies, or npm dependencies.
+  - UI: Home/Status `restart_backend` now has an executable host-side consumer that rejects sensitive or inherited commands and returns sanitized lifecycle snapshots suitable for recovery UI binding.
+- Risk: This remains a host contract, not the concrete Electron main process, Windows capture adapter, PaddleOCR process manager, OBS automation, or installer. Future host/IPC slices must call this module rather than reimplementing lifecycle rules.
+- Regression tests added first: `test/desktop-host-lifecycle.test.js` covers config defaults/rejections, trusted frozen ready snapshots, Home/Status restart intent execution, sanitized retryable startup failures, invalid started-port cleanup, failed-stop recovery cleanup before new adapter creation, failed restart counter semantics, sensitive/unsupported/inherited command rejection, trusted URL helpers, and no serialization of provider keys, raw text, screenshots, stack traces, or arbitrary adapter details.
+- Migration needed: None.
+- Rollback plan: Remove `src/desktop/host-lifecycle.js`, `test/desktop-host-lifecycle.test.js`, and the T-013-001 spec/decision entries. Existing localhost API server, Home/Status renderer contract, and T-012 smoke evidence remain unchanged.

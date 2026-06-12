@@ -7,22 +7,22 @@
 - active_task_ids: (none)
 
 ## Slice Progress (Update Every Slice)
-- current_slice_prefix: (none)
-- current_slice_id: (none)
-- current_slice_goal: (none)
-- current_slice_status: (none)
-- completed_slices: 0
-- total_slices: 0
-- progress_pct: 0
-- next_slice_id: (none)
-- next_slice_goal: (none)
-- last_checkpoint: 2026-05-28T08:14:41.831Z
+- current_slice_prefix: T-013
+- current_slice_id: T-013-002
+- current_slice_goal: Desktop IPC bridge and safe host intents
+- current_slice_status: todo
+- completed_slices: 1
+- total_slices: 5
+- progress_pct: 20
+- next_slice_id: T-013-002
+- next_slice_goal: Desktop IPC bridge and safe host intents
+- last_checkpoint: 2026-05-28T09:27:31.166Z
 ## Session Flow
 - current_session_role: supervisor
-- recommended_next_session_role: spec
+- recommended_next_session_role: execution
 - checkpoint_status: satisfied
-- checkpoint_reason: T-012-005/T-012 complete: closeout smoke/test/build/lint/diff-check passed; Claude agent-pass T-012-005-r2 full-diff clean with must_fix=0 and unresolved P1/P2=0.
-- last_completed_slice: T-012-005
-- handoff_summary: T-012-005 and parent T-012 complete: added npm run smoke:first-run-closeout and FIRST_RUN_STREAM_CLOSEOUT_RUNBOOK_JA.md, aggregating first-run stream, backend recovery, and overlay layout smoke module evidence into privacy-safe hash/count/schema records with explicit WINDOWS_OBS_VISUAL_GATE manual gate. Verification: node --check new files pass; npm test -- T-012 smoke tests pass; npm run smoke:first-run-closeout pass with escalated localhost listen; npm test 385 pass; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-012-005-r2 full-diff clean with must_fix=0 and unresolved P1/P2=0.
-- next_action: start_spec_session
-- updated_at: 2026-05-28T08:14:41.828Z
+- checkpoint_reason: T-013-001 completed, checkpointed, pushed, and draft PR #15 created; deterministic verification and Claude sidecar review are clean.
+- last_completed_slice: T-013-001
+- handoff_summary: T-013-001 complete and published as draft PR #15. Added dependency-free desktop host lifecycle contract for future Electron main process: localhost-only backend config, injected API adapter start/stop/restart, trusted OBS overlay/app WebSocket URLs, sanitized snapshots/errors, Home/Status restart_backend execution, failed-stop cleanup, restart counter safety, strict host-command validation, and spec/decision/migration updates. Verification: node --check new files pass; focused npm test pass with 105 tests; npm test pass with 398 tests; npm run build pass; npm run lint pass; git diff --check pass; Claude agent-pass T-013-001-r3 module review clean with must_fix=0 and unresolved P1/P2=0.
+- next_action: start_execution_session for T-013-002 Desktop IPC bridge and safe host intents
+- updated_at: 2026-05-28T09:27:31.163Z

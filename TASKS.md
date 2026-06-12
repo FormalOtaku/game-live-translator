@@ -11,7 +11,11 @@
 ## Backlog
 | ID | Title | Status | Owner | Notes |
 |---|---|---|---|---|
-| (none) |  |  |  |  |
+| T-013 | Implement desktop host and Windows OBS readiness core | todo | codex | Production-grade v1 integration parent after T-012: turn dependency-free core/API/UI contracts into a desktop-host-ready Windows 10/11 + OBS Browser Source execution boundary. Keep no game modification/file parsing/code injection/script distribution, privacy-first defaults, localhost-only overlay server, no plaintext/logged API keys, specs first, 3-6 PR-sized slices, npm test/build/lint, smoke evidence, and Claude sidecar review before completion. |
+| T-013-002 | Desktop IPC bridge and safe host intents | todo | codex | PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
+| T-013-003 | Windows adapter preflight and capture OCR readiness | todo | codex | PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
+| T-013-004 | OBS manual validation evidence and release gate | todo | codex | PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
+| T-013-005 | Desktop host closeout smoke runbook | todo | codex | PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 
 ## Done
 | ID | Title | Date | Evidence |
@@ -66,3 +70,4 @@
 | T-012-003 | Backend restart and port conflict recovery smoke |  | PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-012-004 | Overlay resolution layout verification smoke |  | PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
 | T-012-005 | First-run stream closeout runbook |  | PR-sized queue for T-012. Each child must update specs first, implement production-grade contracts/tests/smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
+| T-013-001 | Desktop host lifecycle contract |  | PR-sized queue for T-013. Each child must update specs first, implement production-grade host/readiness contracts or smoke evidence, run npm test/build/lint, and import Claude sidecar review evidence before completion. |
